@@ -41,6 +41,8 @@ interface AppContextType {
   setIsFilterModalOpen: (open: boolean) => void;
   isWizardModalOpen: boolean;
   setIsWizardModalOpen: (open: boolean) => void;
+  isAuthModalOpen: boolean;
+  setIsAuthModalOpen: (open: boolean) => void;
   
   // Map Visual Modes & Geolocation & Theme
   mapVisualMode: 'NORMAL' | 'HEATMAP' | 'BEAMS_3D';
@@ -107,6 +109,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [filterState, setFilterState] = useState<PropertyFilterState>(DEFAULT_FILTERS);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
   const [isWizardModalOpen, setIsWizardModalOpen] = useState<boolean>(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [mapVisualMode, setMapVisualMode] = useState<'NORMAL' | 'HEATMAP' | 'BEAMS_3D'>('NORMAL');
   const [mapTheme, setMapThemeState] = useState<MapTheme>(() => {
     const saved = localStorage.getItem('locash_map_theme');
@@ -494,6 +497,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsFilterModalOpen,
         isWizardModalOpen,
         setIsWizardModalOpen,
+        isAuthModalOpen,
+        setIsAuthModalOpen,
         mapVisualMode,
         setMapVisualMode,
         mapTheme,

@@ -28,7 +28,8 @@ export const Header: React.FC = () => {
     setActiveView,
     setIsWizardModalOpen,
     filteredProperties,
-    searchAddress
+    searchAddress,
+    setIsAuthModalOpen
   } = useApp();
 
   const [isSearching, setIsSearching] = useState(false);
@@ -232,6 +233,16 @@ export const Header: React.FC = () => {
             <span className="hidden sm:inline">Locador</span>
           </button>
         </div>
+
+        {/* Auth / Login Modal Trigger Button */}
+        <button
+          onClick={() => setIsAuthModalOpen(true)}
+          className="p-2 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-blue-600/20 to-cyan-500/20 hover:from-blue-600/40 hover:to-cyan-500/40 border border-cyan-500/40 text-cyber-cyan hover:text-white transition-all flex items-center gap-1.5 shadow-sm group"
+          title="Fazer Login ou Criar Conta"
+        >
+          <User className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          <span className="text-xs font-bold font-mono hidden md:inline">Entrar</span>
+        </button>
       </div>
     </header>
   );

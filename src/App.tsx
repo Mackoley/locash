@@ -9,6 +9,7 @@ import { PropertyDetailModal } from './components/property/PropertyDetailModal';
 import { PropertyFiltersModal } from './components/property/PropertyFiltersModal';
 import { PropertyWizardModal } from './components/property/PropertyWizardModal';
 import { PropertyEditModal } from './components/property/PropertyEditModal';
+import { AuthModal } from './components/auth/AuthModal';
 import { PropertyExplorerList } from './components/property/PropertyExplorerList';
 import { LandlordDashboard } from './components/landlord/LandlordDashboard';
 import { LandlordProperties } from './components/landlord/LandlordProperties';
@@ -16,7 +17,7 @@ import { LeaseHub } from './components/tenant/LeaseHub';
 import { StandaloneChat } from './components/chat/StandaloneChat';
 
 export const AppContent: React.FC = () => {
-  const { activeView } = useApp();
+  const { activeView, isAuthModalOpen, setIsAuthModalOpen } = useApp();
 
   return (
     <div className="min-h-screen bg-cyber-darkest text-slate-100 flex flex-col overflow-hidden select-none">
@@ -48,6 +49,7 @@ export const AppContent: React.FC = () => {
       <PropertyFiltersModal />
       <PropertyWizardModal />
       <PropertyEditModal />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       <PwaInstallPrompt />
     </div>
   );
