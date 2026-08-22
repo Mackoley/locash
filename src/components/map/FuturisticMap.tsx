@@ -213,15 +213,16 @@ export const FuturisticMap: React.FC = () => {
       }
     };
 
-    // Dynamic Real-time Zoom-Responsive Scale for 3D Beams, Base Spinner and Markers
+    // Dynamic Real-time Zoom-Responsive Scale for 3D Beams, Base Spinner and Markers (Higher Zoom Reduction Ratio)
     const updateZoomScale = () => {
       const zoom = map.getZoom();
-      // Smooth scaling by zoom level:
-      // Zoom 16 (close): scale 1.0
-      // Zoom 14 (medium): scale 0.68
-      // Zoom 12 (far): scale 0.42
-      // Zoom 10 (very far): scale 0.22
-      const scale = Math.min(Math.max(0.22 + (zoom - 10) * 0.13, 0.20), 1.05);
+      // Exponential reduction curve:
+      // Zoom 16: scale 1.0 (street level)
+      // Zoom 14.5: scale 0.60 (neighborhood)
+      // Zoom 13: scale 0.32 (city overview)
+      // Zoom 11.5: scale 0.16 (metropolitan area)
+      // Zoom <= 10: scale 0.07 (micro-beacon / pin dot)
+      const scale = Math.min(Math.max(Math.pow(1.52, zoom - 16), 0.07), 1.15);
       
       const scalers = container.querySelectorAll<HTMLElement>('.marker-zoom-scaler');
       scalers.forEach(scaler => {
@@ -473,7 +474,7 @@ export const FuturisticMap: React.FC = () => {
       ` : '';
 
       const currentZoom = map.getZoom();
-      const currentScale = Math.min(Math.max(0.22 + (currentZoom - 10) * 0.13, 0.20), 1.05);
+      const currentScale = Math.min(Math.max(Math.pow(1.52, currentZoom - 16), 0.07), 1.15);
 
       el.innerHTML = `
         <div class="marker-zoom-scaler" style="
