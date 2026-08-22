@@ -46,10 +46,10 @@ export const FuturisticMap: React.FC = () => {
           'bright-labels': {
             type: 'raster',
             tiles: [
-              'https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
-              'https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
-              'https://c.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
-              'https://d.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png'
+              'https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
+              'https://b.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
+              'https://c.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
+              'https://d.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png'
             ],
             tileSize: 256,
             maxzoom: 18
@@ -70,7 +70,7 @@ export const FuturisticMap: React.FC = () => {
             minzoom: 0,
             maxzoom: 22,
             paint: {
-              'raster-brightness-min': 0.3,
+              'raster-brightness-min': 0.2,
               'raster-contrast': 0.3
             }
           }
@@ -97,10 +97,10 @@ export const FuturisticMap: React.FC = () => {
           'carto-bright-white-labels': {
             type: 'raster',
             tiles: [
-              'https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
-              'https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
-              'https://c.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
-              'https://d.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png'
+              'https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
+              'https://b.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
+              'https://c.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
+              'https://d.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png'
             ],
             tileSize: 256,
             maxzoom: 18
@@ -125,8 +125,8 @@ export const FuturisticMap: React.FC = () => {
             minzoom: 0,
             maxzoom: 22,
             paint: {
-              'raster-brightness-min': 0.4,
-              'raster-contrast': 0.35
+              'raster-brightness-min': 0.25,
+              'raster-contrast': 0.3
             }
           }
         ]
