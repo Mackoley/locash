@@ -395,9 +395,10 @@ export const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* ================= TIER 2: DEDICATED FULL-WIDTH ADDRESS SEARCH BAR ================= */}
-      <div className="px-2.5 sm:px-6 py-2 bg-slate-950/60">
-        <div ref={searchContainerRef} className="w-full max-w-4xl mx-auto relative">
+      {/* ================= TIER 2: DEDICATED FULL-WIDTH ADDRESS SEARCH BAR (EXCLUSIVO DO MAPA) ================= */}
+      {activeView === 'MAPA' && (
+        <div className="px-2.5 sm:px-6 py-2 bg-slate-950/60 border-t border-slate-800/40 animate-fade-in">
+          <div ref={searchContainerRef} className="w-full max-w-4xl mx-auto relative">
           <form onSubmit={handleSearchSubmit} className="relative group flex items-center w-full">
             <div className="absolute left-3.5 flex items-center pointer-events-none text-cyber-cyan">
               <MapPin className="w-4 h-4" />
@@ -518,6 +519,7 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
+      )}
     </header>
   );
 };
