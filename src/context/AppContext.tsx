@@ -37,6 +37,8 @@ interface AppContextType {
   setIsWizardModalOpen: (open: boolean) => void;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
+  isRoleOnboardingOpen: boolean;
+  setIsRoleOnboardingOpen: (open: boolean) => void;
   currentUser: {
     id: string;
     email: string;
@@ -131,6 +133,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
   const [isWizardModalOpen, setIsWizardModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [isRoleOnboardingOpen, setIsRoleOnboardingOpen] = useState<boolean>(false);
   const [mapVisualMode, setMapVisualMode] = useState<'NORMAL' | 'HEATMAP' | 'BEAMS_3D'>('NORMAL');
   const [mapTheme, setMapThemeState] = useState<MapTheme>(() => {
     const saved = localStorage.getItem('locash_map_theme');
@@ -158,6 +161,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (session?.user) {
         const userMeta = session.user.user_metadata || {};
         const role = (userMeta.role as UserRole) || userRole;
+        const isGoogle = session.user.app_metadata?.provider === 'google' || userMeta.iss?.includes('google');
+        
         setCurrentUser({
           id: session.user.id,
           email: session.user.email || '',
@@ -166,6 +171,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           role
         });
         setUserRole(role);
+
+        // Check if first-time social/Google user needs to pick role
+        if (!userMeta.role_confirmed && (isGoogle || !userMeta.role)) {
+          setIsRoleOnboardingOpen(true);
+        }
       }
     });
 
@@ -175,6 +185,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const role = (userMeta.role as UserRole) || userRole;
         const name = userMeta.full_name || userMeta.name || session.user.email?.split('@')[0] || 'Usuário';
         const avatarUrl = userMeta.avatar_url || userMeta.picture;
+        const isGoogle = session.user.app_metadata?.provider === 'google' || userMeta.iss?.includes('google');
 
         setCurrentUser({
           id: session.user.id,
@@ -184,6 +195,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           role
         });
         setUserRole(role);
+
+        // Check if first-time social/Google user needs to pick role
+        if (!userMeta.role_confirmed && (isGoogle || !userMeta.role)) {
+          setIsRoleOnboardingOpen(true);
+        }
 
         // Sync with public.profiles table
         try {
@@ -197,12 +213,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (userMeta.phone) {
             profilePayload.phone = userMeta.phone;
           }
+          if (userMeta.role_confirmed) {
+            profilePayload.role_confirmed = true;
+          }
           await supabase.from('profiles').upsert(profilePayload);
         } catch (err) {
           console.warn('Sincronização de perfil:', err);
         }
       } else {
         setCurrentUser(null);
+        setIsRoleOnboardingOpen(false);
       }
     });
 
@@ -688,6 +708,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsWizardModalOpen,
         isAuthModalOpen,
         setIsAuthModalOpen,
+        isRoleOnboardingOpen,
+        setIsRoleOnboardingOpen,
         currentUser,
         logout,
         mapVisualMode,

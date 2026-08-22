@@ -10,6 +10,7 @@ import { PropertyFiltersModal } from './components/property/PropertyFiltersModal
 import { PropertyWizardModal } from './components/property/PropertyWizardModal';
 import { PropertyEditModal } from './components/property/PropertyEditModal';
 import { AuthModal } from './components/auth/AuthModal';
+import { RoleOnboardingModal } from './components/auth/RoleOnboardingModal';
 import { PropertyExplorerList } from './components/property/PropertyExplorerList';
 import { LandlordDashboard } from './components/landlord/LandlordDashboard';
 import { LandlordProperties } from './components/landlord/LandlordProperties';
@@ -50,6 +51,7 @@ export const AppContent: React.FC = () => {
       <PropertyWizardModal />
       <PropertyEditModal />
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      <RoleOnboardingModal />
       <PwaInstallPrompt />
     </div>
   );
