@@ -338,7 +338,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           }
 
           if (!targetEmail.includes('@')) {
-            throw new Error('Nenhuma conta encontrada com este número de telefone. Verifique o número digitado ou faça login com seu e-mail.');
+            throw new Error('Telefone não vinculado neste navegador. Como sua conta foi criada antes da sincronização, por favor faça login digitando seu E-MAIL nesta primeira vez para vincular o telefone!');
           }
         }
 
