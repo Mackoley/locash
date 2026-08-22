@@ -22,6 +22,9 @@ import {
   INITIAL_CHAT_MESSAGES, 
   INITIAL_LANDLORD_STATS 
 } from '../data/mockData';
+import { propertyService } from '../services/propertyService';
+import { chatService } from '../services/chatService';
+import { isSupabaseConfigured } from '../services/supabase';
 
 interface AppContextType {
   userRole: UserRole;
@@ -97,14 +100,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userRole, setUserRole] = useState<UserRole>('TENANT');
   const [activeView, setActiveView] = useState<string>('MAPA');
-  const [properties, setProperties] = useState<Property[]>(() => {
-    const saved = localStorage.getItem('locash_properties');
-    return saved ? JSON.parse(saved) : INITIAL_PROPERTIES;
-  });
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    const saved = localStorage.getItem('locash_favorites');
-    return saved ? JSON.parse(saved) : ['prop-1', 'prop-3'];
-  });
+  // Initial State from memory / cloud
+  const [properties, setProperties] = useState<Property[]>(INITIAL_PROPERTIES);
+  const [favorites, setFavorites] = useState<string[]>(['prop-1', 'prop-3']);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [filterState, setFilterState] = useState<PropertyFilterState>(DEFAULT_FILTERS);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
@@ -120,12 +118,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setMapThemeState(theme);
     localStorage.setItem('locash_map_theme', theme);
   };
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(() => {
-    const saved = localStorage.getItem('locash_user_gps');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [searchTarget, setSearchTarget] = useState<{ lat: number; lng: number; name: string } | null>(null);
+
+  // Load properties and chat from Supabase Cloud on startup + Live WebSockets Sync
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadCloudData = async () => {
+      try {
+        const cloudProps = await propertyService.getAll();
+        if (isMounted && cloudProps && cloudProps.length > 0) {
+          setProperties(cloudProps);
+        }
+
+        const cloudMsgs = await chatService.getMessages();
+        if (isMounted && cloudMsgs && cloudMsgs.length > 0) {
+          setChatMessages(cloudMsgs);
+        }
+      } catch (err) {
+        console.warn('Carregando dados padrão:', err);
+      }
+    };
+
+    loadCloudData();
+
+    // Subscribe to live property updates across all connected clients
+    const unsubProperties = propertyService.subscribeToChanges(async () => {
+      const refreshed = await propertyService.getAll();
+      if (isMounted && refreshed && refreshed.length > 0) {
+        setProperties(refreshed);
+      }
+    });
+
+    // Subscribe to live chat messages
+    const unsubChat = chatService.subscribeToChat((newMsg) => {
+      if (isMounted) {
+        setChatMessages(prev => {
+          if (prev.some(m => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      unsubProperties();
+      unsubChat();
+    };
+  }, []);
 
   // Request & Watch Real-Time User GPS Location immediately on startup
   const requestUserLocation = () => {
@@ -443,6 +485,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tabCategory: category
     };
     setChatMessages(prev => [...prev, newMsg]);
+    chatService.sendMessage(newMsg).catch(err => console.warn('Erro ao salvar chat no Supabase:', err));
   };
 
   const addProperty = (newPropData: Omit<Property, 'id' | 'createdAt' | 'viewsCount' | 'favoritesCount' | 'contactCount'>) => {
@@ -458,6 +501,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Reset search filter so the newly added property is immediately visible on map & list
     setFilterState(prev => ({ ...prev, search: '', propertyType: 'TODOS', status: 'TODOS' }));
     setSelectedProperty(newProp);
+    propertyService.create(newProp).catch(err => console.warn('Erro ao salvar imóvel no Supabase:', err));
   };
 
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
@@ -480,6 +524,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return p;
     }));
+    propertyService.update(id, updatedData).catch(err => console.warn('Erro ao atualizar imóvel no Supabase:', err));
   };
 
   const deleteProperty = (id: string) => {
@@ -487,6 +532,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (selectedProperty?.id === id) {
       setSelectedProperty(null);
     }
+    propertyService.delete(id).catch(err => console.warn('Erro ao deletar imóvel no Supabase:', err));
   };
 
   const updatePropertyStatus = (id: string, newStatus: PropertyStatus) => {
@@ -494,6 +540,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (selectedProperty?.id === id) {
       setSelectedProperty(prev => prev ? { ...prev, status: newStatus } : null);
     }
+    propertyService.update(id, { status: newStatus }).catch(err => console.warn('Erro ao atualizar status no Supabase:', err));
   };
 
   // Landlord stats dynamic calculation
