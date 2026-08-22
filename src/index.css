@@ -72,23 +72,207 @@
   z-index: 1000 !important;
 }
 
-/* 3D Holographic Cylinder Beam */
-.light-beam-cylinder {
+/* 3D Holographic Cylinder Beam & Circular Ground Emitter */
+.hologram-3d-beacon {
   position: absolute;
   bottom: 0;
-  width: 48px;
-  height: 180px;
-  background: linear-gradient(to top, rgba(0, 242, 254, 0.65) 0%, rgba(2, 132, 199, 0.3) 50%, transparent 100%);
-  border-radius: 50% 50% 0 0 / 20% 20% 0 0;
-  pointer-events: none;
-  filter: drop-shadow(0 0 12px rgba(0, 242, 254, 0.8));
-  animation: beamPulse 3s infinite ease-in-out;
+  left: 50%;
   transform: translateX(-50%);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 5;
 }
 
-@keyframes beamPulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.85; }
+/* Base Circular Ground Ring (Perspectiva 3D no Solo com Rotação Contínua) */
+.beam-ground-circle {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 
+    0 0 16px var(--beam-color, #00f2fe),
+    0 0 30px var(--beam-color, #00f2fe),
+    inset 0 0 14px var(--beam-color, #00f2fe);
+  background: radial-gradient(circle, var(--beam-color-trans, rgba(0,242,254,0.45)) 0%, transparent 70%);
+  pointer-events: none;
+  animation: spinGroundCircle 4s linear infinite;
+}
+
+/* Animated Rotating Gradient Edge on the Ground Circle */
+.beam-ground-glow-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px dashed var(--beam-color, #00f2fe);
+  animation: spinGroundReverse 6s linear infinite;
+  opacity: 0.8;
+}
+
+/* Central Ground Point Emitter */
+.beam-ground-dot {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 8px #ffffff, 0 0 20px var(--beam-color, #00f2fe);
+  z-index: 12;
+}
+
+/* Volumetric Vertical Light Beam Pillar */
+.beam-cylinder-body {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 280px;
+  background: linear-gradient(
+    to top,
+    var(--beam-color, #00f2fe) 0%,
+    var(--beam-color-trans, rgba(0, 242, 254, 0.75)) 20%,
+    var(--beam-color-fade, rgba(0, 242, 254, 0.25)) 65%,
+    transparent 100%
+  );
+  clip-path: polygon(12% 0%, 88% 0%, 100% 100%, 0% 100%);
+  filter: drop-shadow(0 0 22px var(--beam-color, #00f2fe));
+  opacity: 0.88;
+  animation: beamFlicker 3.5s infinite ease-in-out;
+}
+
+/* Intense Laser Beam Core */
+.beam-laser-core {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3.5px;
+  transform: translateX(-50%);
+  background: linear-gradient(to top, #ffffff 0%, rgba(255,255,255,0.9) 35%, transparent 100%);
+  box-shadow: 0 0 10px #ffffff, 0 0 20px var(--beam-color, #00f2fe);
+}
+
+/* Swirling 3D Circular Orbital Light Ribbon 1 */
+.beam-orbital-helix {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border-top: 3px solid #ffffff;
+  border-right: 3px solid var(--beam-color, #00f2fe);
+  border-bottom: 2px solid transparent;
+  border-left: 1px solid transparent;
+  filter: drop-shadow(0 0 12px var(--beam-color, #00f2fe)) drop-shadow(0 0 6px #ffffff);
+  animation: orbitSwirl 2.4s linear infinite;
+  pointer-events: none;
+}
+
+/* Swirling 3D Circular Orbital Light Ribbon 2 (Counter-spin and higher) */
+.beam-orbital-helix-2 {
+  position: absolute;
+  bottom: 90px;
+  left: 50%;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border-bottom: 2.5px solid #ffffff;
+  border-left: 2.5px solid var(--beam-color, #00f2fe);
+  border-top: 1px solid transparent;
+  border-right: 1px solid transparent;
+  filter: drop-shadow(0 0 12px var(--beam-color, #00f2fe));
+  animation: orbitSwirlReverse 3.2s linear infinite;
+  pointer-events: none;
+}
+
+/* Ground Circular Expansive Radar Wave */
+.beam-radar-wave {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotateX(68deg);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1.5px solid var(--beam-color, #00f2fe);
+  animation: radarWaveExpand 2.2s cubic-bezier(0.1, 0.4, 0.2, 1) infinite;
+  opacity: 0;
+}
+
+/* KEYFRAMES DE ROTAÇÃO CIRCULAR 3D */
+@keyframes spinGroundCircle {
+  0% {
+    transform: translateX(-50%) rotateX(68deg) rotateZ(0deg);
+  }
+  100% {
+    transform: translateX(-50%) rotateX(68deg) rotateZ(360deg);
+  }
+}
+
+@keyframes spinGroundReverse {
+  0% {
+    transform: rotateZ(360deg);
+  }
+  100% {
+    transform: rotateZ(0deg);
+  }
+}
+
+@keyframes orbitSwirl {
+  0% {
+    transform: translateX(-50%) translateY(0px) rotateX(65deg) rotateZ(0deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateX(-50%) translateY(-70px) rotateX(65deg) rotateZ(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-140px) rotateX(65deg) rotateZ(360deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes orbitSwirlReverse {
+  0% {
+    transform: translateX(-50%) translateY(0px) rotateX(65deg) rotateZ(360deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateX(-50%) translateY(-60px) rotateX(65deg) rotateZ(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(-120px) rotateX(65deg) rotateZ(0deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes radarWaveExpand {
+  0% {
+    transform: translateX(-50%) rotateX(68deg) scale(0.6);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(-50%) rotateX(68deg) scale(1.8);
+    opacity: 0;
+  }
+}
+
+@keyframes beamFlicker {
+  0%, 100% { opacity: 0.85; }
+  25% { opacity: 0.96; }
+  50% { opacity: 0.78; }
+  75% { opacity: 0.92; }
 }
 
 @keyframes pulseGlow {

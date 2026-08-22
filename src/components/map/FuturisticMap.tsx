@@ -366,6 +366,20 @@ export const FuturisticMap: React.FC = () => {
     searchMarkerRef.current = marker;
   }, [searchTarget, mapTheme]);
 
+  // Auto-pitch camera into 3D angle when activating BEAMS_3D mode
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (mapVisualMode === 'BEAMS_3D') {
+      map.easeTo({
+        pitch: 60,
+        duration: 1200,
+        essential: true
+      });
+    }
+  }, [mapVisualMode]);
+
   // Update Property Markers and Beams
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -400,13 +414,31 @@ export const FuturisticMap: React.FC = () => {
       el.className = 'custom-price-marker group';
       el.style.position = 'relative';
 
-      const beamHtml = (mapVisualMode === 'BEAMS_3D' || isSelected) && isFeatured ? `
-        <div class="light-beam-cylinder" style="
-          left: 50%;
+      const showBeam = (mapVisualMode === 'BEAMS_3D' || isSelected) && isFeatured;
+
+      const beamHtml = showBeam ? `
+        <div class="hologram-3d-beacon" style="
+          --beam-color: ${statusColor};
+          --beam-color-trans: ${statusColor}cc;
+          --beam-color-fade: ${statusColor}44;
           bottom: 12px;
-          background: linear-gradient(to top, ${statusColor}cc 0%, ${statusColor}33 50%, transparent 100%);
-          filter: drop-shadow(0 0 16px ${statusColor});
-        "></div>
+        ">
+          <!-- 1. Base Circular Ground Ring com Rotação 3D Contínua -->
+          <div class="beam-ground-circle">
+            <div class="beam-ground-glow-ring"></div>
+          </div>
+          <div class="beam-radar-wave"></div>
+          <div class="beam-ground-dot"></div>
+
+          <!-- 2. Pilar Cilíndrico Volumétrico -->
+          <div class="beam-cylinder-body">
+            <div class="beam-laser-core"></div>
+          </div>
+
+          <!-- 3. Fitas de Luz em Movimento Circular Orbital 3D -->
+          <div class="beam-orbital-helix"></div>
+          <div class="beam-orbital-helix-2"></div>
+        </div>
       ` : '';
 
       const heatHtml = mapVisualMode === 'HEATMAP' ? `
