@@ -13,7 +13,10 @@ import {
   AlertCircle,
   Phone,
   MapPin,
-  Sparkles
+  Sparkles,
+  Send,
+  MailCheck,
+  ExternalLink
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
@@ -124,6 +127,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { userRole, setUserRole } = useApp();
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
+  const [emailConfirmationPending, setEmailConfirmationPending] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
@@ -312,11 +316,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           }, 900);
           return;
         } else {
-          setSuccessMessage('Conta criada com sucesso! Se a confirmação de e-mail estiver ativa, verifique sua caixa de entrada.');
-          setTimeout(() => {
-            setIsSignUp(false);
-            setSuccessMessage(null);
-          }, 3000);
+          // Open dedicated email confirmation screen!
+          setEmailConfirmationPending(email.trim().toLowerCase());
+          return;
         }
       } else {
         // Dual Login: Detect if loginIdentifier is email or phone number
@@ -412,6 +414,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleResendConfirmation = async () => {
+    if (!emailConfirmationPending) return;
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: emailConfirmationPending
+      });
+      if (error) throw error;
+      setSuccessMessage('Novo link de confirmação enviado para seu e-mail!');
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Erro ao reenviar link de confirmação.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/85 backdrop-blur-2xl animate-fade-in">
       {/* Background Ambient Glows */}
@@ -446,7 +466,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Toggle between Login and Sign Up Tabs */}
-        {!isForgotPassword && (
+        {!isForgotPassword && !emailConfirmationPending && (
           <div className="flex rounded-xl p-1 bg-slate-900/90 border border-slate-800 mb-4">
             <button
               type="button"
@@ -482,22 +502,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         )}
 
         {/* Welcome Title */}
-        <div className="text-center mb-4">
-          <h2 className="text-lg sm:text-xl font-extrabold text-white">
-            {isForgotPassword 
-              ? 'Recuperar Senha'
-              : isSignUp 
-                ? 'Criar Conta no LOCASH' 
-                : 'Acesse sua conta'}
-          </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
-            {isForgotPassword 
-              ? 'Digite seu e-mail para receber as instruções'
-              : isSignUp 
-                ? 'Preencha seus dados para ter acesso exclusivo' 
-                : 'Entre com seu e-mail ou número de telefone'}
-          </p>
-        </div>
+        {!emailConfirmationPending && (
+          <div className="text-center mb-4">
+            <h2 className="text-lg sm:text-xl font-extrabold text-white">
+              {isForgotPassword 
+                ? 'Recuperar Senha'
+                : isSignUp 
+                  ? 'Criar Conta no LOCASH' 
+                  : 'Acesse sua conta'}
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {isForgotPassword 
+                ? 'Digite seu e-mail para receber as instruções'
+                : isSignUp 
+                  ? 'Preencha seus dados para ter acesso exclusivo' 
+                  : 'Entre com seu e-mail ou número de telefone'}
+            </p>
+          </div>
+        )}
 
         {/* Success Notification */}
         {successMessage && (
@@ -515,8 +537,63 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </div>
         )}
 
-        {/* Forgot Password Flow */}
-        {isForgotPassword ? (
+        {/* Dedicated Email Confirmation Pending View */}
+        {emailConfirmationPending ? (
+          <div className="space-y-4 text-center animate-fade-in">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyber-cyan shadow-[0_0_30px_rgba(0,242,254,0.3)]">
+              <MailCheck className="w-8 h-8 animate-pulse" />
+            </div>
+
+            <div>
+              <h3 className="text-lg font-extrabold text-white">Quase pronto! Ative sua conta</h3>
+              <p className="text-xs text-slate-300 mt-1">
+                Enviamos um link de confirmação para:
+              </p>
+              <div className="mt-2 inline-block px-3.5 py-1.5 rounded-xl bg-slate-900 border border-cyan-500/40 text-xs font-mono text-cyan-300 font-bold shadow-inner">
+                {emailConfirmationPending}
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-left space-y-2.5 text-xs text-slate-300">
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyber-cyan font-bold text-[11px] flex items-center justify-center shrink-0">1</span>
+                <span>Abra a caixa de entrada (ou lixeira/spam) do seu e-mail.</span>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyber-cyan font-bold text-[11px] flex items-center justify-center shrink-0">2</span>
+                <span>Clique no link de confirmação do <strong>LOCASH</strong> para validar sua conta.</span>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <span className="w-5 h-5 rounded-full bg-cyan-500/20 text-cyber-cyan font-bold text-[11px] flex items-center justify-center shrink-0">3</span>
+                <span>Volte aqui e faça login com seu <strong>E-mail</strong> ou <strong>Telefone</strong>!</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setLoginIdentifier(emailConfirmationPending);
+                setEmailConfirmationPending(null);
+                setIsSignUp(false);
+                setErrorMessage(null);
+                setSuccessMessage(null);
+              }}
+              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-400 hover:from-blue-500 hover:to-teal-300 text-slate-950 font-extrabold text-sm flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 transition-all cursor-pointer"
+            >
+              <span>Ir para a tela de Login</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleResendConfirmation}
+              className="w-full text-center text-xs text-slate-400 hover:text-cyber-cyan transition-colors underline cursor-pointer disabled:opacity-50"
+            >
+              {loading ? 'Reenviando...' : 'Não recebeu? Reenviar link de ativação'}
+            </button>
+          </div>
+        ) : isForgotPassword ? (
           <form onSubmit={handlePasswordReset} className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1">E-mail Cadastrado</label>
