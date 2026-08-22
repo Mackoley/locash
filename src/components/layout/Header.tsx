@@ -84,12 +84,12 @@ export const Header: React.FC = () => {
         const neighborhoodMatch = p.neighborhood.toLowerCase().includes(queryLower);
         const addressMatch = p.publicAddress.toLowerCase().includes(queryLower);
 
-        if ((titleMatch || neighborhoodMatch || addressMatch) && !seenNames.has(p.neighborhood)) {
-          seenNames.add(p.neighborhood);
+        if ((titleMatch || neighborhoodMatch || addressMatch) && !seenNames.has(p.id)) {
+          seenNames.add(p.id);
           localMatches.push({
             id: `local-${p.id}`,
-            name: `${p.neighborhood}, ${p.city}`,
-            subtext: `${p.title} • R$ ${p.rentPrice.toLocaleString('pt-BR')}/mês`,
+            name: `${p.publicAddress} - ${p.neighborhood}`,
+            subtext: `${p.city} - ${p.state} • ${p.title} • R$ ${p.rentPrice.toLocaleString('pt-BR')}/mês`,
             lat: p.latitude,
             lng: p.longitude,
             isLocalProperty: true
@@ -97,23 +97,50 @@ export const Header: React.FC = () => {
         }
       });
 
-      // 2. Fetch Nominatim Geocoding API suggestions for Brazil
+      // 2. Fetch Nominatim Geocoding API suggestions with full address details
       let apiMatches: AddressSuggestion[] = [];
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=4&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=6&addressdetails=1`,
           { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } }
         );
         if (res.ok) {
           const data = await res.json();
           apiMatches = data.map((item: any) => {
-            const parts = item.display_name.split(',');
-            const mainName = parts[0]?.trim() || item.display_name;
-            const sub = parts.slice(1, 4).join(',').trim();
+            const addr = item.address || {};
+            const road = addr.road || addr.street || addr.pedestrian || addr.footway || addr.avenue || '';
+            const houseNum = addr.house_number ? `, nº ${addr.house_number}` : '';
+            const district = addr.suburb || addr.neighbourhood || addr.city_district || addr.quarter || '';
+            const city = addr.city || addr.town || addr.municipality || addr.village || addr.county || '';
+            const state = addr.state || '';
+            const postcode = addr.postcode ? ` • CEP ${addr.postcode}` : '';
+
+            // Construct Full Main Street & Neighborhood Title
+            let mainTitle = '';
+            if (road) {
+              mainTitle = `${road}${houseNum}${district ? ` - ${district}` : ''}`;
+            } else if (district) {
+              mainTitle = `${district}${city ? `, ${city}` : ''}`;
+            } else if (city) {
+              mainTitle = `${city}${state ? ` - ${state}` : ''}`;
+            } else {
+              mainTitle = item.display_name.split(',').slice(0, 2).join(', ').trim();
+            }
+
+            // Construct Full City, State, CEP & Country Subtitle
+            let subDetail = '';
+            if (city && state) {
+              subDetail = `${city} - ${state}${postcode} • Brasil`;
+            } else if (state) {
+              subDetail = `${state}${postcode} • Brasil`;
+            } else {
+              subDetail = item.display_name.split(',').slice(1, 5).join(', ').trim();
+            }
+
             return {
               id: `geo-${item.place_id}`,
-              name: mainName,
-              subtext: sub || 'Brasil',
+              name: mainTitle,
+              subtext: subDetail,
               lat: parseFloat(item.lat),
               lng: parseFloat(item.lon),
               isLocalProperty: false
@@ -124,7 +151,7 @@ export const Header: React.FC = () => {
         console.warn('Erro na busca de sugestões geográficas:', err);
       }
 
-      const combined = [...localMatches, ...apiMatches].slice(0, 5);
+      const combined = [...localMatches, ...apiMatches].slice(0, 6);
       setSuggestions(combined);
       setShowSuggestions(combined.length > 0);
       setIsSuggesting(false);
