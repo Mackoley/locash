@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Plus, 
   Minus, 
@@ -12,7 +12,7 @@ import {
   Loader2, 
   Sun,
   Moon,
-  Check
+  Globe
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MapTheme } from '../../types';
@@ -49,26 +49,6 @@ export const MapControls: React.FC<MapControlsProps> = ({
   setMapTheme
 }) => {
   const { setIsFilterModalOpen, filteredProperties, setSelectedProperty } = useApp();
-  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
-
-  const themeOptions: { id: MapTheme; name: string; icon: any; iconColor: string; bg: string; desc: string }[] = [
-    {
-      id: 'CYBER_DARK',
-      name: 'Cyberpunk Dark',
-      icon: Moon,
-      iconColor: 'from-cyber-cyan to-blue-600',
-      bg: 'bg-cyan-500/10 border-cyan-500/40 text-cyan-400',
-      desc: 'Fundo escuro profundo, neons ciano e feixes 3D holográficos'
-    },
-    {
-      id: 'CYBER_LIGHT',
-      name: 'Cyberpunk Light',
-      icon: Sun,
-      iconColor: 'from-amber-400 to-cyan-500',
-      bg: 'bg-sky-500/10 border-sky-400/40 text-sky-400',
-      desc: 'Fundo branco limpo com estradas de grafite e neons azuis elétricos'
-    }
-  ];
 
   const isLight = mapTheme === 'CYBER_LIGHT';
 
@@ -101,7 +81,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
           )}
         </div>
 
-        {/* Quick Map Mode Switcher */}
+        {/* Quick Map Visual Layers (Normal, Beams, Heatmap) */}
         <div className="glass-panel p-1 rounded-xl flex items-center gap-1 border-slate-800 bg-slate-950/80">
           <button
             onClick={() => setMapVisualMode('NORMAL')}
@@ -141,25 +121,42 @@ export const MapControls: React.FC<MapControlsProps> = ({
 
       {/* Right Map Navigation Controls */}
       <div className="absolute right-4 top-4 z-20 flex flex-col gap-2">
-        {/* Quick Cyber Dark / Cyber Light Switcher Button */}
-        <div className="relative">
+        {/* Map Theme 3-way Switcher (Dark / Light / Satellite) */}
+        <div className="flex flex-col rounded-2xl glass-panel border border-slate-700/60 overflow-hidden shadow-lg bg-slate-950/85">
           <button
-            onClick={() => {
-              // Direct Toggle or open quick menu
-              setMapTheme(mapTheme === 'CYBER_DARK' ? 'CYBER_LIGHT' : 'CYBER_DARK');
-            }}
-            className={`p-3 rounded-2xl glass-panel transition-all border shadow-lg group ${
-              isLight 
-                ? 'border-amber-400/60 text-amber-300 shadow-neon-amber bg-slate-900/90' 
-                : 'border-cyan-500/60 text-cyber-cyan shadow-neon-cyan'
+            onClick={() => setMapTheme('CYBER_DARK')}
+            className={`p-2.5 flex items-center justify-center transition-all border-b border-slate-800 ${
+              mapTheme === 'CYBER_DARK' 
+                ? 'bg-cyan-500/25 text-cyber-cyan font-bold' 
+                : 'text-slate-400 hover:text-white'
             }`}
-            title={`Alternar Tema: ${isLight ? 'Mudar para Cyber Dark' : 'Mudar para Cyber Light'}`}
+            title="Modo Cyberpunk Dark"
           >
-            {isLight ? (
-              <Sun className="w-4 h-4 text-amber-300 group-hover:rotate-45 transition-transform" />
-            ) : (
-              <Moon className="w-4 h-4 text-cyber-cyan group-hover:-rotate-12 transition-transform" />
-            )}
+            <Moon className="w-4 h-4" />
+          </button>
+          
+          <button
+            onClick={() => setMapTheme('CYBER_LIGHT')}
+            className={`p-2.5 flex items-center justify-center transition-all border-b border-slate-800 ${
+              mapTheme === 'CYBER_LIGHT' 
+                ? 'bg-amber-400/25 text-amber-300 font-bold' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+            title="Modo Cyberpunk Light (Fundo Branco)"
+          >
+            <Sun className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={() => setMapTheme('SATELLITE')}
+            className={`p-2.5 flex items-center justify-center transition-all ${
+              mapTheme === 'SATELLITE' 
+                ? 'bg-emerald-500/25 text-cyber-emerald font-bold shadow-neon-emerald' 
+                : 'text-slate-400 hover:text-white'
+            }`}
+            title="Modo Satélite Real (Fotos em Alta Resolução)"
+          >
+            <Globe className="w-4 h-4" />
           </button>
         </div>
 

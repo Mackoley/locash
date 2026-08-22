@@ -28,8 +28,33 @@ export const FuturisticMap: React.FC = () => {
   const hasAutoCenteredRef = useRef<boolean>(false);
   const [is3DView, setIs3DView] = useState(true);
 
-  // Generate Tile Specification for Cyber Dark or Cyber Light
+  // Generate Tile Specification for Cyber Dark, Cyber Light, or Real Satellite
   const getStyleSpec = (theme: MapTheme): maplibregl.StyleSpecification => {
+    if (theme === 'SATELLITE') {
+      return {
+        version: 8,
+        sources: {
+          'satellite-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+            ],
+            tileSize: 256,
+            attribution: '&copy; Esri &copy; Maxar &copy; Earthstar Geographics'
+          }
+        },
+        layers: [
+          {
+            id: 'satellite-layer',
+            type: 'raster',
+            source: 'satellite-tiles',
+            minzoom: 0,
+            maxzoom: 20
+          }
+        ]
+      };
+    }
+
     const isLight = theme === 'CYBER_LIGHT';
     const tileType = isLight ? 'light_all' : 'dark_all';
 
@@ -145,7 +170,7 @@ export const FuturisticMap: React.FC = () => {
     };
   }, []);
 
-  // Dynamically update map style when switching between Cyber Dark and Cyber Light
+  // Dynamically update map style when switching theme
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -155,18 +180,28 @@ export const FuturisticMap: React.FC = () => {
 
   // Theme Accent Palette
   const isLight = mapTheme === 'CYBER_LIGHT';
+  const isSat = mapTheme === 'SATELLITE';
+
   const currentAccent = isLight ? {
-    primary: '#0284c7', // Electric Blue
-    secondary: '#7c3aed', // Neon Purple
-    available: '#059669', // Emerald
+    primary: '#0284c7',
+    secondary: '#7c3aed',
+    available: '#059669',
     availableBg: 'rgba(255, 255, 255, 0.96)',
     textColor: '#0f172a',
     beam: 'rgba(2, 132, 199, 0.85)',
     radarColor: '#0284c7'
+  } : isSat ? {
+    primary: '#00f2fe',
+    secondary: '#f59e0b',
+    available: '#00f0aa',
+    availableBg: 'rgba(5, 10, 25, 0.94)',
+    textColor: '#ffffff',
+    beam: 'rgba(0, 242, 254, 0.95)',
+    radarColor: '#00f2fe'
   } : {
-    primary: '#00f2fe', // Cyber Cyan
-    secondary: '#3b82f6', // Electric Blue
-    available: '#00f0aa', // Neon Emerald
+    primary: '#00f2fe',
+    secondary: '#3b82f6',
+    available: '#00f0aa',
     availableBg: 'rgba(13, 21, 39, 0.94)',
     textColor: '#ffffff',
     beam: 'rgba(0, 242, 254, 0.9)',
@@ -198,8 +233,8 @@ export const FuturisticMap: React.FC = () => {
         userEl.className = 'relative flex items-center justify-center';
         userEl.innerHTML = `
           <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-            <div style="position: absolute; inset: 0; border-radius: 50%; background: ${currentAccent.radarColor}33; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-            <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: ${currentAccent.radarColor}55; border: 1.5px solid ${currentAccent.radarColor}; box-shadow: 0 0 15px ${currentAccent.radarColor};"></div>
+            <div style="position: absolute; inset: 0; border-radius: 50%; background: ${currentAccent.radarColor}44; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+            <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: ${currentAccent.radarColor}66; border: 2px solid ${currentAccent.radarColor}; box-shadow: 0 0 15px ${currentAccent.radarColor};"></div>
             <div style="position: relative; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 8px #ffffff;"></div>
           </div>
         `;
@@ -342,8 +377,8 @@ export const FuturisticMap: React.FC = () => {
           border-radius: 9999px;
           backdrop-filter: blur(14px);
           box-shadow: ${isSelected 
-            ? `0 0 25px ${currentAccent.primary}ee, 0 4px 15px rgba(0,0,0,0.25)` 
-            : isLight ? '0 4px 14px rgba(0,0,0,0.12), 0 0 10px rgba(2,132,199,0.15)' : '0 4px 14px rgba(0,0,0,0.6)'};
+            ? `0 0 25px ${currentAccent.primary}ee, 0 4px 15px rgba(0,0,0,0.4)` 
+            : isLight ? '0 4px 14px rgba(0,0,0,0.12), 0 0 10px rgba(2,132,199,0.15)' : '0 4px 14px rgba(0,0,0,0.7)'};
           transition: all 0.2s ease;
           transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
           cursor: pointer;
@@ -455,7 +490,7 @@ export const FuturisticMap: React.FC = () => {
   const themeBgClass = isLight ? 'bg-[#f1f5f9]' : 'bg-[#080d1a]';
 
   return (
-    <div className={`relative w-full h-full flex-1 overflow-hidden transition-all duration-700 ${themeBgClass} ${isLight ? 'map-theme-cyber-light' : 'map-theme-cyber-dark'}`}>
+    <div className={`relative w-full h-full flex-1 overflow-hidden transition-all duration-700 ${themeBgClass} ${isLight ? 'map-theme-cyber-light' : isSat ? 'map-theme-satellite' : 'map-theme-cyber-dark'}`}>
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
