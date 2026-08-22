@@ -15,7 +15,7 @@ import {
 } from '../types';
 import { propertyService } from '../services/propertyService';
 import { chatService } from '../services/chatService';
-import { isSupabaseConfigured } from '../services/supabase';
+import { supabase, isSupabaseConfigured } from '../services/supabase';
 
 interface AppContextType {
   userRole: UserRole;
@@ -37,6 +37,14 @@ interface AppContextType {
   setIsWizardModalOpen: (open: boolean) => void;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
+  currentUser: {
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl?: string;
+    role: UserRole;
+  } | null;
+  logout: () => Promise<void>;
   
   // Map Visual Modes & Geolocation & Theme
   mapVisualMode: 'NORMAL' | 'HEATMAP' | 'BEAMS_3D';
@@ -136,6 +144,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [searchTarget, setSearchTarget] = useState<{ lat: number; lng: number; name: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl?: string;
+    role: UserRole;
+  } | null>(null);
+
+  // Sync Supabase Auth State (Google OAuth, Email sessions, Profiles)
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const userMeta = session.user.user_metadata || {};
+        const role = (userMeta.role as UserRole) || userRole;
+        setCurrentUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          name: userMeta.full_name || userMeta.name || session.user.email?.split('@')[0] || 'Usuário',
+          avatarUrl: userMeta.avatar_url || userMeta.picture,
+          role
+        });
+        setUserRole(role);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        const userMeta = session.user.user_metadata || {};
+        const role = (userMeta.role as UserRole) || userRole;
+        const name = userMeta.full_name || userMeta.name || session.user.email?.split('@')[0] || 'Usuário';
+        const avatarUrl = userMeta.avatar_url || userMeta.picture;
+
+        setCurrentUser({
+          id: session.user.id,
+          email: session.user.email || '',
+          name,
+          avatarUrl,
+          role
+        });
+        setUserRole(role);
+
+        // Sync with public.profiles table
+        try {
+          await supabase.from('profiles').upsert({
+            id: session.user.id,
+            email: session.user.email,
+            full_name: name,
+            avatar_url: avatarUrl,
+            role
+          });
+        } catch (err) {
+          console.warn('Sincronização de perfil:', err);
+        }
+      } else {
+        setCurrentUser(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {}
+    setCurrentUser(null);
+    setUserRole('TENANT');
+    setActiveView('MAPA');
+  };
 
   // Load properties and chat from Supabase Cloud on startup + Live WebSockets Sync
   useEffect(() => {
@@ -592,6 +671,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsWizardModalOpen,
         isAuthModalOpen,
         setIsAuthModalOpen,
+        currentUser,
+        logout,
         mapVisualMode,
         setMapVisualMode,
         mapTheme,

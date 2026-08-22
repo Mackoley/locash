@@ -62,6 +62,8 @@ export const Header: React.FC = () => {
     searchAddress,
     setSearchTarget,
     setIsAuthModalOpen,
+    currentUser,
+    logout,
     userLocation
   } = useApp();
 
@@ -358,27 +360,35 @@ export const Header: React.FC = () => {
             </button>
           )}
 
-          {/* Active User Role Badge & Auth Button */}
+          {/* Active User Profile Badge & Auth Trigger */}
           <button
             onClick={() => setIsAuthModalOpen(true)}
-            className={`p-1.5 sm:px-3 sm:py-1.5 rounded-xl border transition-all flex items-center gap-2 shadow-sm shrink-0 group ${
+            className={`p-1 sm:px-2.5 sm:py-1 rounded-xl border transition-all flex items-center gap-2 shadow-sm shrink-0 group ${
               userRole === 'LANDLORD'
-                ? 'bg-purple-950/40 hover:bg-purple-900/60 border-purple-500/40 text-purple-300'
-                : 'bg-cyan-950/40 hover:bg-cyan-900/60 border-cyan-500/40 text-cyan-300'
+                ? 'bg-purple-950/50 hover:bg-purple-900/70 border-purple-500/40 text-purple-200'
+                : 'bg-cyan-950/50 hover:bg-cyan-900/70 border-cyan-500/40 text-cyan-200'
             }`}
-            title="Conta & Autenticação (Clique para trocar ou entrar)"
+            title="Sua Conta & Sessão (Clique para gerenciar ou trocar)"
           >
-            <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${
-              userRole === 'LANDLORD' ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'
-            }`}>
-              {userRole === 'LANDLORD' ? <Building className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-[11px] font-bold font-sans leading-tight">
-                {userRole === 'LANDLORD' ? 'Locador (Admin)' : 'Inquilino'}
+            {currentUser?.avatarUrl ? (
+              <img 
+                src={currentUser.avatarUrl} 
+                alt={currentUser.name} 
+                className="w-6 h-6 rounded-full object-cover border border-cyan-400/80 shadow-sm"
+              />
+            ) : (
+              <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                userRole === 'LANDLORD' ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'
+              }`}>
+                {userRole === 'LANDLORD' ? <Building className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+              </div>
+            )}
+            <div className="flex flex-col text-left max-w-[110px] sm:max-w-[140px]">
+              <span className="text-[11px] font-bold font-sans leading-tight truncate">
+                {currentUser?.name || (userRole === 'LANDLORD' ? 'Locador (Admin)' : 'Inquilino')}
               </span>
-              <span className="text-[9px] text-slate-400 font-mono leading-none">
-                Trocar Conta
+              <span className="text-[9px] text-slate-400 font-mono leading-none truncate">
+                {userRole === 'LANDLORD' ? '🏢 Locador' : '🏠 Inquilino'}
               </span>
             </div>
           </button>
