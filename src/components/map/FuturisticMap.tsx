@@ -133,51 +133,30 @@ export const FuturisticMap: React.FC = () => {
       };
     }
 
-    // CYBER_LIGHT (Definitive Architectural Slate-Gray Map: Soft Gray Terrain, Crisp Roads & Jet-Black Typography)
+    // CYBER_LIGHT (Google Maps Roadmap HD: Crisp White Streets, Blue/Steel Highways, Clean Gray Background & Rich Points of Interest)
     return {
       version: 8,
       sources: {
-        'esri-gray-base': {
+        'google-roadmap-tiles': {
           type: 'raster',
           tiles: [
-            'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'
+            'https://mt0.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}',
+            'https://mt1.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}',
+            'https://mt2.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}',
+            'https://mt3.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}'
           ],
           tileSize: 256,
-          maxzoom: 17,
-          attribution: '&copy; Esri &copy; OpenStreetMap'
-        },
-        'esri-gray-labels': {
-          type: 'raster',
-          tiles: [
-            'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
-          ],
-          tileSize: 256,
-          maxzoom: 17
+          maxzoom: 21,
+          attribution: '&copy; Google Maps'
         }
       },
       layers: [
         {
-          id: 'esri-gray-base-layer',
+          id: 'google-roadmap-layer',
           type: 'raster',
-          source: 'esri-gray-base',
+          source: 'google-roadmap-tiles',
           minzoom: 0,
-          maxzoom: 22,
-          paint: {
-            'raster-contrast': 0.35,
-            'raster-brightness-max': 0.88,
-            'raster-saturation': -0.15
-          }
-        },
-        {
-          id: 'esri-gray-labels-layer',
-          type: 'raster',
-          source: 'esri-gray-labels',
-          minzoom: 0,
-          maxzoom: 22,
-          paint: {
-            'raster-contrast': 0.45,
-            'raster-brightness-min': 0.0
-          }
+          maxzoom: 22
         }
       ]
     };
