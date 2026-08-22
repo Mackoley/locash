@@ -349,26 +349,6 @@ export const Header: React.FC = () => {
             </button>
           )}
 
-          {/* Favorites Shortcut */}
-          {userRole === 'TENANT' && (
-            <button
-              onClick={() => setActiveView('FAVORITOS')}
-              className={`p-1.5 sm:p-2 rounded-xl border transition-all relative shrink-0 ${
-                activeView === 'FAVORITOS' 
-                  ? 'bg-red-500/20 text-red-400 border-red-500/40 shadow-sm' 
-                  : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-red-400'
-              }`}
-              title="Meus Favoritos"
-            >
-              <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill={favorites.length > 0 ? "currentColor" : "none"} />
-              {favorites.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[8px] font-extrabold flex items-center justify-center">
-                  {favorites.length}
-                </span>
-              )}
-            </button>
-          )}
-
           {/* Auth Button (when logged out) or User Profile Dropdown (when logged in) */}
           {!currentUser ? (
             <button
