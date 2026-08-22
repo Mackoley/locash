@@ -512,19 +512,7 @@ export const FuturisticMap: React.FC = () => {
   const themeBgClass = isLight ? 'bg-[#f1f5f9]' : 'bg-[#080d1a]';
 
   return (
-    <div className={`relative w-full h-full flex-1 overflow-hidden transition-all duration-700 ${themeBgClass} ${isLight ? 'map-theme-cyber-light' : isSat ? 'map-theme-satellite' : 'map-theme-cyber-dark'}`}>
-      {/* Dynamic Map Shaders */}
-      <style>{`
-        .map-theme-cyber-light .maplibregl-canvas {
-          filter: grayscale(85%) contrast(1.2) brightness(1.0);
-          transition: filter 0.5s ease;
-        }
-        .map-theme-cyber-dark .maplibregl-canvas {
-          filter: brightness(0.95) contrast(1.15) saturate(1.2);
-          transition: filter 0.5s ease;
-        }
-      `}</style>
-
+    <div className={`relative w-full h-full flex-1 overflow-hidden transition-all duration-700 ${themeBgClass}`}>
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
