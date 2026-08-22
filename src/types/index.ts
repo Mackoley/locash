@@ -1,6 +1,6 @@
 export type UserRole = 'TENANT' | 'LANDLORD' | 'ADMIN';
 
-export type MapTheme = 'CYBER_DARK' | 'MIDNIGHT_BLUE' | 'MATRIX_EMERALD' | 'OLED_MONOCHROME';
+export type MapTheme = 'CYBER_DARK' | 'CYBER_LIGHT';
 
 export type PropertyType = 
   | 'CASA' 

@@ -28,31 +28,36 @@ export const FuturisticMap: React.FC = () => {
   const hasAutoCenteredRef = useRef<boolean>(false);
   const [is3DView, setIs3DView] = useState(true);
 
-  // Reliable Cyber Dark Style Specification with High-Res CartoDB Tiles
-  const darkStyleSpec: maplibregl.StyleSpecification = {
-    version: 8,
-    sources: {
-      'carto-dark-tiles': {
-        type: 'raster',
-        tiles: [
-          'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-          'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-          'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-          'https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
-        ],
-        tileSize: 256,
-        attribution: '&copy; OpenStreetMap &copy; CARTO'
-      }
-    },
-    layers: [
-      {
-        id: 'carto-dark-layer',
-        type: 'raster',
-        source: 'carto-dark-tiles',
-        minzoom: 0,
-        maxzoom: 20
-      }
-    ]
+  // Generate Tile Specification for Cyber Dark or Cyber Light
+  const getStyleSpec = (theme: MapTheme): maplibregl.StyleSpecification => {
+    const isLight = theme === 'CYBER_LIGHT';
+    const tileType = isLight ? 'light_all' : 'dark_all';
+
+    return {
+      version: 8,
+      sources: {
+        'carto-tiles': {
+          type: 'raster',
+          tiles: [
+            `https://a.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`,
+            `https://b.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`,
+            `https://c.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`,
+            `https://d.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`
+          ],
+          tileSize: 256,
+          attribution: '&copy; OpenStreetMap &copy; CARTO'
+        }
+      },
+      layers: [
+        {
+          id: 'carto-layer',
+          type: 'raster',
+          source: 'carto-tiles',
+          minzoom: 0,
+          maxzoom: 20
+        }
+      ]
+    };
   };
 
   // Initialize MapLibre Map with Middle-Click Scroll Drag Rotation
@@ -66,7 +71,7 @@ export const FuturisticMap: React.FC = () => {
 
     const map = new maplibregl.Map({
       container,
-      style: darkStyleSpec,
+      style: getStyleSpec(mapTheme),
       center: initialCenter,
       zoom: userLocation ? 15.5 : 13.8,
       pitch: 52, // 3D Camera Perspective
@@ -140,22 +145,33 @@ export const FuturisticMap: React.FC = () => {
     };
   }, []);
 
-  // Theme Accent Colors
-  const getThemeAccent = (theme: MapTheme) => {
-    switch (theme) {
-      case 'MIDNIGHT_BLUE':
-        return { primary: '#38bdf8', secondary: '#818cf8', available: '#38bdf8', beam: 'rgba(56, 189, 248, 0.9)' };
-      case 'MATRIX_EMERALD':
-        return { primary: '#10b981', secondary: '#34d399', available: '#10b981', beam: 'rgba(16, 185, 129, 0.9)' };
-      case 'OLED_MONOCHROME':
-        return { primary: '#ffffff', secondary: '#94a3b8', available: '#ffffff', beam: 'rgba(255, 255, 255, 0.9)' };
-      case 'CYBER_DARK':
-      default:
-        return { primary: '#00f2fe', secondary: '#3b82f6', available: '#00f0aa', beam: 'rgba(0, 242, 254, 0.9)' };
-    }
-  };
+  // Dynamically update map style when switching between Cyber Dark and Cyber Light
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
 
-  const currentAccent = getThemeAccent(mapTheme);
+    map.setStyle(getStyleSpec(mapTheme));
+  }, [mapTheme]);
+
+  // Theme Accent Palette
+  const isLight = mapTheme === 'CYBER_LIGHT';
+  const currentAccent = isLight ? {
+    primary: '#0284c7', // Electric Blue
+    secondary: '#7c3aed', // Neon Purple
+    available: '#059669', // Emerald
+    availableBg: 'rgba(255, 255, 255, 0.96)',
+    textColor: '#0f172a',
+    beam: 'rgba(2, 132, 199, 0.85)',
+    radarColor: '#0284c7'
+  } : {
+    primary: '#00f2fe', // Cyber Cyan
+    secondary: '#3b82f6', // Electric Blue
+    available: '#00f0aa', // Neon Emerald
+    availableBg: 'rgba(13, 21, 39, 0.94)',
+    textColor: '#ffffff',
+    beam: 'rgba(0, 242, 254, 0.9)',
+    radarColor: '#00f2fe'
+  };
 
   // Real-Time User GPS Location Beacon & Auto-Center on Startup
   useEffect(() => {
@@ -182,8 +198,8 @@ export const FuturisticMap: React.FC = () => {
         userEl.className = 'relative flex items-center justify-center';
         userEl.innerHTML = `
           <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-            <div style="position: absolute; inset: 0; border-radius: 50%; background: ${currentAccent.primary}33; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-            <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: ${currentAccent.primary}55; border: 1.5px solid ${currentAccent.primary}; box-shadow: 0 0 15px ${currentAccent.primary};"></div>
+            <div style="position: absolute; inset: 0; border-radius: 50%; background: ${currentAccent.radarColor}33; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+            <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: ${currentAccent.radarColor}55; border: 1.5px solid ${currentAccent.radarColor}; box-shadow: 0 0 15px ${currentAccent.radarColor};"></div>
             <div style="position: relative; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 8px #ffffff;"></div>
           </div>
         `;
@@ -219,14 +235,14 @@ export const FuturisticMap: React.FC = () => {
     searchEl.className = 'relative flex flex-col items-center';
     searchEl.innerHTML = `
       <div style="
-        background: rgba(13, 21, 39, 0.95);
+        background: ${isLight ? 'rgba(255, 255, 255, 0.96)' : 'rgba(13, 21, 39, 0.95)'};
         border: 1.5px solid ${currentAccent.primary};
-        color: #ffffff;
+        color: ${isLight ? '#0f172a' : '#ffffff'};
         padding: 4px 10px;
         border-radius: 12px;
         font-family: 'JetBrains Mono', monospace;
         font-size: 11px;
-        font-weight: 700;
+        font-weight: 800;
         box-shadow: 0 0 20px ${currentAccent.primary}cc;
         white-space: nowrap;
         max-width: 200px;
@@ -269,17 +285,18 @@ export const FuturisticMap: React.FC = () => {
 
       let statusColor = currentAccent.available;
       let statusBorder = `${currentAccent.available}88`;
-      let statusBg = 'rgba(13, 21, 39, 0.94)';
+      let statusBg = currentAccent.availableBg;
+      let textColor = currentAccent.textColor;
 
       if (prop.status === 'RESERVADO') {
         statusColor = '#f59e0b';
-        statusBorder = 'rgba(245, 158, 11, 0.6)';
+        statusBorder = 'rgba(245, 158, 11, 0.7)';
       } else if (prop.status === 'EM NEGOCIAÇÃO') {
-        statusColor = '#a855f7';
-        statusBorder = 'rgba(168, 85, 247, 0.6)';
+        statusColor = isLight ? '#7c3aed' : '#a855f7';
+        statusBorder = isLight ? 'rgba(124, 58, 237, 0.7)' : 'rgba(168, 85, 247, 0.7)';
       } else if (prop.status === 'ALUGADO') {
         statusColor = '#ef4444';
-        statusBorder = 'rgba(239, 68, 68, 0.6)';
+        statusBorder = 'rgba(239, 68, 68, 0.7)';
       }
 
       const formattedPrice = `R$ ${prop.rentPrice.toLocaleString('pt-BR')}`;
@@ -292,7 +309,7 @@ export const FuturisticMap: React.FC = () => {
         <div class="light-beam-cylinder" style="
           left: 50%;
           bottom: 12px;
-          background: linear-gradient(to top, ${statusColor}99 0%, ${statusColor}33 50%, transparent 100%);
+          background: linear-gradient(to top, ${statusColor}cc 0%, ${statusColor}33 50%, transparent 100%);
           filter: drop-shadow(0 0 16px ${statusColor});
         "></div>
       ` : '';
@@ -324,7 +341,9 @@ export const FuturisticMap: React.FC = () => {
           border: 1.5px solid ${isSelected ? currentAccent.primary : statusBorder};
           border-radius: 9999px;
           backdrop-filter: blur(14px);
-          box-shadow: ${isSelected ? `0 0 25px ${currentAccent.primary}ee, 0 4px 15px rgba(0,0,0,0.8)` : '0 4px 14px rgba(0,0,0,0.6)'};
+          box-shadow: ${isSelected 
+            ? `0 0 25px ${currentAccent.primary}ee, 0 4px 15px rgba(0,0,0,0.25)` 
+            : isLight ? '0 4px 14px rgba(0,0,0,0.12), 0 0 10px rgba(2,132,199,0.15)' : '0 4px 14px rgba(0,0,0,0.6)'};
           transition: all 0.2s ease;
           transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
           cursor: pointer;
@@ -341,7 +360,7 @@ export const FuturisticMap: React.FC = () => {
             font-family: 'JetBrains Mono', monospace;
             font-weight: 800;
             font-size: 11px;
-            color: #ffffff;
+            color: ${textColor};
             letter-spacing: -0.02em;
           ">${formattedPrice}</span>
         </div>
@@ -433,43 +452,15 @@ export const FuturisticMap: React.FC = () => {
     });
   };
 
-  // Dynamic Theme Background Overlay Class
-  const themeBgMap: Record<MapTheme, string> = {
-    CYBER_DARK: 'bg-[#080d1a]',
-    MIDNIGHT_BLUE: 'bg-[#050c24] saturate-150',
-    MATRIX_EMERALD: 'bg-[#02130b] hue-rotate-[90deg]',
-    OLED_MONOCHROME: 'bg-[#000000] grayscale'
-  };
-
-  const themeBgClass = themeBgMap[mapTheme] || 'bg-[#080d1a]';
+  const themeBgClass = isLight ? 'bg-[#f1f5f9]' : 'bg-[#080d1a]';
 
   return (
-    <div className={`relative w-full h-full flex-1 overflow-hidden transition-all duration-700 ${themeBgClass} map-theme-${mapTheme}`}>
-      {/* Dynamic Map Tiles Shader CSS */}
-      <style>{`
-        .map-theme-CYBER_DARK .maplibregl-canvas {
-          filter: brightness(0.95) contrast(1.15) saturate(1.2);
-          transition: filter 0.5s ease;
-        }
-        .map-theme-MIDNIGHT_BLUE .maplibregl-canvas {
-          filter: hue-rotate(210deg) saturate(2.8) brightness(0.85) contrast(1.4);
-          transition: filter 0.5s ease;
-        }
-        .map-theme-MATRIX_EMERALD .maplibregl-canvas {
-          filter: hue-rotate(95deg) saturate(3.5) brightness(0.9) contrast(1.45);
-          transition: filter 0.5s ease;
-        }
-        .map-theme-OLED_MONOCHROME .maplibregl-canvas {
-          filter: grayscale(100%) brightness(0.75) contrast(2.2);
-          transition: filter 0.5s ease;
-        }
-      `}</style>
-
+    <div className={`relative w-full h-full flex-1 overflow-hidden transition-all duration-700 ${themeBgClass} ${isLight ? 'map-theme-cyber-light' : 'map-theme-cyber-dark'}`}>
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
       {/* Futuristic HUD Grid overlay */}
-      <div className="absolute inset-0 pointer-events-none hud-grid-bg opacity-15 z-10" />
+      <div className={`absolute inset-0 pointer-events-none hud-grid-bg ${isLight ? 'opacity-5' : 'opacity-15'} z-10`} />
 
       {/* Floating HUD Controls */}
       <MapControls

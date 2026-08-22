@@ -10,7 +10,8 @@ import {
   Box, 
   RotateCw, 
   Loader2, 
-  Palette,
+  Sun,
+  Moon,
   Check
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -50,42 +51,32 @@ export const MapControls: React.FC<MapControlsProps> = ({
   const { setIsFilterModalOpen, filteredProperties, setSelectedProperty } = useApp();
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
 
-  const themeOptions: { id: MapTheme; name: string; iconColor: string; bg: string; desc: string }[] = [
+  const themeOptions: { id: MapTheme; name: string; icon: any; iconColor: string; bg: string; desc: string }[] = [
     {
       id: 'CYBER_DARK',
       name: 'Cyberpunk Dark',
+      icon: Moon,
       iconColor: 'from-cyber-cyan to-blue-600',
-      bg: 'bg-cyan-500/10 border-cyan-500/30',
-      desc: 'Preto profundo com neons ciano e esmeralda'
+      bg: 'bg-cyan-500/10 border-cyan-500/40 text-cyan-400',
+      desc: 'Fundo escuro profundo, neons ciano e feixes 3D holográficos'
     },
     {
-      id: 'MIDNIGHT_BLUE',
-      name: 'Midnight Blue',
-      iconColor: 'from-blue-500 to-indigo-600',
-      bg: 'bg-blue-500/10 border-blue-500/30',
-      desc: 'Azul-marinho estelar com azul elétrico'
-    },
-    {
-      id: 'MATRIX_EMERALD',
-      name: 'Matrix Emerald',
-      iconColor: 'from-emerald-500 to-green-600',
-      bg: 'bg-emerald-500/10 border-emerald-500/30',
-      desc: 'Verde cibernético de alta tecnologia'
-    },
-    {
-      id: 'OLED_MONOCHROME',
-      name: 'OLED Monochrome',
-      iconColor: 'from-slate-200 to-slate-400',
-      bg: 'bg-slate-500/10 border-slate-400/30',
-      desc: 'Preto puro com contraste branco acetinado'
+      id: 'CYBER_LIGHT',
+      name: 'Cyberpunk Light',
+      icon: Sun,
+      iconColor: 'from-amber-400 to-cyan-500',
+      bg: 'bg-sky-500/10 border-sky-400/40 text-sky-400',
+      desc: 'Fundo branco limpo com estradas de grafite e neons azuis elétricos'
     }
   ];
+
+  const isLight = mapTheme === 'CYBER_LIGHT';
 
   return (
     <>
       {/* Top Left HUD Telemetry Badge */}
       <div className="absolute top-4 left-4 z-20 hidden sm:flex flex-col gap-2">
-        <div className="glass-panel py-2 px-3.5 rounded-2xl flex items-center gap-3 border-cyan-500/30">
+        <div className={`glass-panel py-2 px-3.5 rounded-2xl flex items-center gap-3 ${isLight ? 'border-sky-500/40 bg-slate-900/90' : 'border-cyan-500/30'}`}>
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-cyan opacity-75"></span>
@@ -97,7 +88,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
           </div>
           <span className="text-slate-600">|</span>
           <span className="text-xs font-mono text-cyber-cyan">
-            {propertiesCount} IMÓVEIS MAPEADOS
+            {propertiesCount} IMÓVEIS
           </span>
           {hasUserLocation && (
             <>
@@ -111,7 +102,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
         </div>
 
         {/* Quick Map Mode Switcher */}
-        <div className="glass-panel p-1 rounded-xl flex items-center gap-1 border-slate-800">
+        <div className="glass-panel p-1 rounded-xl flex items-center gap-1 border-slate-800 bg-slate-950/80">
           <button
             onClick={() => setMapVisualMode('NORMAL')}
             className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
@@ -150,6 +141,28 @@ export const MapControls: React.FC<MapControlsProps> = ({
 
       {/* Right Map Navigation Controls */}
       <div className="absolute right-4 top-4 z-20 flex flex-col gap-2">
+        {/* Quick Cyber Dark / Cyber Light Switcher Button */}
+        <div className="relative">
+          <button
+            onClick={() => {
+              // Direct Toggle or open quick menu
+              setMapTheme(mapTheme === 'CYBER_DARK' ? 'CYBER_LIGHT' : 'CYBER_DARK');
+            }}
+            className={`p-3 rounded-2xl glass-panel transition-all border shadow-lg group ${
+              isLight 
+                ? 'border-amber-400/60 text-amber-300 shadow-neon-amber bg-slate-900/90' 
+                : 'border-cyan-500/60 text-cyber-cyan shadow-neon-cyan'
+            }`}
+            title={`Alternar Tema: ${isLight ? 'Mudar para Cyber Dark' : 'Mudar para Cyber Light'}`}
+          >
+            {isLight ? (
+              <Sun className="w-4 h-4 text-amber-300 group-hover:rotate-45 transition-transform" />
+            ) : (
+              <Moon className="w-4 h-4 text-cyber-cyan group-hover:-rotate-12 transition-transform" />
+            )}
+          </button>
+        </div>
+
         {/* Toggle 3D Perspective */}
         <button
           onClick={onToggle3D}
@@ -169,69 +182,6 @@ export const MapControls: React.FC<MapControlsProps> = ({
         >
           <RotateCw className="w-4 h-4 group-hover:rotate-45 transition-transform" />
         </button>
-
-        {/* Theme Palette Switcher Button */}
-        <div className="relative">
-          <button
-            onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
-            className={`p-3 rounded-2xl glass-panel transition-all border shadow-lg group ${
-              isThemeMenuOpen 
-                ? 'border-purple-500/60 text-cyber-purple shadow-neon-purple' 
-                : 'border-slate-700/60 text-slate-300 hover:text-cyber-purple'
-            }`}
-            title="Personalizar Cores e Tema do Mapa"
-          >
-            <Palette className="w-4 h-4 group-hover:scale-110 transition-transform" />
-          </button>
-
-          {/* Theme Selector Floating Panel */}
-          {isThemeMenuOpen && (
-            <div className="absolute right-14 top-0 w-64 glass-panel border border-cyan-500/40 p-3 rounded-2xl shadow-2xl space-y-2 z-50 animate-fade-in bg-slate-950/95 backdrop-blur-xl">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-                <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
-                  <Palette className="w-3.5 h-3.5 text-cyber-cyan" />
-                  Paleta de Cores
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono">4 TEMAS</span>
-              </div>
-
-              <div className="space-y-1.5">
-                {themeOptions.map((opt) => {
-                  const isSelected = mapTheme === opt.id;
-                  return (
-                    <button
-                      key={opt.id}
-                      onClick={() => {
-                        setMapTheme(opt.id);
-                        setIsThemeMenuOpen(false);
-                      }}
-                      className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all group ${
-                        isSelected 
-                          ? `${opt.bg} shadow-sm` 
-                          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <div className={`w-4 h-4 rounded-full bg-gradient-to-tr ${opt.iconColor} shrink-0 shadow-sm`} />
-                        <div>
-                          <div className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
-                            {opt.name}
-                          </div>
-                          <div className="text-[9px] text-slate-400 leading-tight">
-                            {opt.desc}
-                          </div>
-                        </div>
-                      </div>
-                      {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-cyber-cyan shrink-0 ml-1" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
 
         <button
           onClick={() => setIsFilterModalOpen(true)}
@@ -282,7 +232,9 @@ export const MapControls: React.FC<MapControlsProps> = ({
           <div
             key={prop.id}
             onClick={() => setSelectedProperty(prop)}
-            className="shrink-0 w-64 glass-panel p-2.5 rounded-xl border border-slate-800 hover:border-cyan-500/50 cursor-pointer transition-all hover:scale-[1.02] flex items-center gap-3 group"
+            className={`shrink-0 w-64 glass-panel p-2.5 rounded-xl border transition-all hover:scale-[1.02] flex items-center gap-3 group cursor-pointer ${
+              isLight ? 'border-slate-300 hover:border-sky-500/70 bg-white/90 text-slate-900 shadow-md' : 'border-slate-800 hover:border-cyan-500/50'
+            }`}
           >
             <img
               src={prop.images[0]}
@@ -290,12 +242,12 @@ export const MapControls: React.FC<MapControlsProps> = ({
               className="w-14 h-14 rounded-lg object-cover border border-slate-700 group-hover:border-cyan-500/50 transition-colors"
             />
             <div className="flex-1 min-w-0">
-              <span className="text-[10px] font-mono text-cyber-cyan uppercase font-bold">
+              <span className={`text-[10px] font-mono uppercase font-bold ${isLight ? 'text-sky-600' : 'text-cyber-cyan'}`}>
                 {prop.neighborhood}
               </span>
-              <h4 className="text-xs font-semibold text-white truncate">{prop.title}</h4>
-              <p className="text-xs font-bold text-cyber-emerald font-mono mt-0.5">
-                R$ {prop.rentPrice.toLocaleString('pt-BR')}<span className="text-[10px] text-slate-400 font-normal">/mês</span>
+              <h4 className={`text-xs font-semibold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{prop.title}</h4>
+              <p className={`text-xs font-bold font-mono mt-0.5 ${isLight ? 'text-emerald-600' : 'text-cyber-emerald'}`}>
+                R$ {prop.rentPrice.toLocaleString('pt-BR')}<span className={`text-[10px] font-normal ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>/mês</span>
               </p>
             </div>
           </div>
