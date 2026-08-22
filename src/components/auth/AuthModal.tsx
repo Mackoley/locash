@@ -79,19 +79,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           <X className="w-4 h-4" />
         </button>
 
-        {/* Brand Header with 3D Logo */}
+        {/* Brand Header with Large 3D Logo & Subtitle */}
         <div className="flex flex-col items-center text-center mb-6">
           <img 
             src="/logo.png" 
-            alt="LOCASH" 
-            className="w-16 h-16 object-contain drop-shadow-[0_0_20px_rgba(0,242,254,0.6)] mb-2 transform hover:scale-105 transition-transform"
+            alt="LOCASH IMOBILIÁRIA" 
+            className="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-[0_0_25px_rgba(0,242,254,0.65)] transform hover:scale-105 transition-transform duration-300"
           />
-          <div className="flex items-center gap-1.5">
-            <span className="font-extrabold text-2xl tracking-widest text-white font-mono">
-              LOCA<span className="text-cyber-cyan">SH</span>
-            </span>
-          </div>
-          <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 mt-0.5">
+          <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-slate-400 mt-2 font-medium">
             IMÓVEIS • LOCAÇÃO • FINANÇAS
           </span>
         </div>
