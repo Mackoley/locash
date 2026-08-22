@@ -133,33 +133,50 @@ export const FuturisticMap: React.FC = () => {
       };
     }
 
-    // CYBER_LIGHT (Vibrant, high-contrast, crystal-clear map with distinct streets, lush green parks, and sharp dark labels)
+    // CYBER_LIGHT (Definitive Architectural Slate-Gray Map: Soft Gray Terrain, Crisp Roads & Jet-Black Typography)
     return {
       version: 8,
       sources: {
-        'carto-voyager-tiles': {
+        'esri-gray-base': {
           type: 'raster',
           tiles: [
-            'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-            'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-            'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-            'https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}'
           ],
           tileSize: 256,
-          maxzoom: 19,
-          attribution: '&copy; OpenStreetMap &copy; CARTO'
+          maxzoom: 17,
+          attribution: '&copy; Esri &copy; OpenStreetMap'
+        },
+        'esri-gray-labels': {
+          type: 'raster',
+          tiles: [
+            'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}'
+          ],
+          tileSize: 256,
+          maxzoom: 17
         }
       },
       layers: [
         {
-          id: 'carto-voyager-layer',
+          id: 'esri-gray-base-layer',
           type: 'raster',
-          source: 'carto-voyager-tiles',
+          source: 'esri-gray-base',
           minzoom: 0,
           maxzoom: 22,
           paint: {
-            'raster-contrast': 0.12,
-            'raster-saturation': 0.08
+            'raster-contrast': 0.35,
+            'raster-brightness-max': 0.88,
+            'raster-saturation': -0.15
+          }
+        },
+        {
+          id: 'esri-gray-labels-layer',
+          type: 'raster',
+          source: 'esri-gray-labels',
+          minzoom: 0,
+          maxzoom: 22,
+          paint: {
+            'raster-contrast': 0.45,
+            'raster-brightness-min': 0.0
           }
         }
       ]
