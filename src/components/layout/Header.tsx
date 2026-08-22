@@ -462,28 +462,30 @@ export const Header: React.FC = () => {
                     <span>Meu Perfil</span>
                   </button>
 
-                  {/* Alternar Papel */}
-                  <button
-                    onClick={() => {
-                      const nextRole = userRole === 'LANDLORD' ? 'TENANT' : 'LANDLORD';
-                      setUserRole(nextRole);
-                      if (nextRole === 'LANDLORD') {
+                  {/* Context Action depending on fixed account role */}
+                  {userRole === 'LANDLORD' ? (
+                    <button
+                      onClick={() => {
                         setActiveView('DASHBOARD_LOCADOR');
-                      } else {
-                        setActiveView('MAPA');
-                      }
-                      setIsProfileDropdownOpen(false);
-                    }}
-                    className="w-full px-3 py-2.5 rounded-xl text-left text-xs font-semibold text-slate-200 hover:text-white hover:bg-slate-800/80 flex items-center justify-between transition-all group cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <ShieldCheck className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
-                      <span>Alternar Papel</span>
-                    </div>
-                    <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
-                      {userRole === 'LANDLORD' ? 'Mudar p/ Inquilino' : 'Mudar p/ Locador'}
-                    </span>
-                  </button>
+                        setIsProfileDropdownOpen(false);
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl text-left text-xs font-semibold text-slate-200 hover:text-white hover:bg-purple-500/15 flex items-center gap-2.5 transition-all group cursor-pointer"
+                    >
+                      <Building className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+                      <span>Painel de Gestão</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setActiveView('CENTRAL_LOCACAO');
+                        setIsProfileDropdownOpen(false);
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl text-left text-xs font-semibold text-slate-200 hover:text-white hover:bg-cyan-500/15 flex items-center gap-2.5 transition-all group cursor-pointer"
+                    >
+                      <Key className="w-4 h-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+                      <span>Minha Locação</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Divider */}

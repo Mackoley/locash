@@ -190,32 +190,37 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </p>
         </div>
 
-        {/* Role Toggle Selector */}
-        <div className="flex rounded-xl p-1 bg-slate-900/90 border border-slate-800 mb-5">
-          <button
-            type="button"
-            onClick={() => setSelectedRole('TENANT')}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              selectedRole === 'TENANT' 
-                ? 'bg-cyan-500/20 text-cyber-cyan border border-cyan-500/40 shadow-sm' 
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Home className="w-3.5 h-3.5" />
-            <span>Inquilino</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedRole('LANDLORD')}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-              selectedRole === 'LANDLORD' 
-                ? 'bg-blue-600/30 text-blue-400 border border-blue-500/40 shadow-sm' 
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5" />
-            <span>Locador</span>
-          </button>
+        {/* Permanent Role Selector */}
+        <div className="mb-5">
+          <label className="block text-[11px] font-mono text-slate-400 mb-1.5 text-center uppercase tracking-wider">
+            Tipo de Acesso da Conta (Fixo)
+          </label>
+          <div className="flex rounded-xl p-1 bg-slate-900/90 border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setSelectedRole('TENANT')}
+              className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                selectedRole === 'TENANT' 
+                  ? 'bg-cyan-500/25 text-cyber-cyan border border-cyan-500/40 shadow-sm' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Home className="w-3.5 h-3.5" />
+              <span>Locatário (Inquilino)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedRole('LANDLORD')}
+              className={`flex-1 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                selectedRole === 'LANDLORD' 
+                  ? 'bg-purple-600/30 text-purple-300 border border-purple-500/40 shadow-sm' 
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span>Locador (Proprietário)</span>
+            </button>
+          </div>
         </div>
 
         {/* Quick Test Accounts for instant access */}
