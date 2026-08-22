@@ -408,6 +408,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       console.error('Erro de autenticação:', err);
       if (err.message?.includes('Email not confirmed')) {
         setErrorMessage('E-mail ainda não confirmado. Verifique a caixa de entrada do seu e-mail para ativar sua conta.');
+      } else if (err.message?.includes('rate limit') || err.message?.includes('Rate limit')) {
+        setErrorMessage('Limite temporário de envios atingido no Supabase. Para resolver, desmarque a opção "Confirm email" no painel do Supabase ou aguarde alguns instantes.');
       } else if (err.message?.includes('Invalid login credentials')) {
         setErrorMessage('E-mail, telefone ou senha incorretos.');
       } else if (err.message?.includes('User already registered')) {
