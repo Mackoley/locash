@@ -498,9 +498,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       createdAt: new Date().toISOString()
     };
     setProperties(prev => [newProp, ...prev]);
-    // Reset search filter so the newly added property is immediately visible on map & list
+    // Reset filter and fly 3D map camera directly to new property
     setFilterState(prev => ({ ...prev, search: '', propertyType: 'TODOS', status: 'TODOS' }));
-    setSelectedProperty(newProp);
+    setSearchTarget({
+      lat: newProp.latitude,
+      lng: newProp.longitude,
+      name: newProp.title
+    });
     propertyService.create(newProp).catch(err => console.warn('Erro ao salvar imóvel no Supabase:', err));
   };
 
