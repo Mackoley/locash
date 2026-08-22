@@ -446,9 +446,6 @@ export const Header: React.FC = () => {
                           {item.subtext}
                         </div>
                       </div>
-                      <span className="text-xs text-slate-500 group-hover:text-cyber-cyan transition-colors shrink-0 font-mono flex items-center gap-1 font-bold">
-                        Ir ➔
-                      </span>
                     </button>
                   );
                 })}
