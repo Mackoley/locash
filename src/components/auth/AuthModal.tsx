@@ -94,8 +94,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         {/* Welcome Title */}
         <div className="text-center mb-5">
           <h2 className="text-xl sm:text-2xl font-extrabold text-white">
-            {isSignUp ? 'Criar sua conta' : 'Bem-vindo ao '}
-            {!isSignUp && <span className="text-cyber-cyan font-mono">LOCASH</span>}
+            {isSignUp ? 'Criar sua conta' : 'Bem-vindo'}
           </h2>
           <p className="text-xs text-slate-400 mt-1">
             {isSignUp ? 'Preencha seus dados para começar' : 'Entre para continuar'}
