@@ -664,11 +664,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           /* Main Real Login/Sign Up Form */
           <>
             <form onSubmit={handleSubmit} className="space-y-3">
-              {/* If Sign Up: Select Role (Permanent) */}
+              {/* If Sign Up: Select Role */}
               {isSignUp && (
                 <div>
-                  <label className="block text-[10px] font-mono text-slate-400 mb-1 text-center uppercase tracking-wider">
-                    Tipo de Conta (Acesso Fixo)
+                  <label className="block text-[11px] font-mono text-slate-400 mb-1.5 text-center uppercase tracking-wider font-medium">
+                    Tipo de Conta
                   </label>
                   <div className="grid grid-cols-2 gap-2 mb-2.5">
                     <button
