@@ -235,7 +235,17 @@ export const FuturisticMap: React.FC = () => {
 
     mapInstanceRef.current = map;
 
+    const handleWindowResize = () => {
+      map.resize();
+      updateZoomScale();
+    };
+
+    window.addEventListener('resize', handleWindowResize);
+    window.addEventListener('orientationchange', handleWindowResize);
+
     return () => {
+      window.removeEventListener('resize', handleWindowResize);
+      window.removeEventListener('orientationchange', handleWindowResize);
       map.off('zoom', updateZoomScale);
       map.off('render', updateZoomScale);
       container.removeEventListener('mousedown', handleMouseDown);

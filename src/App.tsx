@@ -20,7 +20,7 @@ export const AppContent: React.FC = () => {
   const { activeView, isAuthModalOpen, setIsAuthModalOpen } = useApp();
 
   return (
-    <div className="min-h-screen bg-cyber-darkest text-slate-100 flex flex-col overflow-hidden select-none">
+    <div className="h-[100dvh] w-screen max-w-full bg-cyber-darkest text-slate-100 flex flex-col overflow-hidden select-none">
       {/* Top Cockpit Header */}
       <Header />
 
