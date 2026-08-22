@@ -1,0 +1,140 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #080d1a;
+    color: #f1f5f9;
+    font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+    color-scheme: dark;
+  }
+
+  /* Custom Cyber Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(8, 13, 26, 0.9);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e3a66;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00f2fe;
+  }
+}
+
+/* Glassmorphism Panel styles */
+.glass-panel {
+  background: rgba(13, 21, 39, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30, 58, 102, 0.45);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+}
+
+.glass-panel-glow {
+  background: rgba(13, 21, 39, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 242, 254, 0.3);
+  box-shadow: 0 0 25px rgba(0, 242, 254, 0.15), 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+}
+
+.glass-pill {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Futuristic HUD Grid Line */
+.hud-grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(30, 58, 102, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(30, 58, 102, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Custom Marker Styling for Leaflet */
+.custom-price-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -100%);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.custom-price-marker:hover {
+  transform: translate(-50%, -110%) scale(1.1);
+  z-index: 1000 !important;
+}
+
+/* 3D Holographic Cylinder Beam */
+.light-beam-cylinder {
+  position: absolute;
+  bottom: 0;
+  width: 48px;
+  height: 180px;
+  background: linear-gradient(to top, rgba(0, 242, 254, 0.65) 0%, rgba(2, 132, 199, 0.3) 50%, transparent 100%);
+  border-radius: 50% 50% 0 0 / 20% 20% 0 0;
+  pointer-events: none;
+  filter: drop-shadow(0 0 12px rgba(0, 242, 254, 0.8));
+  animation: beamPulse 3s infinite ease-in-out;
+  transform: translateX(-50%);
+}
+
+@keyframes beamPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite ease-in-out;
+}
+
+.animate-float {
+  animation: float 4s infinite ease-in-out;
+}
+
+/* Leaflet Container Dark Invert */
+.leaflet-container {
+  background-color: #050811 !important;
+  font-family: inherit;
+}
+
+.leaflet-tile-pane {
+  filter: brightness(0.7) invert(1) contrast(3) hue-rotate(200deg) saturate(0.35) brightness(0.5);
+}
+
+/* Hide default leaflet attribution styling overflow */
+.leaflet-control-attribution {
+  background: rgba(8, 13, 26, 0.8) !important;
+  color: #64748b !important;
+  font-size: 10px !important;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.leaflet-control-attribution a {
+  color: #00f2fe !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
