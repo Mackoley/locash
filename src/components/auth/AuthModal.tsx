@@ -125,6 +125,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   // Registration fields
   const [firstName, setFirstName] = useState('');
@@ -132,6 +133,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   
   // Dual Login field (E-mail ou Telefone)
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -240,6 +242,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         if (password.length < 6) {
           throw new Error('A senha deve conter no mínimo 6 caracteres.');
+        }
+
+        if (password !== confirmPassword) {
+          throw new Error('As senhas digitadas não coincidem. Por favor, confirme sua senha.');
         }
 
         const fullName = `${firstName.trim()} ${lastName.trim()}`;
@@ -688,6 +694,48 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                   </button>
                 </div>
               </div>
+
+              {/* Confirm Password Input (Sign Up Only) */}
+              {isSignUp && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-slate-300">Confirmar Senha</label>
+                    {confirmPassword && (
+                      <span className={`text-[10px] font-mono font-bold flex items-center gap-1 ${
+                        password === confirmPassword ? 'text-emerald-400' : 'text-red-400'
+                      }`}>
+                        {password === confirmPassword ? '✓ Senhas coincidem' : '✗ Senhas diferentes'}
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative flex items-center">
+                    <Lock className={`absolute left-3.5 w-4 h-4 ${
+                      confirmPassword && password === confirmPassword ? 'text-emerald-400' : 'text-slate-400'
+                    }`} />
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      required
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Repita sua senha"
+                      className={`w-full bg-slate-900/80 border rounded-xl pl-10 pr-10 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors ${
+                        confirmPassword 
+                          ? password === confirmPassword 
+                            ? 'border-emerald-500/60 focus:border-emerald-400' 
+                            : 'border-red-500/60 focus:border-red-400'
+                          : 'border-slate-800 focus:border-cyan-400'
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Main Submit Button */}
               <button
