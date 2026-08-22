@@ -45,9 +45,9 @@ const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: num
 const formatDistance = (distKm?: number): string | null => {
   if (distKm === undefined || isNaN(distKm)) return null;
   if (distKm < 1) {
-    return `${Math.round(distKm * 1000)} m de você`;
+    return `${Math.round(distKm * 1000)}m`;
   }
-  return `${distKm.toFixed(1)} km de você`;
+  return `${distKm.toFixed(1)} km`;
 };
 
 export const Header: React.FC = () => {
