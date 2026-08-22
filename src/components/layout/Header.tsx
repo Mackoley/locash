@@ -10,7 +10,8 @@ import {
   MapPin,
   Building,
   Navigation,
-  X
+  X,
+  Compass
 } from 'lucide-react';
 
 interface AddressSuggestion {
@@ -19,8 +20,32 @@ interface AddressSuggestion {
   subtext: string;
   lat: number;
   lng: number;
+  distanceKm?: number;
   isLocalProperty?: boolean;
 }
+
+// Haversine formula to compute geodesic distance in KM
+const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+const formatDistance = (distKm?: number): string | null => {
+  if (distKm === undefined || isNaN(distKm)) return null;
+  if (distKm < 1) {
+    return `${Math.round(distKm * 1000)} m de você`;
+  }
+  return `${distKm.toFixed(1)} km de você`;
+};
 
 export const Header: React.FC = () => {
   const { 
@@ -36,7 +61,8 @@ export const Header: React.FC = () => {
     properties,
     searchAddress,
     setSearchTarget,
-    setIsAuthModalOpen
+    setIsAuthModalOpen,
+    userLocation
   } = useApp();
 
   const [isSearching, setIsSearching] = useState(false);
@@ -58,7 +84,7 @@ export const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Real-time debounced address autocomplete
+  // Real-time debounced address autocomplete with GPS Proximity Rule
   useEffect(() => {
     const query = filterState.search.trim();
 
@@ -76,7 +102,7 @@ export const Header: React.FC = () => {
       setIsSuggesting(true);
       const queryLower = query.toLowerCase();
 
-      // 1. Match local properties and neighborhoods first
+      // 1. Match local properties and calculate exact distance
       const localMatches: AddressSuggestion[] = [];
       const seenNames = new Set<string>();
 
@@ -87,24 +113,34 @@ export const Header: React.FC = () => {
 
         if ((titleMatch || neighborhoodMatch || addressMatch) && !seenNames.has(p.id)) {
           seenNames.add(p.id);
+          const dist = userLocation 
+            ? calculateDistanceKm(userLocation.lat, userLocation.lng, p.latitude, p.longitude)
+            : undefined;
+
           localMatches.push({
             id: `local-${p.id}`,
             name: `${p.publicAddress} - ${p.neighborhood}`,
             subtext: `${p.city} - ${p.state} • ${p.title} • R$ ${p.rentPrice.toLocaleString('pt-BR')}/mês`,
             lat: p.latitude,
             lng: p.longitude,
+            distanceKm: dist,
             isLocalProperty: true
           });
         }
       });
 
-      // 2. Fetch Nominatim Geocoding API suggestions with full address details
+      // 2. Fetch Nominatim Geocoding API with Proximity Viewbox biasing
       let apiMatches: AddressSuggestion[] = [];
       try {
+        const viewboxParam = userLocation
+          ? `&viewbox=${userLocation.lng - 0.9},${userLocation.lat + 0.9},${userLocation.lng + 0.9},${userLocation.lat - 0.9}&bounded=0`
+          : '';
+
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=6&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=7&addressdetails=1${viewboxParam}`,
           { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } }
         );
+
         if (res.ok) {
           const data = await res.json();
           apiMatches = data.map((item: any) => {
@@ -138,12 +174,19 @@ export const Header: React.FC = () => {
               subDetail = item.display_name.split(',').slice(1, 5).join(', ').trim();
             }
 
+            const itemLat = parseFloat(item.lat);
+            const itemLng = parseFloat(item.lon);
+            const dist = userLocation 
+              ? calculateDistanceKm(userLocation.lat, userLocation.lng, itemLat, itemLng)
+              : undefined;
+
             return {
               id: `geo-${item.place_id}`,
               name: mainTitle,
               subtext: subDetail,
-              lat: parseFloat(item.lat),
-              lng: parseFloat(item.lon),
+              lat: itemLat,
+              lng: itemLng,
+              distanceKm: dist,
               isLocalProperty: false
             };
           });
@@ -152,9 +195,15 @@ export const Header: React.FC = () => {
         console.warn('Erro na busca de sugestões geográficas:', err);
       }
 
-      const combined = [...localMatches, ...apiMatches].slice(0, 6);
-      setSuggestions(combined);
-      setShowSuggestions(combined.length > 0);
+      // Combine and SORT strictly by closest distance to user
+      const combined = [...localMatches, ...apiMatches];
+      if (userLocation) {
+        combined.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
+      }
+
+      const topResults = combined.slice(0, 6);
+      setSuggestions(topResults);
+      setShowSuggestions(topResults.length > 0);
       setIsSuggesting(false);
     }, 280);
 
@@ -163,7 +212,7 @@ export const Header: React.FC = () => {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [filterState.search, properties]);
+  }, [filterState.search, properties, userLocation]);
 
   const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
     setFilterState(prev => ({ ...prev, search: suggestion.name }));
@@ -341,7 +390,7 @@ export const Header: React.FC = () => {
 
               <button
                 type="submit"
-                className="px-3 sm:px-4 py-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs shadow-neon-cyan transition-all transform active:scale-95 shrink-0"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs shadow-neon-cyan transition-all transform active:scale-95 shrink-0"
                 title="Buscar no mapa (ou pressione Enter)"
               >
                 {isSearching || isSuggesting ? (
@@ -356,51 +405,62 @@ export const Header: React.FC = () => {
             </div>
           </form>
 
-          {/* Real-time Full-Width Autocomplete Suggestions Dropdown */}
+          {/* Real-time Full-Width Autocomplete Suggestions Dropdown (Sorted by Proximity) */}
           {showSuggestions && suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1.5 glass-panel border border-cyan-500/40 rounded-2xl bg-slate-950/98 shadow-[0_12px_40px_rgba(0,0,0,0.85)] overflow-hidden z-50 animate-fade-in backdrop-blur-2xl">
               <div className="p-2 flex items-center justify-between border-b border-slate-800/80 px-4 bg-slate-900/50">
                 <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Navigation className="w-3 h-3 text-cyber-cyan" />
-                  Sugestões de Endereço em Tempo Real
+                  <Compass className="w-3.5 h-3.5 text-cyber-cyan" />
+                  Sugestões por Proximidade GPS
                 </span>
                 <span className="text-[9px] font-mono text-cyber-cyan font-bold">
-                  {suggestions.length} RESULTADOS
+                  {suggestions.length} MAIS PRÓXIMOS
                 </span>
               </div>
 
               <div className="divide-y divide-slate-800/60 max-h-72 overflow-y-auto no-scrollbar">
-                {suggestions.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => handleSelectSuggestion(item)}
-                    className="w-full px-4 py-3 text-left flex items-center gap-3.5 hover:bg-cyan-500/10 transition-colors group cursor-pointer"
-                  >
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
-                      item.isLocalProperty 
-                        ? 'bg-emerald-500/15 border-emerald-500/30 text-cyber-emerald shadow-sm' 
-                        : 'bg-cyan-500/15 border-cyan-500/30 text-cyber-cyan shadow-sm'
-                    }`}>
-                      {item.isLocalProperty ? (
-                        <Building className="w-4 h-4" />
-                      ) : (
-                        <MapPin className="w-4 h-4" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs sm:text-sm font-bold text-white group-hover:text-cyber-cyan transition-colors truncate">
-                        {item.name}
+                {suggestions.map((item) => {
+                  const distanceLabel = formatDistance(item.distanceKm);
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSelectSuggestion(item)}
+                      className="w-full px-4 py-3 text-left flex items-center gap-3.5 hover:bg-cyan-500/10 transition-colors group cursor-pointer"
+                    >
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
+                        item.isLocalProperty 
+                          ? 'bg-emerald-500/15 border-emerald-500/30 text-cyber-emerald shadow-sm' 
+                          : 'bg-cyan-500/15 border-cyan-500/30 text-cyber-cyan shadow-sm'
+                      }`}>
+                        {item.isLocalProperty ? (
+                          <Building className="w-4 h-4" />
+                        ) : (
+                          <MapPin className="w-4 h-4" />
+                        )}
                       </div>
-                      <div className="text-[11px] text-slate-400 truncate mt-0.5 font-sans">
-                        {item.subtext}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-bold text-white group-hover:text-cyber-cyan transition-colors truncate">
+                            {item.name}
+                          </span>
+                          {distanceLabel && (
+                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyber-cyan border border-cyan-500/30 shrink-0">
+                              📍 {distanceLabel}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-400 truncate mt-0.5 font-sans">
+                          {item.subtext}
+                        </div>
                       </div>
-                    </div>
-                    <span className="text-xs text-slate-500 group-hover:text-cyber-cyan transition-colors shrink-0 font-mono flex items-center gap-1 font-bold">
-                      Ir ➔
-                    </span>
-                  </button>
-                ))}
+                      <span className="text-xs text-slate-500 group-hover:text-cyber-cyan transition-colors shrink-0 font-mono flex items-center gap-1 font-bold">
+                        Ir ➔
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
