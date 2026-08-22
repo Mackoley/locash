@@ -43,7 +43,7 @@ export const SidebarNav: React.FC = () => {
   const navItems = userRole === 'LANDLORD' ? landlordNavItems : tenantNavItems;
 
   return (
-    <aside className="hidden md:flex flex-col w-64 glass-panel border-r border-slate-800/80 bg-cyber-darkest/95 p-3.5 justify-between select-none shrink-0 h-[calc(100vh-61px)]">
+    <aside className="hidden md:flex flex-col w-64 glass-panel border-r border-slate-800/80 bg-cyber-darkest/95 p-3.5 justify-between select-none shrink-0 h-full overflow-y-auto no-scrollbar">
       {/* Navigation Section */}
       <div className="space-y-6">
         <div>
