@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { Property } from '../../types';
+import { Property, MapTheme } from '../../types';
 import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapControls } from './MapControls';
@@ -12,6 +12,8 @@ export const FuturisticMap: React.FC = () => {
     setSelectedProperty, 
     mapVisualMode,
     setMapVisualMode,
+    mapTheme,
+    setMapTheme,
     userLocation,
     isLocating,
     requestUserLocation,
@@ -58,7 +60,6 @@ export const FuturisticMap: React.FC = () => {
     const container = mapContainerRef.current;
     if (!container || mapInstanceRef.current) return;
 
-    // Use userLocation if available, else São Paulo center
     const initialCenter: [number, number] = userLocation 
       ? [userLocation.lng, userLocation.lat] 
       : [-46.6753, -23.5855];
@@ -77,7 +78,7 @@ export const FuturisticMap: React.FC = () => {
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
-    // Middle Mouse Button (Scroll Wheel Click) Drag Rotation & Pitch
+    // Middle Mouse Button Drag Rotation & Pitch
     let isMiddleDragging = false;
     let startX = 0;
     let startY = 0;
@@ -85,7 +86,6 @@ export const FuturisticMap: React.FC = () => {
     let startPitch = 0;
 
     const handleMouseDown = (e: MouseEvent) => {
-      // e.button === 1 is the Middle Click (Scroll Wheel button)
       if (e.button === 1) {
         e.preventDefault();
         isMiddleDragging = true;
@@ -103,7 +103,6 @@ export const FuturisticMap: React.FC = () => {
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
 
-      // Adjust Bearing (rotation 360) and Pitch (tilt 0-80)
       const newBearing = startBearing + deltaX * 0.45;
       const newPitch = Math.min(Math.max(startPitch - deltaY * 0.35, 0), 80);
 
@@ -120,7 +119,7 @@ export const FuturisticMap: React.FC = () => {
 
     const handleAuxClick = (e: MouseEvent) => {
       if (e.button === 1) {
-        e.preventDefault(); // Prevent default browser auto-scroll on wheel click
+        e.preventDefault();
       }
     };
 
@@ -141,13 +140,29 @@ export const FuturisticMap: React.FC = () => {
     };
   }, []);
 
+  // Theme Accent Colors
+  const getThemeAccent = (theme: MapTheme) => {
+    switch (theme) {
+      case 'MIDNIGHT_BLUE':
+        return { primary: '#38bdf8', secondary: '#818cf8', available: '#38bdf8', beam: 'rgba(56, 189, 248, 0.9)' };
+      case 'MATRIX_EMERALD':
+        return { primary: '#10b981', secondary: '#34d399', available: '#10b981', beam: 'rgba(16, 185, 129, 0.9)' };
+      case 'OLED_MONOCHROME':
+        return { primary: '#ffffff', secondary: '#94a3b8', available: '#ffffff', beam: 'rgba(255, 255, 255, 0.9)' };
+      case 'CYBER_DARK':
+      default:
+        return { primary: '#00f2fe', secondary: '#3b82f6', available: '#00f0aa', beam: 'rgba(0, 242, 254, 0.9)' };
+    }
+  };
+
+  const currentAccent = getThemeAccent(mapTheme);
+
   // Real-Time User GPS Location Beacon & Auto-Center on Startup
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
     if (userLocation) {
-      // Auto-center map on user's real location upon entering the app
       if (!hasAutoCenteredRef.current) {
         hasAutoCenteredRef.current = true;
         map.flyTo({
@@ -167,8 +182,8 @@ export const FuturisticMap: React.FC = () => {
         userEl.className = 'relative flex items-center justify-center';
         userEl.innerHTML = `
           <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-            <div style="position: absolute; inset: 0; border-radius: 50%; background: rgba(0, 242, 254, 0.25); animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-            <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: rgba(0, 242, 254, 0.45); border: 1.5px solid #00f2fe; box-shadow: 0 0 15px #00f2fe;"></div>
+            <div style="position: absolute; inset: 0; border-radius: 50%; background: ${currentAccent.primary}33; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+            <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: ${currentAccent.primary}55; border: 1.5px solid ${currentAccent.primary}; box-shadow: 0 0 15px ${currentAccent.primary};"></div>
             <div style="position: relative; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 8px #ffffff;"></div>
           </div>
         `;
@@ -180,7 +195,7 @@ export const FuturisticMap: React.FC = () => {
         userMarkerRef.current = userMarker;
       }
     }
-  }, [userLocation]);
+  }, [userLocation, mapTheme]);
 
   // Handle Search Target (Enter Address Search FlyTo)
   useEffect(() => {
@@ -205,14 +220,14 @@ export const FuturisticMap: React.FC = () => {
     searchEl.innerHTML = `
       <div style="
         background: rgba(13, 21, 39, 0.95);
-        border: 1.5px solid #00f2fe;
+        border: 1.5px solid ${currentAccent.primary};
         color: #ffffff;
         padding: 4px 10px;
         border-radius: 12px;
         font-family: 'JetBrains Mono', monospace;
         font-size: 11px;
         font-weight: 700;
-        box-shadow: 0 0 20px rgba(0,242,254,0.8);
+        box-shadow: 0 0 20px ${currentAccent.primary}cc;
         white-space: nowrap;
         max-width: 200px;
         overflow: hidden;
@@ -221,7 +236,7 @@ export const FuturisticMap: React.FC = () => {
         align-items: center;
         gap: 4px;
       ">
-        <span style="color: #00f2fe;">📍</span>
+        <span style="color: ${currentAccent.primary};">📍</span>
         <span>${searchTarget.name.split(',')[0]}</span>
       </div>
       <div style="
@@ -229,7 +244,7 @@ export const FuturisticMap: React.FC = () => {
         height: 0;
         border-left: 5px solid transparent;
         border-right: 5px solid transparent;
-        border-top: 6px solid #00f2fe;
+        border-top: 6px solid ${currentAccent.primary};
       "></div>
     `;
 
@@ -238,7 +253,7 @@ export const FuturisticMap: React.FC = () => {
       .addTo(map);
 
     searchMarkerRef.current = marker;
-  }, [searchTarget]);
+  }, [searchTarget, mapTheme]);
 
   // Update Property Markers and Beams
   useEffect(() => {
@@ -252,8 +267,8 @@ export const FuturisticMap: React.FC = () => {
       const isSelected = selectedProperty?.id === prop.id;
       const isFeatured = prop.featured;
 
-      let statusColor = '#00f0aa'; // Disponível
-      let statusBorder = 'rgba(0, 240, 170, 0.5)';
+      let statusColor = currentAccent.available;
+      let statusBorder = `${currentAccent.available}88`;
       let statusBg = 'rgba(13, 21, 39, 0.94)';
 
       if (prop.status === 'RESERVADO') {
@@ -288,7 +303,7 @@ export const FuturisticMap: React.FC = () => {
           width: ${Math.max(120, prop.demandScore * 2)}px;
           height: ${Math.max(120, prop.demandScore * 2)}px;
           border-radius: 50%;
-          background: radial-gradient(circle, ${prop.demandScore > 90 ? 'rgba(239,68,68,0.55)' : prop.demandScore > 80 ? 'rgba(245,158,11,0.5)' : 'rgba(0,240,170,0.4)'} 0%, transparent 70%);
+          background: radial-gradient(circle, ${prop.demandScore > 90 ? 'rgba(239,68,68,0.55)' : prop.demandScore > 80 ? 'rgba(245,158,11,0.5)' : `${currentAccent.primary}66`} 0%, transparent 70%);
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
@@ -306,10 +321,10 @@ export const FuturisticMap: React.FC = () => {
           gap: 6px;
           padding: 4px 10px;
           background: ${statusBg};
-          border: 1.5px solid ${isSelected ? '#00f2fe' : statusBorder};
+          border: 1.5px solid ${isSelected ? currentAccent.primary : statusBorder};
           border-radius: 9999px;
           backdrop-filter: blur(14px);
-          box-shadow: ${isSelected ? '0 0 25px rgba(0,242,254,0.9), 0 4px 15px rgba(0,0,0,0.8)' : '0 4px 14px rgba(0,0,0,0.6)'};
+          box-shadow: ${isSelected ? `0 0 25px ${currentAccent.primary}ee, 0 4px 15px rgba(0,0,0,0.8)` : '0 4px 14px rgba(0,0,0,0.6)'};
           transition: all 0.2s ease;
           transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
           cursor: pointer;
@@ -335,7 +350,7 @@ export const FuturisticMap: React.FC = () => {
           height: 0;
           border-left: 5px solid transparent;
           border-right: 5px solid transparent;
-          border-top: 6px solid ${isSelected ? '#00f2fe' : statusBorder};
+          border-top: 6px solid ${isSelected ? currentAccent.primary : statusBorder};
           margin-top: -1px;
         "></div>
         <div style="
@@ -366,7 +381,7 @@ export const FuturisticMap: React.FC = () => {
 
       markersRef.current.push(marker);
     });
-  }, [filteredProperties, selectedProperty, mapVisualMode, setSelectedProperty]);
+  }, [filteredProperties, selectedProperty, mapVisualMode, mapTheme, setSelectedProperty]);
 
   // Center on selected property if changed from outside
   useEffect(() => {
@@ -418,8 +433,18 @@ export const FuturisticMap: React.FC = () => {
     });
   };
 
+  // Dynamic Theme Background Overlay Class
+  const themeBgMap: Record<MapTheme, string> = {
+    CYBER_DARK: 'bg-[#080d1a]',
+    MIDNIGHT_BLUE: 'bg-[#050c24] saturate-150',
+    MATRIX_EMERALD: 'bg-[#02130b] hue-rotate-[90deg]',
+    OLED_MONOCHROME: 'bg-[#000000] grayscale'
+  };
+
+  const themeBgClass = themeBgMap[mapTheme] || 'bg-[#080d1a]';
+
   return (
-    <div className="relative w-full h-full flex-1 overflow-hidden bg-cyber-darkest">
+    <div className={`relative w-full h-full flex-1 overflow-hidden transition-colors duration-500 ${themeBgClass}`}>
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
@@ -439,6 +464,8 @@ export const FuturisticMap: React.FC = () => {
         propertiesCount={filteredProperties.length}
         mapVisualMode={mapVisualMode}
         setMapVisualMode={setMapVisualMode}
+        mapTheme={mapTheme}
+        setMapTheme={setMapTheme}
       />
     </div>
   );

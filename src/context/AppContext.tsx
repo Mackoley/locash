@@ -10,7 +10,8 @@ import {
   MaintenanceStatus,
   LeaseDocument, 
   ChatMessage, 
-  LandlordStats 
+  LandlordStats,
+  MapTheme
 } from '../types';
 import { 
   INITIAL_PROPERTIES, 
@@ -41,9 +42,11 @@ interface AppContextType {
   isWizardModalOpen: boolean;
   setIsWizardModalOpen: (open: boolean) => void;
   
-  // Map Visual Modes & Geolocation
+  // Map Visual Modes & Geolocation & Theme
   mapVisualMode: 'NORMAL' | 'HEATMAP' | 'BEAMS_3D';
   setMapVisualMode: (mode: 'NORMAL' | 'HEATMAP' | 'BEAMS_3D') => void;
+  mapTheme: MapTheme;
+  setMapTheme: (theme: MapTheme) => void;
   userLocation: { lat: number; lng: number } | null;
   isLocating: boolean;
   requestUserLocation: () => void;
@@ -105,6 +108,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
   const [isWizardModalOpen, setIsWizardModalOpen] = useState<boolean>(false);
   const [mapVisualMode, setMapVisualMode] = useState<'NORMAL' | 'HEATMAP' | 'BEAMS_3D'>('NORMAL');
+  const [mapTheme, setMapThemeState] = useState<MapTheme>(() => {
+    const saved = localStorage.getItem('locash_map_theme');
+    return (saved as MapTheme) || 'CYBER_DARK';
+  });
+
+  const setMapTheme = (theme: MapTheme) => {
+    setMapThemeState(theme);
+    localStorage.setItem('locash_map_theme', theme);
+  };
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(() => {
     const saved = localStorage.getItem('locash_user_gps');
     return saved ? JSON.parse(saved) : null;
@@ -484,6 +496,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsWizardModalOpen,
         mapVisualMode,
         setMapVisualMode,
+        mapTheme,
+        setMapTheme,
         userLocation,
         isLocating,
         requestUserLocation,

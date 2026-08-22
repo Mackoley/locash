@@ -1,6 +1,20 @@
-import React from 'react';
-import { Plus, Minus, Navigation, Layers, Flame, Sparkles, SlidersHorizontal, Box, RotateCw, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { 
+  Plus, 
+  Minus, 
+  Navigation, 
+  Layers, 
+  Flame, 
+  Sparkles, 
+  SlidersHorizontal, 
+  Box, 
+  RotateCw, 
+  Loader2, 
+  Palette,
+  Check
+} from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { MapTheme } from '../../types';
 
 interface MapControlsProps {
   onZoomIn: () => void;
@@ -14,6 +28,8 @@ interface MapControlsProps {
   propertiesCount: number;
   mapVisualMode: 'NORMAL' | 'HEATMAP' | 'BEAMS_3D';
   setMapVisualMode: (mode: 'NORMAL' | 'HEATMAP' | 'BEAMS_3D') => void;
+  mapTheme: MapTheme;
+  setMapTheme: (theme: MapTheme) => void;
 }
 
 export const MapControls: React.FC<MapControlsProps> = ({
@@ -27,9 +43,43 @@ export const MapControls: React.FC<MapControlsProps> = ({
   hasUserLocation = false,
   propertiesCount,
   mapVisualMode,
-  setMapVisualMode
+  setMapVisualMode,
+  mapTheme,
+  setMapTheme
 }) => {
   const { setIsFilterModalOpen, filteredProperties, setSelectedProperty } = useApp();
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+
+  const themeOptions: { id: MapTheme; name: string; iconColor: string; bg: string; desc: string }[] = [
+    {
+      id: 'CYBER_DARK',
+      name: 'Cyberpunk Dark',
+      iconColor: 'from-cyber-cyan to-blue-600',
+      bg: 'bg-cyan-500/10 border-cyan-500/30',
+      desc: 'Preto profundo com neons ciano e esmeralda'
+    },
+    {
+      id: 'MIDNIGHT_BLUE',
+      name: 'Midnight Blue',
+      iconColor: 'from-blue-500 to-indigo-600',
+      bg: 'bg-blue-500/10 border-blue-500/30',
+      desc: 'Azul-marinho estelar com azul elétrico'
+    },
+    {
+      id: 'MATRIX_EMERALD',
+      name: 'Matrix Emerald',
+      iconColor: 'from-emerald-500 to-green-600',
+      bg: 'bg-emerald-500/10 border-emerald-500/30',
+      desc: 'Verde cibernético de alta tecnologia'
+    },
+    {
+      id: 'OLED_MONOCHROME',
+      name: 'OLED Monochrome',
+      iconColor: 'from-slate-200 to-slate-400',
+      bg: 'bg-slate-500/10 border-slate-400/30',
+      desc: 'Preto puro com contraste branco acetinado'
+    }
+  ];
 
   return (
     <>
@@ -119,6 +169,69 @@ export const MapControls: React.FC<MapControlsProps> = ({
         >
           <RotateCw className="w-4 h-4 group-hover:rotate-45 transition-transform" />
         </button>
+
+        {/* Theme Palette Switcher Button */}
+        <div className="relative">
+          <button
+            onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+            className={`p-3 rounded-2xl glass-panel transition-all border shadow-lg group ${
+              isThemeMenuOpen 
+                ? 'border-purple-500/60 text-cyber-purple shadow-neon-purple' 
+                : 'border-slate-700/60 text-slate-300 hover:text-cyber-purple'
+            }`}
+            title="Personalizar Cores e Tema do Mapa"
+          >
+            <Palette className="w-4 h-4 group-hover:scale-110 transition-transform" />
+          </button>
+
+          {/* Theme Selector Floating Panel */}
+          {isThemeMenuOpen && (
+            <div className="absolute right-14 top-0 w-64 glass-panel border border-cyan-500/40 p-3 rounded-2xl shadow-2xl space-y-2 z-50 animate-fade-in bg-slate-950/95 backdrop-blur-xl">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                <span className="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+                  <Palette className="w-3.5 h-3.5 text-cyber-cyan" />
+                  Paleta de Cores
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">4 TEMAS</span>
+              </div>
+
+              <div className="space-y-1.5">
+                {themeOptions.map((opt) => {
+                  const isSelected = mapTheme === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        setMapTheme(opt.id);
+                        setIsThemeMenuOpen(false);
+                      }}
+                      className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all group ${
+                        isSelected 
+                          ? `${opt.bg} shadow-sm` 
+                          : 'bg-slate-900/60 border-slate-800 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-4 h-4 rounded-full bg-gradient-to-tr ${opt.iconColor} shrink-0 shadow-sm`} />
+                        <div>
+                          <div className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-slate-300'}`}>
+                            {opt.name}
+                          </div>
+                          <div className="text-[9px] text-slate-400 leading-tight">
+                            {opt.desc}
+                          </div>
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <Check className="w-3.5 h-3.5 text-cyber-cyan shrink-0 ml-1" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
 
         <button
           onClick={() => setIsFilterModalOpen(true)}
