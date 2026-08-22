@@ -28,7 +28,7 @@ export const FuturisticMap: React.FC = () => {
   const hasAutoCenteredRef = useRef<boolean>(false);
   const [is3DView, setIs3DView] = useState(true);
 
-  // Generate Tile Specification for Cyber Dark, Cyber Light, or Hybrid Satellite
+  // Generate Tile Specification for Cyber Dark, Cyber Light, or Hybrid Satellite with Ultra-Bright White Labels
   const getStyleSpec = (theme: MapTheme): maplibregl.StyleSpecification => {
     if (theme === 'SATELLITE') {
       return {
@@ -40,10 +40,10 @@ export const FuturisticMap: React.FC = () => {
               'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
             ],
             tileSize: 256,
-            maxzoom: 17, // MapLibre will automatically overzoom smoothly past zoom 17
+            maxzoom: 17,
             attribution: '&copy; Esri &copy; Maxar &copy; Earthstar Geographics'
           },
-          'satellite-labels': {
+          'bright-labels': {
             type: 'raster',
             tiles: [
               'https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
@@ -64,29 +64,82 @@ export const FuturisticMap: React.FC = () => {
             maxzoom: 22
           },
           {
-            id: 'satellite-street-labels',
+            id: 'satellite-bright-street-labels',
             type: 'raster',
-            source: 'satellite-labels',
+            source: 'bright-labels',
             minzoom: 0,
-            maxzoom: 22
+            maxzoom: 22,
+            paint: {
+              'raster-brightness-min': 0.3,
+              'raster-contrast': 0.3
+            }
           }
         ]
       };
     }
 
-    const isLight = theme === 'CYBER_LIGHT';
-    const tileType = isLight ? 'light_all' : 'dark_all';
+    if (theme === 'CYBER_DARK') {
+      return {
+        version: 8,
+        sources: {
+          'carto-dark-base': {
+            type: 'raster',
+            tiles: [
+              'https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png',
+              'https://b.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png',
+              'https://c.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png',
+              'https://d.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png'
+            ],
+            tileSize: 256,
+            maxzoom: 18,
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
+          },
+          'carto-bright-white-labels': {
+            type: 'raster',
+            tiles: [
+              'https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
+              'https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
+              'https://c.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
+              'https://d.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png'
+            ],
+            tileSize: 256,
+            maxzoom: 18
+          }
+        },
+        layers: [
+          {
+            id: 'carto-dark-layer',
+            type: 'raster',
+            source: 'carto-dark-base',
+            minzoom: 0,
+            maxzoom: 22
+          },
+          {
+            id: 'carto-white-labels-layer',
+            type: 'raster',
+            source: 'carto-bright-white-labels',
+            minzoom: 0,
+            maxzoom: 22,
+            paint: {
+              'raster-brightness-min': 0.35,
+              'raster-contrast': 0.4
+            }
+          }
+        ]
+      };
+    }
 
+    // CYBER_LIGHT (Clean light map with crisp dark gray/slate typography)
     return {
       version: 8,
       sources: {
-        'carto-tiles': {
+        'carto-light-tiles': {
           type: 'raster',
           tiles: [
-            `https://a.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`,
-            `https://b.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`,
-            `https://c.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`,
-            `https://d.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`
+            'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+            'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+            'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+            'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png'
           ],
           tileSize: 256,
           maxzoom: 18,
@@ -95,9 +148,9 @@ export const FuturisticMap: React.FC = () => {
       },
       layers: [
         {
-          id: 'carto-layer',
+          id: 'carto-light-layer',
           type: 'raster',
-          source: 'carto-tiles',
+          source: 'carto-light-tiles',
           minzoom: 0,
           maxzoom: 22
         }
@@ -120,7 +173,7 @@ export const FuturisticMap: React.FC = () => {
       center: initialCenter,
       zoom: userLocation ? 15.5 : 13.8,
       minZoom: 2,
-      maxZoom: 18.2, // Clean max zoom without tile limits
+      maxZoom: 18.2,
       pitch: 52, // 3D Camera Perspective
       bearing: -18,
       dragRotate: true,
