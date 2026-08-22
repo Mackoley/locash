@@ -50,6 +50,22 @@ const formatDistance = (distKm?: number): string | null => {
   return `${distKm.toFixed(1)} km`;
 };
 
+const getCategoryEmoji = (name: string, subtext: string = ''): string => {
+  const t = `${name} ${subtext}`.toLowerCase();
+  if (t.includes('pizza')) return '🍕';
+  if (t.includes('farmacia') || t.includes('farmácia') || t.includes('drogaria') || t.includes('medic') || t.includes('remedio') || t.includes('remédio')) return '💊';
+  if (t.includes('supermercado') || t.includes('mercado') || t.includes('mercadinho') || t.includes('mercearia') || t.includes('atacadao') || t.includes('atacadão') || t.includes('hipermercado')) return '🛒';
+  if (t.includes('padaria') || t.includes('panificadora') || t.includes('pão') || t.includes('pao')) return '🥖';
+  if (t.includes('posto') || t.includes('combustivel') || t.includes('combustível') || t.includes('gasolina') || t.includes('etanol') || t.includes('gnv') || t.includes('ipiranga') || t.includes('shell') || t.includes('petrobras') || t.includes('br distribuidora')) return '⛽';
+  if (t.includes('hospital') || t.includes('upa') || t.includes('clinica') || t.includes('clínica') || t.includes('saude') || t.includes('saúde') || t.includes('pronto socorro') || t.includes('medico') || t.includes('médico')) return '🏥';
+  if (t.includes('restaurante') || t.includes('lanchonete') || t.includes('burger') || t.includes('hamburguer') || t.includes('hambúrguer') || t.includes('comida') || t.includes('churrascaria') || t.includes('sushi') || t.includes('bar') || t.includes('boteco') || t.includes('choperia')) return '🍽️';
+  if (t.includes('academia') || t.includes('fitness') || t.includes('crossfit') || t.includes('gym') || t.includes('treino')) return '🏋️';
+  if (t.includes('banco') || t.includes('caixa') || t.includes('loterica') || t.includes('lotérica') || t.includes('bradesco') || t.includes('itau') || t.includes('itaú') || t.includes('santander') || t.includes('nubank') || t.includes('banco do brasil')) return '🏦';
+  if (t.includes('escola') || t.includes('colegio') || t.includes('colégio') || t.includes('faculdade') || t.includes('universidade')) return '🎓';
+  if (t.includes('pet') || t.includes('veterin') || t.includes('animal') || t.includes('racao') || t.includes('ração')) return '🐾';
+  return '';
+};
+
 export const Header: React.FC = () => {
   const { 
     userRole, 
@@ -188,14 +204,17 @@ export const Header: React.FC = () => {
         }
       });
 
-      // 2. Fetch Multi-source (Photon + Nominatim) in parallel
+      // 2. Fetch Multi-source (Photon + Nominatim) with strict proximity bias to user location
       let apiMatches: AddressSuggestion[] = [];
       const latLonBias = userLocation ? `&lat=${userLocation.lat}&lon=${userLocation.lng}` : '';
+      const viewboxBias = userLocation 
+        ? `&viewbox=${userLocation.lng - 0.25},${userLocation.lat + 0.25},${userLocation.lng + 0.25},${userLocation.lat - 0.25}&bounded=0`
+        : '';
 
       try {
         const [photonRes, nominatimRes] = await Promise.allSettled([
-          fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}${latLonBias}&limit=6&lang=default`),
-          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=5&addressdetails=1`)
+          fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}${latLonBias}&limit=8&lang=default`),
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}${viewboxBias}&countrycodes=br&limit=7&addressdetails=1`)
         ]);
 
         // Process Photon
@@ -479,6 +498,7 @@ export const Header: React.FC = () => {
               <div className="divide-y divide-slate-800/60 max-h-72 overflow-y-auto no-scrollbar">
                 {suggestions.map((item) => {
                   const distanceLabel = formatDistance(item.distanceKm);
+                  const categoryEmoji = getCategoryEmoji(item.name, item.subtext);
 
                   return (
                     <button
@@ -490,10 +510,14 @@ export const Header: React.FC = () => {
                       <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border ${
                         item.isLocalProperty 
                           ? 'bg-emerald-500/15 border-emerald-500/30 text-cyber-emerald shadow-sm' 
-                          : 'bg-cyan-500/15 border-cyan-500/30 text-cyber-cyan shadow-sm'
+                          : categoryEmoji
+                            ? 'bg-cyan-500/20 border-cyan-500/40 text-cyber-cyan shadow-sm text-sm'
+                            : 'bg-cyan-500/15 border-cyan-500/30 text-cyber-cyan shadow-sm'
                       }`}>
                         {item.isLocalProperty ? (
                           <Building className="w-3.5 h-3.5" />
+                        ) : categoryEmoji ? (
+                          <span className="leading-none select-none">{categoryEmoji}</span>
                         ) : (
                           <MapPin className="w-3.5 h-3.5" />
                         )}
