@@ -56,7 +56,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
     <>
       {/* Top Left HUD Telemetry Badge */}
       <div className="absolute top-4 left-4 z-20 hidden sm:flex flex-col gap-2">
-        <div className={`glass-panel py-2 px-3.5 rounded-2xl flex items-center gap-3 ${isLight ? 'border-sky-500/40 bg-slate-900/90' : 'border-cyan-500/30'}`}>
+        <div className="glass-panel py-2 px-3.5 rounded-2xl flex items-center gap-3 border-cyan-500/30 bg-slate-950/90 shadow-lg">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2.5 w-2.5">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-cyan opacity-75"></span>
@@ -82,7 +82,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
         </div>
 
         {/* Quick Map Visual Layers (Normal, Beams, Heatmap) */}
-        <div className="glass-panel p-1 rounded-xl flex items-center gap-1 border-slate-800 bg-slate-950/80">
+        <div className="glass-panel p-1 rounded-xl flex items-center gap-1 border-slate-800 bg-slate-950/90 shadow-lg">
           <button
             onClick={() => setMapVisualMode('NORMAL')}
             className={`px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all ${
@@ -122,7 +122,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
       {/* Right Map Navigation Controls */}
       <div className="absolute right-4 top-4 z-20 flex flex-col gap-2">
         {/* Map Theme 3-way Switcher (Dark / Light / Satellite) */}
-        <div className="flex flex-col rounded-2xl glass-panel border border-slate-700/60 overflow-hidden shadow-lg bg-slate-950/85">
+        <div className="flex flex-col rounded-2xl glass-panel border border-slate-700/60 overflow-hidden shadow-lg bg-slate-950/90">
           <button
             onClick={() => setMapTheme('CYBER_DARK')}
             className={`p-2.5 flex items-center justify-center transition-all border-b border-slate-800 ${
@@ -163,7 +163,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
         {/* Toggle 3D Perspective */}
         <button
           onClick={onToggle3D}
-          className={`p-3 rounded-2xl glass-panel transition-all border shadow-lg group ${
+          className={`p-3 rounded-2xl glass-panel transition-all border shadow-lg group bg-slate-950/90 ${
             is3DView ? 'border-cyan-500/60 text-cyber-cyan shadow-neon-cyan' : 'border-slate-700/60 text-slate-300'
           }`}
           title="Alternar Perspectiva 3D / 2D"
@@ -174,7 +174,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
         {/* Rotate 360 */}
         <button
           onClick={onRotate}
-          className="p-3 rounded-2xl glass-panel hover:glass-panel-glow text-slate-300 hover:text-cyber-cyan transition-all border border-slate-700/60 shadow-lg group"
+          className="p-3 rounded-2xl glass-panel hover:glass-panel-glow text-slate-300 hover:text-cyber-cyan transition-all border border-slate-700/60 shadow-lg group bg-slate-950/90"
           title="Girar Câmera 3D (45°)"
         >
           <RotateCw className="w-4 h-4 group-hover:rotate-45 transition-transform" />
@@ -182,7 +182,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
 
         <button
           onClick={() => setIsFilterModalOpen(true)}
-          className="p-3 rounded-2xl glass-panel hover:glass-panel-glow text-slate-300 hover:text-cyber-cyan transition-all border border-slate-700/60 shadow-lg group"
+          className="p-3 rounded-2xl glass-panel hover:glass-panel-glow text-slate-300 hover:text-cyber-cyan transition-all border border-slate-700/60 shadow-lg group bg-slate-950/90"
           title="Abrir Filtros Avançados"
         >
           <SlidersHorizontal className="w-4 h-4 group-hover:scale-110 transition-transform" />
@@ -191,7 +191,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
         {/* Real-Time GPS User Location Button */}
         <button
           onClick={onCenterUser}
-          className={`p-3 rounded-2xl glass-panel hover:glass-panel-glow transition-all border shadow-lg group ${
+          className={`p-3 rounded-2xl glass-panel hover:glass-panel-glow transition-all border shadow-lg group bg-slate-950/90 ${
             hasUserLocation 
               ? 'border-emerald-500/60 text-cyber-emerald shadow-neon-emerald' 
               : 'border-slate-700/60 text-slate-300 hover:text-cyber-cyan'
@@ -205,7 +205,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
           )}
         </button>
 
-        <div className="flex flex-col rounded-2xl glass-panel border border-slate-700/60 overflow-hidden shadow-lg">
+        <div className="flex flex-col rounded-2xl glass-panel border border-slate-700/60 overflow-hidden shadow-lg bg-slate-950/90">
           <button
             onClick={onZoomIn}
             className="p-3 text-slate-300 hover:text-cyber-cyan hover:bg-slate-800/60 transition-colors border-b border-slate-800"
@@ -223,15 +223,13 @@ export const MapControls: React.FC<MapControlsProps> = ({
         </div>
       </div>
 
-      {/* Bottom Floating Quick Carousel of Properties (Elevated on mobile above bottom nav bar) */}
+      {/* Bottom Floating Quick Carousel of Properties (Always standard Dark Cyberpunk UI) */}
       <div className="absolute bottom-20 md:bottom-4 left-3 md:left-4 right-3 md:right-4 z-20 overflow-x-auto pb-1 flex gap-3 pointer-events-auto no-scrollbar max-w-4xl mx-auto">
         {filteredProperties.slice(0, 5).map(prop => (
           <div
             key={prop.id}
             onClick={() => setSelectedProperty(prop)}
-            className={`shrink-0 w-60 sm:w-64 glass-panel p-2.5 rounded-xl border transition-all hover:scale-[1.02] flex items-center gap-3 group cursor-pointer shadow-lg backdrop-blur-md ${
-              isLight ? 'border-slate-300 hover:border-sky-500/70 bg-white/95 text-slate-900 shadow-md' : 'border-slate-800 hover:border-cyan-500/50 bg-slate-950/90'
-            }`}
+            className="shrink-0 w-60 sm:w-64 glass-panel p-2.5 rounded-xl border border-slate-800 hover:border-cyan-500/50 bg-slate-950/95 text-white transition-all hover:scale-[1.02] flex items-center gap-3 group cursor-pointer shadow-2xl backdrop-blur-xl"
           >
             <img
               src={prop.images[0]}
@@ -239,12 +237,12 @@ export const MapControls: React.FC<MapControlsProps> = ({
               className="w-14 h-14 rounded-lg object-cover border border-slate-700 group-hover:border-cyan-500/50 transition-colors"
             />
             <div className="flex-1 min-w-0">
-              <span className={`text-[10px] font-mono uppercase font-bold ${isLight ? 'text-sky-600' : 'text-cyber-cyan'}`}>
+              <span className="text-[10px] font-mono uppercase font-bold text-cyber-cyan">
                 {prop.neighborhood}
               </span>
-              <h4 className={`text-xs font-semibold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{prop.title}</h4>
-              <p className={`text-xs font-bold font-mono mt-0.5 ${isLight ? 'text-emerald-600' : 'text-cyber-emerald'}`}>
-                R$ {prop.rentPrice.toLocaleString('pt-BR')}<span className={`text-[10px] font-normal ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>/mês</span>
+              <h4 className="text-xs font-semibold text-white truncate">{prop.title}</h4>
+              <p className="text-xs font-bold font-mono text-cyber-emerald mt-0.5">
+                R$ {prop.rentPrice.toLocaleString('pt-BR')}<span className="text-[10px] text-slate-400 font-normal">/mês</span>
               </p>
             </div>
           </div>
