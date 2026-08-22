@@ -11,7 +11,10 @@ import {
   Building,
   Navigation,
   X,
-  Compass
+  Compass,
+  ChevronDown,
+  LogOut,
+  ShieldCheck
 } from 'lucide-react';
 
 interface AddressSuggestion {
@@ -71,7 +74,9 @@ export const Header: React.FC = () => {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasJustSelectedRef = useRef<boolean>(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -81,6 +86,9 @@ export const Header: React.FC = () => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
         setShowSuggestions(false);
+      }
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
       }
     };
 
@@ -360,38 +368,141 @@ export const Header: React.FC = () => {
             </button>
           )}
 
-          {/* Active User Profile Badge & Auth Trigger */}
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className={`p-1 sm:px-2.5 sm:py-1 rounded-xl border transition-all flex items-center gap-2 shadow-sm shrink-0 group ${
-              userRole === 'LANDLORD'
-                ? 'bg-purple-950/50 hover:bg-purple-900/70 border-purple-500/40 text-purple-200'
-                : 'bg-cyan-950/50 hover:bg-cyan-900/70 border-cyan-500/40 text-cyan-200'
-            }`}
-            title="Sua Conta & Sessão (Clique para gerenciar ou trocar)"
-          >
-            {currentUser?.avatarUrl ? (
-              <img 
-                src={currentUser.avatarUrl} 
-                alt={currentUser.name} 
-                className="w-6 h-6 rounded-full object-cover border border-cyan-400/80 shadow-sm"
-              />
-            ) : (
-              <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
-                userRole === 'LANDLORD' ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'
-              }`}>
-                {userRole === 'LANDLORD' ? <Building className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+          {/* User Profile Trigger & Dropdown Menu */}
+          <div ref={profileDropdownRef} className="relative shrink-0">
+            <button
+              onClick={() => setIsProfileDropdownOpen(prev => !prev)}
+              className={`p-1 sm:px-2.5 sm:py-1 rounded-xl border transition-all flex items-center gap-2 shadow-sm shrink-0 group cursor-pointer ${
+                isProfileDropdownOpen
+                  ? 'bg-cyan-950/80 border-cyan-400 ring-2 ring-cyan-500/20 text-white'
+                  : userRole === 'LANDLORD'
+                    ? 'bg-purple-950/50 hover:bg-purple-900/70 border-purple-500/40 text-purple-200'
+                    : 'bg-cyan-950/50 hover:bg-cyan-900/70 border-cyan-500/40 text-cyan-200'
+              }`}
+              title="Menu do Usuário"
+            >
+              {currentUser?.avatarUrl ? (
+                <div className="relative">
+                  <img 
+                    src={currentUser.avatarUrl} 
+                    alt={currentUser.name} 
+                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-cyan-400 shadow-sm"
+                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-slate-950"></span>
+                </div>
+              ) : (
+                <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center ${
+                  userRole === 'LANDLORD' ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'
+                }`}>
+                  {userRole === 'LANDLORD' ? <Building className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                </div>
+              )}
+
+              <div className="flex flex-col text-left max-w-[100px] sm:max-w-[130px]">
+                <span className="text-[11px] font-bold font-sans leading-tight truncate">
+                  {currentUser?.name || (userRole === 'LANDLORD' ? 'Locador (Admin)' : 'Inquilino')}
+                </span>
+                <span className="text-[9px] text-slate-400 font-mono leading-none truncate">
+                  {userRole === 'LANDLORD' ? '🏢 Locador' : '🏠 Inquilino'}
+                </span>
+              </div>
+
+              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                isProfileDropdownOpen ? 'rotate-180 text-cyan-400' : 'group-hover:text-slate-200'
+              }`} />
+            </button>
+
+            {/* Profile Dropdown Menu */}
+            {isProfileDropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-64 glass-panel border border-cyan-500/40 rounded-2xl bg-slate-950/98 shadow-[0_15px_50px_rgba(0,0,0,0.85)] p-2 z-50 animate-fade-in backdrop-blur-2xl">
+                {/* User Info Header */}
+                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 mb-2">
+                  <div className="flex items-center gap-2.5">
+                    {currentUser?.avatarUrl ? (
+                      <img 
+                        src={currentUser.avatarUrl} 
+                        alt={currentUser.name} 
+                        className="w-9 h-9 rounded-full object-cover border border-cyan-400/80 shadow-md"
+                      />
+                    ) : (
+                      <div className="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyber-cyan flex items-center justify-center font-bold text-sm">
+                        {(currentUser?.name || 'U').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-white truncate">
+                        {currentUser?.name || 'Usuário LOCASH'}
+                      </p>
+                      <p className="text-[10px] text-slate-400 font-mono truncate">
+                        {currentUser?.email || 'conta@locash.com'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-2.5 pt-2 border-t border-slate-800 flex items-center justify-between">
+                    <span className="text-[9px] font-mono uppercase text-slate-400 tracking-wider">Perfil Ativo:</span>
+                    <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md ${
+                      userRole === 'LANDLORD' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40'
+                    }`}>
+                      {userRole === 'LANDLORD' ? '🏢 LOCADOR' : '🏠 INQUILINO'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions Menu */}
+                <div className="space-y-1">
+                  {/* Meu Perfil */}
+                  <button
+                    onClick={() => {
+                      setIsProfileDropdownOpen(false);
+                      setIsAuthModalOpen(true);
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl text-left text-xs font-semibold text-slate-200 hover:text-white hover:bg-cyan-500/15 flex items-center gap-2.5 transition-all group cursor-pointer"
+                  >
+                    <User className="w-4 h-4 text-cyber-cyan group-hover:scale-110 transition-transform" />
+                    <span>Meu Perfil</span>
+                  </button>
+
+                  {/* Alternar Papel */}
+                  <button
+                    onClick={() => {
+                      const nextRole = userRole === 'LANDLORD' ? 'TENANT' : 'LANDLORD';
+                      setUserRole(nextRole);
+                      if (nextRole === 'LANDLORD') {
+                        setActiveView('DASHBOARD_LOCADOR');
+                      } else {
+                        setActiveView('MAPA');
+                      }
+                      setIsProfileDropdownOpen(false);
+                    }}
+                    className="w-full px-3 py-2.5 rounded-xl text-left text-xs font-semibold text-slate-200 hover:text-white hover:bg-slate-800/80 flex items-center justify-between transition-all group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <ShieldCheck className="w-4 h-4 text-purple-400 group-hover:scale-110 transition-transform" />
+                      <span>Alternar Papel</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                      {userRole === 'LANDLORD' ? 'Mudar p/ Inquilino' : 'Mudar p/ Locador'}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Divider */}
+                <div className="my-1.5 border-t border-slate-800/80" />
+
+                {/* Logout Button */}
+                <button
+                  onClick={() => {
+                    setIsProfileDropdownOpen(false);
+                    logout();
+                  }}
+                  className="w-full px-3 py-2.5 rounded-xl text-left text-xs font-bold text-red-400 hover:text-red-300 hover:bg-red-500/15 flex items-center gap-2.5 transition-all group cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+                  <span>Sair da Conta (Logout)</span>
+                </button>
               </div>
             )}
-            <div className="flex flex-col text-left max-w-[110px] sm:max-w-[140px]">
-              <span className="text-[11px] font-bold font-sans leading-tight truncate">
-                {currentUser?.name || (userRole === 'LANDLORD' ? 'Locador (Admin)' : 'Inquilino')}
-              </span>
-              <span className="text-[9px] text-slate-400 font-mono leading-none truncate">
-                {userRole === 'LANDLORD' ? '🏢 Locador' : '🏠 Inquilino'}
-              </span>
-            </div>
-          </button>
+          </div>
         </div>
       </div>
 
