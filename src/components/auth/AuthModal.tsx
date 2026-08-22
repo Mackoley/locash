@@ -11,12 +11,109 @@ import {
   Check, 
   User, 
   AlertCircle,
-  KeyRound,
-  Shield
+  Phone,
+  MapPin,
+  Sparkles
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
 import { supabase, isSupabaseConfigured } from '../../services/supabase';
+
+// Brazilian DDD region recognizer
+const DDD_REGIONS: Record<string, string> = {
+  '11': 'SP • São Paulo Capital / RMSP',
+  '12': 'SP • Vale do Paraíba / Litoral Norte',
+  '13': 'SP • Baixada Santista / Litoral Sul',
+  '14': 'SP • Bauru / Botucatu / Jaú',
+  '15': 'SP • Sorocaba / Itapetininga',
+  '16': 'SP • Ribeirão Preto / Franca',
+  '17': 'SP • São José do Rio Preto / Barretos',
+  '18': 'SP • Presidente Prudente / Araçatuba',
+  '19': 'SP • Campinas / Piracicaba / Americana',
+  '21': 'RJ • Rio de Janeiro / Grande Rio',
+  '22': 'RJ • Campos / Cabo Frio / Região dos Lagos',
+  '24': 'RJ • Volta Redonda / Petrópolis / Angra',
+  '27': 'ES • Vitória / Vila Velha',
+  '28': 'ES • Cachoeiro de Itapemirim / Sul',
+  '31': 'MG • Belo Horizonte / Grande BH',
+  '32': 'MG • Juiz de Fora / Barbacena',
+  '33': 'MG • Governador Valadares / Teófilo Otoni',
+  '34': 'MG • Uberlândia / Uberaba / Triângulo',
+  '35': 'MG • Poços de Caldas / Pouso Alegre / Sul',
+  '37': 'MG • Divinópolis / Centro-Oeste',
+  '38': 'MG • Montes Claros / Norte',
+  '41': 'PR • Curitiba / Região Metropolitana',
+  '42': 'PR • Ponta Grossa / Guarapuava',
+  '43': 'PR • Londrina / Apucarana',
+  '44': 'PR • Maringá / Campo Mourão',
+  '45': 'PR • Cascavel / Foz do Iguaçu',
+  '46': 'PR • Francisco Beltrão / Pato Branco',
+  '47': 'SC • Joinville / Blumenau / Baln. Camboriú',
+  '48': 'SC • Florianópolis / Criciúma',
+  '49': 'SC • Chapecó / Lages / Oeste',
+  '51': 'RS • Porto Alegre / Região Metropolitana',
+  '53': 'RS • Pelotas / Rio Grande',
+  '54': 'RS • Caxias do Sul / Serra Gaúcha',
+  '55': 'RS • Santa Maria / Passo Fundo',
+  '61': 'DF • Brasília / Entorno',
+  '62': 'GO • Goiânia / Anápolis',
+  '63': 'TO • Palmas / Todo o Estado',
+  '64': 'GO • Rio Verde / Itumbiara / Catalão',
+  '65': 'MT • Cuiabá / Várzea Grande',
+  '66': 'MT • Rondonópolis / Sinop',
+  '67': 'MS • Campo Grande / Dourados',
+  '68': 'AC • Rio Branco / Todo o Estado',
+  '69': 'RO • Porto Velho / Todo o Estado',
+  '71': 'BA • Salvador / Região Metropolitana',
+  '73': 'BA • Ilhéus / Itabuna / Porto Seguro',
+  '74': 'BA • Juazeiro / Irecê / Jacobina',
+  '75': 'BA • Feira de Santana / Alagoinhas',
+  '77': 'BA • Vitória da Conquista / Barreiras',
+  '79': 'SE • Aracaju / Todo o Estado',
+  '81': 'PE • Recife / Região Metropolitana',
+  '82': 'AL • Maceió / Todo o Estado',
+  '83': 'PB • João Pessoa / Campina Grande',
+  '84': 'RN • Natal / Mossoró',
+  '85': 'CE • Fortaleza / Região Metropolitana',
+  '86': 'PI • Teresina / Parnaíba',
+  '87': 'PE • Petrolina / Caruaru / Garanhuns',
+  '88': 'CE • Juazeiro do Norte / Sobral',
+  '89': 'PI • Picos / Floriano',
+  '91': 'PA • Belém / Região Metropolitana',
+  '92': 'AM • Manaus / Região Metropolitana',
+  '93': 'PA • Santarém / Baixo Amazonas',
+  '94': 'PA • Marabá / Parauapebas / Carajás',
+  '95': 'RR • Boa Vista / Todo o Estado',
+  '96': 'AP • Macapá / Santana',
+  '97': 'AM • Coari / Tabatinga / Interior',
+  '98': 'MA • São Luís / Região Metropolitana',
+  '99': 'MA • Imperatriz / Caxias'
+};
+
+// Guided formatting for phone with automatic DDD parenthesization and hyphen insertion
+const formatBrazilianPhone = (value: string): string => {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length === 0) return '';
+  if (digits.length <= 2) {
+    return `(${digits}`;
+  }
+  if (digits.length <= 6) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  }
+  if (digits.length <= 10) {
+    return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  }
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+};
+
+const getDddRegion = (phoneStr: string): string | null => {
+  const digits = phoneStr.replace(/\D/g, '');
+  if (digits.length >= 2) {
+    const ddd = digits.slice(0, 2);
+    return DDD_REGIONS[ddd] || null;
+  }
+  return null;
+};
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -28,15 +125,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  
+  // Registration fields
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  
+  // Dual Login field (E-mail ou Telefone)
+  const [loginIdentifier, setLoginIdentifier] = useState('');
+  
   const [selectedRole, setSelectedRole] = useState<UserRole>('TENANT');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const dddRegionInfo = getDddRegion(isSignUp ? phone : loginIdentifier);
+
+  // Handle phone input change with auto guidance
+  const handlePhoneChange = (val: string, setter: (v: string) => void) => {
+    const formatted = formatBrazilianPhone(val);
+    setter(formatted);
+  };
+
+  // Handle dual login identifier change
+  const handleLoginIdentifierChange = (val: string) => {
+    // If user starts with numbers or looks like a phone, apply phone mask
+    const hasOnlyDigitsAndPhoneChars = /^[\d\s()+-]+$/.test(val);
+    if (hasOnlyDigitsAndPhoneChars && val.length > 0 && !val.includes('@')) {
+      setLoginIdentifier(formatBrazilianPhone(val));
+    } else {
+      setLoginIdentifier(val);
+    }
+  };
 
   // Real Google OAuth Sign In
   const handleGoogleSignIn = async () => {
@@ -70,15 +194,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   // Password Recovery
   const handlePasswordReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) {
-      setErrorMessage('Por favor, informe seu e-mail para recuperar a senha.');
+    const targetEmail = isSignUp ? email.trim() : loginIdentifier.trim();
+    if (!targetEmail || !targetEmail.includes('@')) {
+      setErrorMessage('Por favor, informe seu e-mail cadastrado para recuperar a senha.');
       return;
     }
 
     try {
       setLoading(true);
       setErrorMessage(null);
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      const { error } = await supabase.auth.resetPasswordForEmail(targetEmail, {
         redirectTo: `${window.location.origin}/reset-password`
       });
 
@@ -103,16 +228,32 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
     try {
       if (isSignUp) {
+        // Validation
+        if (!firstName.trim() || !lastName.trim()) {
+          throw new Error('Por favor, preencha seu Nome e Sobrenome.');
+        }
+
+        const cleanPhoneDigits = phone.replace(/\D/g, '');
+        if (cleanPhoneDigits.length < 10) {
+          throw new Error('Por favor, digite um número de telefone válido com DDD (10 ou 11 dígitos).');
+        }
+
         if (password.length < 6) {
           throw new Error('A senha deve conter no mínimo 6 caracteres.');
         }
+
+        const fullName = `${firstName.trim()} ${lastName.trim()}`;
+        const formattedPhone = formatBrazilianPhone(phone);
 
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
             data: {
-              full_name: name.trim(),
+              full_name: fullName,
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
+              phone: formattedPhone,
               role: selectedRole
             }
           }
@@ -120,13 +261,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         if (error) throw error;
 
-        // Upsert initial profile
+        // Upsert profile in Supabase table
         if (data.user) {
           try {
             await supabase.from('profiles').upsert({
               id: data.user.id,
               email: email.trim(),
-              full_name: name.trim(),
+              full_name: fullName,
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
+              phone: formattedPhone,
               role: selectedRole
             });
           } catch (profileErr) {
@@ -137,8 +281,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         setUserRole(selectedRole);
         setSuccessMessage('Conta criada com sucesso! Bem-vindo ao LOCASH.');
       } else {
+        // Dual Login: Detect if loginIdentifier is email or phone number
+        let targetEmail = loginIdentifier.trim();
+
+        if (!targetEmail.includes('@')) {
+          // It's a phone number: search corresponding email in profiles
+          const cleanPhone = loginIdentifier.replace(/\D/g, '');
+          const formattedPhone = formatBrazilianPhone(loginIdentifier);
+
+          const { data: profileData, error: profileErr } = await supabase
+            .from('profiles')
+            .select('email, role')
+            .or(`phone.eq.${cleanPhone},phone.eq.${formattedPhone}`)
+            .maybeSingle();
+
+          if (profileErr || !profileData?.email) {
+            throw new Error('Nenhuma conta encontrada com este número de telefone. Cadastre-se ou entre com seu e-mail.');
+          }
+
+          targetEmail = profileData.email;
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          email: targetEmail,
           password
         });
 
@@ -160,7 +325,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     } catch (err: any) {
       console.error('Erro de autenticação:', err);
       if (err.message?.includes('Invalid login credentials')) {
-        setErrorMessage('E-mail ou senha incorretos.');
+        setErrorMessage('E-mail, telefone ou senha incorretos.');
       } else if (err.message?.includes('User already registered')) {
         setErrorMessage('Este e-mail já possui uma conta cadastrada. Faça login.');
       } else {
@@ -193,20 +358,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         </button>
 
         {/* Brand Header with Large 3D Logo & Subtitle */}
-        <div className="flex flex-col items-center text-center mb-5">
+        <div className="flex flex-col items-center text-center mb-4">
           <img 
             src="/logo.png" 
             alt="LOCASH IMOBILIÁRIA" 
-            className="w-20 h-20 sm:w-24 sm:h-24 object-contain drop-shadow-[0_0_25px_rgba(0,242,254,0.65)] transform hover:scale-105 transition-transform duration-300"
+            className="w-18 h-18 sm:w-20 sm:h-20 object-contain drop-shadow-[0_0_25px_rgba(0,242,254,0.65)] transform hover:scale-105 transition-transform duration-300"
           />
-          <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-slate-400 mt-2 font-medium">
+          <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-slate-400 mt-1 font-medium">
             IMÓVEIS • LOCAÇÃO • FINANÇAS
           </span>
         </div>
 
         {/* Toggle between Login and Sign Up Tabs */}
         {!isForgotPassword && (
-          <div className="flex rounded-xl p-1 bg-slate-900/90 border border-slate-800 mb-5">
+          <div className="flex rounded-xl p-1 bg-slate-900/90 border border-slate-800 mb-4">
             <button
               type="button"
               onClick={() => {
@@ -241,20 +406,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         )}
 
         {/* Welcome Title */}
-        <div className="text-center mb-5">
-          <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+        <div className="text-center mb-4">
+          <h2 className="text-lg sm:text-xl font-extrabold text-white">
             {isForgotPassword 
               ? 'Recuperar Senha'
               : isSignUp 
-                ? 'Crie sua conta no LOCASH' 
+                ? 'Criar Conta no LOCASH' 
                 : 'Acesse sua conta'}
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-400 mt-0.5">
             {isForgotPassword 
               ? 'Digite seu e-mail para receber as instruções'
               : isSignUp 
-                ? 'Escolha seu tipo de acesso para continuar' 
-                : 'Conecte-se para desbloquear imóveis e recursos'}
+                ? 'Preencha seus dados para ter acesso exclusivo' 
+                : 'Entre com seu e-mail ou número de telefone'}
           </p>
         </div>
 
@@ -284,8 +449,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 <input
                   type="email"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={loginIdentifier}
+                  onChange={(e) => setLoginIdentifier(e.target.value)}
                   placeholder="seu@email.com"
                   className="w-full bg-slate-900/80 border border-slate-800 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
                 />
@@ -306,7 +471,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 setIsForgotPassword(false);
                 setErrorMessage(null);
               }}
-              className="w-full text-center text-xs text-slate-400 hover:text-white transition-colors"
+              className="w-full text-center text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               Voltar ao Login
             </button>
@@ -314,12 +479,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         ) : (
           /* Main Real Login/Sign Up Form */
           <>
-            {/* Google OAuth Quick Button at Top */}
+            {/* Google OAuth Quick Button */}
             <button
               type="button"
               onClick={handleGoogleSignIn}
               disabled={loading}
-              className="w-full mb-4 py-2.5 px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 text-slate-100 text-xs font-bold flex items-center justify-center gap-3 transition-all shadow-md active:scale-[0.99] disabled:opacity-50 cursor-pointer group"
+              className="w-full mb-3.5 py-2.5 px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/60 text-slate-100 text-xs font-bold flex items-center justify-center gap-3 transition-all shadow-md active:scale-[0.99] disabled:opacity-50 cursor-pointer group"
             >
               <svg className="w-4 h-4 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
                 <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" />
@@ -331,12 +496,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             </button>
 
             {/* Separator */}
-            <div className="relative my-3.5 flex items-center justify-center">
+            <div className="relative my-3 flex items-center justify-center">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-800" />
               </div>
               <span className="relative px-3 bg-[#070d1d] text-[10px] text-slate-400 font-mono uppercase">
-                ou com e-mail e senha
+                ou com suas credenciais
               </span>
             </div>
 
@@ -344,71 +509,147 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               {/* If Sign Up: Select Role (Permanent) */}
               {isSignUp && (
                 <div>
-                  <label className="block text-[11px] font-mono text-slate-400 mb-1.5 text-center uppercase tracking-wider">
-                    Tipo de Conta (Definido no Cadastro)
+                  <label className="block text-[10px] font-mono text-slate-400 mb-1 text-center uppercase tracking-wider">
+                    Tipo de Conta (Acesso Fixo)
                   </label>
-                  <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div className="grid grid-cols-2 gap-2 mb-2.5">
                     <button
                       type="button"
                       onClick={() => setSelectedRole('TENANT')}
-                      className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                      className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
                         selectedRole === 'TENANT' 
                           ? 'bg-cyan-500/20 text-cyber-cyan border-cyan-500/60 shadow-[0_0_12px_rgba(0,242,254,0.2)]' 
                           : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200'
                       }`}
                     >
-                      <Home className="w-4 h-4" />
-                      <span>Locatário</span>
+                      <Home className="w-3.5 h-3.5" />
+                      <span>Locatário (Inquilino)</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setSelectedRole('LANDLORD')}
-                      className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                      className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
                         selectedRole === 'LANDLORD' 
                           ? 'bg-purple-600/25 text-purple-300 border-purple-500/60 shadow-[0_0_12px_rgba(168,85,247,0.2)]' 
                           : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200'
                       }`}
                     >
-                      <Building2 className="w-4 h-4" />
-                      <span>Locador (Admin)</span>
+                      <Building2 className="w-3.5 h-3.5" />
+                      <span>Locador (Proprietário)</span>
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Full Name Input (Sign Up Only) */}
+              {/* Sign Up: Nome e Sobrenome em 2 caixas lado a lado */}
+              {isSignUp && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Nome</label>
+                    <div className="relative flex items-center">
+                      <User className="absolute left-3 w-3.5 h-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="Ex: Carlos"
+                        className="w-full bg-slate-900/80 border border-slate-800 focus:border-cyan-400 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">Sobrenome</label>
+                    <div className="relative flex items-center">
+                      <User className="absolute left-3 w-3.5 h-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        required
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Ex: Silva"
+                        className="w-full bg-slate-900/80 border border-slate-800 focus:border-cyan-400 rounded-xl pl-9 pr-3 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Sign Up: Número de Telefone Guiado com DDD e Hífen Automático */}
               {isSignUp && (
                 <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">Nome Completo</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-slate-300">Telefone / Celular (WhatsApp)</label>
+                    {dddRegionInfo && (
+                      <span className="text-[10px] font-mono text-cyber-cyan font-bold flex items-center gap-1 animate-fade-in">
+                        <MapPin className="w-3 h-3" />
+                        {dddRegionInfo}
+                      </span>
+                    )}
+                  </div>
                   <div className="relative flex items-center">
-                    <User className="absolute left-3.5 w-4 h-4 text-slate-400" />
+                    <Phone className="absolute left-3.5 w-4 h-4 text-slate-400" />
                     <input
-                      type="text"
+                      type="tel"
                       required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Seu nome completo"
-                      className="w-full bg-slate-900/80 border border-slate-800 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
+                      value={phone}
+                      onChange={(e) => handlePhoneChange(e.target.value, setPhone)}
+                      placeholder="(11) 99999-9999"
+                      maxLength={15}
+                      className="w-full bg-slate-900/80 border border-slate-800 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors font-mono"
                     />
                   </div>
                 </div>
               )}
 
-              {/* Email Input */}
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">E-mail</label>
-                <div className="relative flex items-center">
-                  <Mail className="absolute left-3.5 w-4 h-4 text-slate-400" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    className="w-full bg-slate-900/80 border border-slate-800 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
-                  />
+              {/* Sign Up: E-mail */}
+              {isSignUp && (
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">E-mail</label>
+                  <div className="relative flex items-center">
+                    <Mail className="absolute left-3.5 w-4 h-4 text-slate-400" />
+                    <input
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      className="w-full bg-slate-900/80 border border-slate-800 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* Login View: E-mail OU Telefone com reconhecimento */}
+              {!isSignUp && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-medium text-slate-300">E-mail ou Telefone</label>
+                    {dddRegionInfo && (
+                      <span className="text-[10px] font-mono text-cyber-cyan font-bold flex items-center gap-1 animate-fade-in">
+                        <MapPin className="w-3 h-3" />
+                        {dddRegionInfo}
+                      </span>
+                    )}
+                  </div>
+                  <div className="relative flex items-center">
+                    {loginIdentifier.replace(/\D/g, '').length >= 2 && !loginIdentifier.includes('@') ? (
+                      <Phone className="absolute left-3.5 w-4 h-4 text-cyber-cyan" />
+                    ) : (
+                      <Mail className="absolute left-3.5 w-4 h-4 text-slate-400" />
+                    )}
+                    <input
+                      type="text"
+                      required
+                      value={loginIdentifier}
+                      onChange={(e) => handleLoginIdentifierChange(e.target.value)}
+                      placeholder="seu@email.com ou (11) 99999-9999"
+                      className="w-full bg-slate-900/80 border border-slate-800 focus:border-cyan-400 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Password Input */}
               <div>
