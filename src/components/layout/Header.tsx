@@ -358,51 +358,29 @@ export const Header: React.FC = () => {
             </button>
           )}
 
-          {/* Role Switcher Pill */}
-          <div className="flex items-center bg-slate-950 p-0.5 sm:p-1 rounded-xl border border-slate-800 shrink-0">
-            <button
-              onClick={() => {
-                setUserRole('TENANT');
-                if (activeView === 'DASHBOARD_LOCADOR' || activeView === 'MEUS_IMOVEIS') {
-                  setActiveView('MAPA');
-                }
-              }}
-              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                userRole === 'TENANT'
-                  ? 'bg-gradient-to-r from-blue-600/40 to-cyber-cyan/30 text-cyber-cyan border border-cyber-cyan/40 shadow-sm font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Modo Locatário"
-            >
-              <User className="w-3.5 h-3.5" />
-              <span className="text-xs">Locatário</span>
-            </button>
-            
-            <button
-              onClick={() => {
-                setUserRole('LANDLORD');
-                setActiveView('DASHBOARD_LOCADOR');
-              }}
-              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
-                userRole === 'LANDLORD'
-                  ? 'bg-gradient-to-r from-purple-600/40 to-indigo-600/30 text-cyber-purple border border-purple-500/40 shadow-sm font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Modo Locador"
-            >
-              <Key className="w-3.5 h-3.5" />
-              <span className="text-xs">Locador</span>
-            </button>
-          </div>
-
-          {/* Auth / Login Trigger Button */}
+          {/* Active User Role Badge & Auth Button */}
           <button
             onClick={() => setIsAuthModalOpen(true)}
-            className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-gradient-to-r from-blue-600/20 to-cyan-500/20 hover:from-blue-600/40 hover:to-cyan-500/40 border border-cyan-500/40 text-cyber-cyan hover:text-white transition-all flex items-center gap-1 shadow-sm shrink-0 group"
-            title="Fazer Login ou Criar Conta"
+            className={`p-1.5 sm:px-3 sm:py-1.5 rounded-xl border transition-all flex items-center gap-2 shadow-sm shrink-0 group ${
+              userRole === 'LANDLORD'
+                ? 'bg-purple-950/40 hover:bg-purple-900/60 border-purple-500/40 text-purple-300'
+                : 'bg-cyan-950/40 hover:bg-cyan-900/60 border-cyan-500/40 text-cyan-300'
+            }`}
+            title="Conta & Autenticação (Clique para trocar ou entrar)"
           >
-            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:scale-110 transition-transform" />
-            <span className="text-xs font-bold font-mono">Entrar</span>
+            <div className={`w-5 h-5 rounded-lg flex items-center justify-center ${
+              userRole === 'LANDLORD' ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'
+            }`}>
+              {userRole === 'LANDLORD' ? <Building className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-[11px] font-bold font-sans leading-tight">
+                {userRole === 'LANDLORD' ? 'Locador (Admin)' : 'Inquilino'}
+              </span>
+              <span className="text-[9px] text-slate-400 font-mono leading-none">
+                Trocar Conta
+              </span>
+            </div>
           </button>
         </div>
       </div>

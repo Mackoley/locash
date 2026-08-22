@@ -117,6 +117,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     }
   };
 
+  const handleQuickTestLogin = (type: 'LANDLORD' | 'TENANT') => {
+    if (type === 'LANDLORD') {
+      setEmail('locador@locash.com');
+      setPassword('locash123');
+      setSelectedRole('LANDLORD');
+      setUserRole('LANDLORD');
+      setSuccessMessage('Conectado como Locador de Teste!');
+    } else {
+      setEmail('inquilino@locash.com');
+      setPassword('locash123');
+      setSelectedRole('TENANT');
+      setUserRole('TENANT');
+      setSuccessMessage('Conectado como Inquilino de Teste!');
+    }
+
+    setTimeout(() => {
+      setSuccessMessage(null);
+      onClose();
+    }, 700);
+  };
+
   const handleQuickDemo = (role: UserRole) => {
     setUserRole(role);
     setSuccessMessage(`Conectado como ${role === 'LANDLORD' ? 'Locador' : 'Inquilino'}!`);
@@ -195,6 +216,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <Building2 className="w-3.5 h-3.5" />
             <span>Locador</span>
           </button>
+        </div>
+
+        {/* Quick Test Accounts for instant access */}
+        <div className="mb-5 p-3 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-inner">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1">
+              <Sparkles className="w-3 h-3 text-cyan-400" />
+              Contas de Teste Pré-Configuradas
+            </span>
+            <span className="text-[9px] font-mono text-cyan-400/90 font-bold">1-CLIQUE</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => handleQuickTestLogin('LANDLORD')}
+              className="p-2.5 rounded-xl bg-gradient-to-b from-purple-950/50 to-slate-900/80 hover:from-purple-900/60 hover:to-slate-900 border border-purple-500/40 hover:border-purple-400 text-purple-200 text-xs font-bold flex flex-col items-center gap-1 transition-all group shadow-sm active:scale-95"
+            >
+              <div className="flex items-center gap-1.5 text-purple-300">
+                <Building2 className="w-3.5 h-3.5 text-purple-400 group-hover:scale-110 transition-transform" />
+                <span>Locador (Admin)</span>
+              </div>
+              <span className="text-[9px] text-purple-300/70 font-mono font-normal">locador@locash.com</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleQuickTestLogin('TENANT')}
+              className="p-2.5 rounded-xl bg-gradient-to-b from-cyan-950/50 to-slate-900/80 hover:from-cyan-900/60 hover:to-slate-900 border border-cyan-500/40 hover:border-cyan-400 text-cyan-200 text-xs font-bold flex flex-col items-center gap-1 transition-all group shadow-sm active:scale-95"
+            >
+              <div className="flex items-center gap-1.5 text-cyan-300">
+                <Home className="w-3.5 h-3.5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                <span>Locatário / Inquilino</span>
+              </div>
+              <span className="text-[9px] text-cyan-300/70 font-mono font-normal">inquilino@locash.com</span>
+            </button>
+          </div>
         </div>
 
         {/* Success Notification */}
