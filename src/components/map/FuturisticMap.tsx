@@ -82,51 +82,32 @@ export const FuturisticMap: React.FC = () => {
       return {
         version: 8,
         sources: {
-          'carto-dark-base': {
+          'google-dark-tiles': {
             type: 'raster',
             tiles: [
-              'https://a.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png',
-              'https://b.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png',
-              'https://c.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png',
-              'https://d.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}@2x.png'
+              'https://mt0.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}',
+              'https://mt1.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}',
+              'https://mt2.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}',
+              'https://mt3.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}'
             ],
             tileSize: 256,
-            maxzoom: 18,
-            attribution: '&copy; OpenStreetMap &copy; CARTO'
-          },
-          'carto-bright-white-labels': {
-            type: 'raster',
-            tiles: [
-              'https://a.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
-              'https://b.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
-              'https://c.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png',
-              'https://d.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}@2x.png'
-            ],
-            tileSize: 256,
-            maxzoom: 18
+            maxzoom: 21,
+            attribution: '&copy; Google Maps'
           }
         },
         layers: [
           {
-            id: 'carto-dark-layer',
+            id: 'google-dark-layer',
             type: 'raster',
-            source: 'carto-dark-base',
+            source: 'google-dark-tiles',
             minzoom: 0,
             maxzoom: 22,
             paint: {
-              'raster-brightness-min': 0.14,
-              'raster-contrast': 0.25
-            }
-          },
-          {
-            id: 'carto-white-labels-layer',
-            type: 'raster',
-            source: 'carto-bright-white-labels',
-            minzoom: 0,
-            maxzoom: 22,
-            paint: {
-              'raster-brightness-min': 0.25,
-              'raster-contrast': 0.3
+              'raster-brightness-max': 0.35,
+              'raster-brightness-min': 0.03,
+              'raster-contrast': 0.60,
+              'raster-saturation': 0.20,
+              'raster-hue-rotate': 195
             }
           }
         ]
