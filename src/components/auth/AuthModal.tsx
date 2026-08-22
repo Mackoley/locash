@@ -679,16 +679,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <span>Continuar com o Google</span>
             </button>
 
-            {/* Separator */}
-            <div className="relative my-3 flex items-center justify-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-800" />
-              </div>
-              <span className="relative px-3 bg-[#070d1d] text-[10px] text-slate-400 font-mono uppercase">
-                ou com suas credenciais
-              </span>
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-3">
               {/* If Sign Up: Select Role (Permanent) */}
               {isSignUp && (
