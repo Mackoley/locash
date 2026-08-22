@@ -213,34 +213,30 @@ export const FuturisticMap: React.FC = () => {
       }
     };
 
-    container.addEventListener('mousedown', handleMouseDown);
     // Dynamic Real-time Zoom-Responsive Scale for 3D Beams, Base Spinner and Markers
     const updateZoomScale = () => {
       const zoom = map.getZoom();
-      // True exponential scaling according to zoom perspective:
-      // Zoom 16: scale 1.0 (street level)
-      // Zoom 14: scale 0.58 (neighborhood level)
-      // Zoom 12: scale 0.32 (city level)
-      // Zoom 10: scale 0.16 (state/country level)
-      const scale = Math.min(Math.max(Math.pow(1.32, zoom - 16), 0.15), 1.15);
+      // Smooth scaling by zoom level:
+      // Zoom 16 (close): scale 1.0
+      // Zoom 14 (medium): scale 0.68
+      // Zoom 12 (far): scale 0.42
+      // Zoom 10 (very far): scale 0.22
+      const scale = Math.min(Math.max(0.22 + (zoom - 10) * 0.13, 0.20), 1.05);
       
-      const elements = container.querySelectorAll<HTMLElement>('.custom-price-marker');
-      elements.forEach(markerEl => {
-        markerEl.style.transform = `translate(-50%, -100%) scale(${scale.toFixed(3)})`;
-        markerEl.style.transformOrigin = 'bottom center';
+      const scalers = container.querySelectorAll<HTMLElement>('.marker-zoom-scaler');
+      scalers.forEach(scaler => {
+        scaler.style.transform = `scale(${scale.toFixed(3)})`;
       });
     };
 
     map.on('zoom', updateZoomScale);
-    map.on('move', updateZoomScale);
-    map.on('idle', updateZoomScale);
+    map.on('render', updateZoomScale);
 
     mapInstanceRef.current = map;
 
     return () => {
       map.off('zoom', updateZoomScale);
-      map.off('move', updateZoomScale);
-      map.off('idle', updateZoomScale);
+      map.off('render', updateZoomScale);
       container.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
@@ -476,56 +472,69 @@ export const FuturisticMap: React.FC = () => {
         "></div>
       ` : '';
 
+      const currentZoom = map.getZoom();
+      const currentScale = Math.min(Math.max(0.22 + (currentZoom - 10) * 0.13, 0.20), 1.05);
+
       el.innerHTML = `
-        ${heatHtml}
-        ${beamHtml}
-        <div style="
-          position: relative;
-          z-index: 25;
+        <div class="marker-zoom-scaler" style="
+          transform: scale(${currentScale.toFixed(3)});
+          transform-origin: bottom center;
           display: flex;
+          flex-direction: column;
           align-items: center;
-          gap: 5px;
-          padding: 3px 9px;
-          background: ${isLight ? '#ffffff' : statusBg};
-          border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-          border-radius: 9999px;
-          backdrop-filter: blur(12px);
-          box-shadow: ${isSelected 
-            ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.5)` 
-            : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
-          transition: all 0.2s ease;
-          transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
-          cursor: pointer;
-          margin-bottom: 10px;
+          position: relative;
+          will-change: transform;
         ">
-          <span style="
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: ${statusColor};
+          ${heatHtml}
+          ${beamHtml}
+          <div style="
+            position: relative;
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            background: ${isLight ? '#ffffff' : statusBg};
+            border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+            border-radius: 9999px;
+            backdrop-filter: blur(12px);
+            box-shadow: ${isSelected 
+              ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.5)` 
+              : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
+            transition: all 0.2s ease;
+            transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
+            cursor: pointer;
+            margin-bottom: 10px;
+          ">
+            <span style="
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              background: ${statusColor};
+              box-shadow: 0 0 6px ${statusColor};
+              display: inline-block;
+            "></span>
+            <span style="
+              font-family: 'JetBrains Mono', monospace;
+              font-weight: 800;
+              font-size: 10.5px;
+              color: ${textColor};
+              letter-spacing: -0.02em;
+            ">${formattedPrice}</span>
+          </div>
+          <div style="
+            position: absolute;
+            bottom: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1.5px;
+            height: 10px;
+            background: linear-gradient(to top, #ffffff, ${statusColor});
             box-shadow: 0 0 6px ${statusColor};
-            display: inline-block;
-          "></span>
-          <span style="
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 800;
-            font-size: 10.5px;
-            color: ${textColor};
-            letter-spacing: -0.02em;
-          ">${formattedPrice}</span>
+            z-index: 20;
+            pointer-events: none;
+          "></div>
         </div>
-        <div style="
-          position: absolute;
-          bottom: 0px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 1.5px;
-          height: 10px;
-          background: linear-gradient(to top, #ffffff, ${statusColor});
-          box-shadow: 0 0 6px ${statusColor};
-          z-index: 20;
-          pointer-events: none;
-        "></div>
       `;
 
       el.addEventListener('click', () => {
@@ -545,15 +554,6 @@ export const FuturisticMap: React.FC = () => {
         .addTo(map);
 
       markersRef.current.push(marker);
-    });
-
-    // Apply immediate zoom-responsive scale to newly added markers
-    const zoom = map.getZoom();
-    const scale = Math.min(Math.max(Math.pow(1.32, zoom - 16), 0.15), 1.15);
-    const elements = mapContainerRef.current?.querySelectorAll<HTMLElement>('.custom-price-marker');
-    elements?.forEach(markerEl => {
-      markerEl.style.transform = `translate(-50%, -100%) scale(${scale.toFixed(3)})`;
-      markerEl.style.transformOrigin = 'bottom center';
     });
   }, [filteredProperties, selectedProperty, mapVisualMode, mapTheme, setSelectedProperty]);
 
