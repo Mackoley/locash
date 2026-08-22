@@ -308,18 +308,24 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         setUserRole(selectedRole);
 
-        if (data.session) {
-          setSuccessMessage('Conta criada e conectada com sucesso! Bem-vindo ao LOCASH.');
-          setTimeout(() => {
-            setSuccessMessage(null);
-            onClose();
-          }, 900);
-          return;
-        } else {
-          // Open dedicated email confirmation screen!
-          setEmailConfirmationPending(email.trim().toLowerCase());
-          return;
+        // Automatic instant login
+        if (!data.session) {
+          try {
+            await supabase.auth.signInWithPassword({
+              email: email.trim().toLowerCase(),
+              password
+            });
+          } catch (autoLoginErr) {
+            console.warn('Auto login:', autoLoginErr);
+          }
         }
+
+        setSuccessMessage('Conta criada com sucesso! Bem-vindo ao LOCASH.');
+        setTimeout(() => {
+          setSuccessMessage(null);
+          onClose();
+        }, 800);
+        return;
       } else {
         // Dual Login: Detect if loginIdentifier is email or phone number
         let targetEmail = loginIdentifier.trim().toLowerCase();
