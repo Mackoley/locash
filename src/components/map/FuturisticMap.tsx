@@ -213,6 +213,12 @@ export const FuturisticMap: React.FC = () => {
       }
     };
 
+    // Attach Middle-Click Scroll Drag Rotation listeners
+    container.addEventListener('mousedown', handleMouseDown);
+    container.addEventListener('auxclick', handleAuxClick);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+
     // Dynamic Real-time Zoom-Responsive Scale for 3D Beams, Base Spinner and Markers (Higher Zoom Reduction Ratio)
     const updateZoomScale = () => {
       const zoom = map.getZoom();
@@ -244,14 +250,14 @@ export const FuturisticMap: React.FC = () => {
     window.addEventListener('orientationchange', handleWindowResize);
 
     return () => {
+      container.removeEventListener('mousedown', handleMouseDown);
+      container.removeEventListener('auxclick', handleAuxClick);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('resize', handleWindowResize);
       window.removeEventListener('orientationchange', handleWindowResize);
       map.off('zoom', updateZoomScale);
       map.off('render', updateZoomScale);
-      container.removeEventListener('mousedown', handleMouseDown);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      container.removeEventListener('auxclick', handleAuxClick);
       map.remove();
       mapInstanceRef.current = null;
     };
