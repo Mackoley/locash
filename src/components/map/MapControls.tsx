@@ -223,14 +223,14 @@ export const MapControls: React.FC<MapControlsProps> = ({
         </div>
       </div>
 
-      {/* Bottom Floating Quick Carousel of Properties */}
-      <div className="absolute bottom-4 left-4 right-4 z-20 overflow-x-auto pb-1 flex gap-3 pointer-events-auto no-scrollbar max-w-4xl mx-auto">
+      {/* Bottom Floating Quick Carousel of Properties (Elevated on mobile above bottom nav bar) */}
+      <div className="absolute bottom-20 md:bottom-4 left-3 md:left-4 right-3 md:right-4 z-20 overflow-x-auto pb-1 flex gap-3 pointer-events-auto no-scrollbar max-w-4xl mx-auto">
         {filteredProperties.slice(0, 5).map(prop => (
           <div
             key={prop.id}
             onClick={() => setSelectedProperty(prop)}
-            className={`shrink-0 w-64 glass-panel p-2.5 rounded-xl border transition-all hover:scale-[1.02] flex items-center gap-3 group cursor-pointer ${
-              isLight ? 'border-slate-300 hover:border-sky-500/70 bg-white/90 text-slate-900 shadow-md' : 'border-slate-800 hover:border-cyan-500/50'
+            className={`shrink-0 w-60 sm:w-64 glass-panel p-2.5 rounded-xl border transition-all hover:scale-[1.02] flex items-center gap-3 group cursor-pointer shadow-lg backdrop-blur-md ${
+              isLight ? 'border-slate-300 hover:border-sky-500/70 bg-white/95 text-slate-900 shadow-md' : 'border-slate-800 hover:border-cyan-500/50 bg-slate-950/90'
             }`}
           >
             <img
