@@ -310,13 +310,13 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 w-full glass-panel border-b border-slate-800/80 bg-cyber-darkest/95 shadow-[0_4px_25px_rgba(0,0,0,0.5)]">
-      {/* ================= TIER 1: BRAND LOGO + USER ACTIONS & ROLES ================= */}
-      <div className="px-2.5 sm:px-6 py-2 flex items-center justify-between gap-2 border-b border-slate-800/50">
-        {/* Brand & Logo */}
+      {/* ================= SINGLE TIER: LOGO + INTEGRATED SEARCH BAR + ACTIONS & USER MENU ================= */}
+      <div className="px-2.5 sm:px-6 py-2 flex items-center justify-between gap-2.5 sm:gap-4">
+        {/* Left: Brand & Logo */}
         <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
           <button 
             onClick={() => setActiveView('MAPA')}
-            className="flex items-center gap-2 sm:gap-2.5 group text-left focus:outline-none"
+            className="flex items-center gap-2 sm:gap-2.5 group text-left focus:outline-none cursor-pointer"
             title="Ir para o Mapa"
           >
             <img 
@@ -328,20 +328,142 @@ export const Header: React.FC = () => {
               <span className="font-extrabold text-sm sm:text-lg tracking-wider text-white font-mono flex items-center">
                 LOCA<span className="text-cyber-cyan">SH</span>
               </span>
-              <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30 uppercase tracking-widest">
+              <span className="hidden lg:inline text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30 uppercase tracking-widest">
                 IMOBILIÁRIA
               </span>
             </div>
           </button>
         </div>
 
-        {/* Action Controls & User Roles */}
+        {/* Center: Integrated Full Search Bar with Real-Time Proximity Autocomplete */}
+        <div ref={searchContainerRef} className="flex-1 max-w-2xl mx-auto relative">
+          <form onSubmit={handleSearchSubmit} className="relative group flex items-center w-full">
+            <div className="absolute left-3.5 flex items-center pointer-events-none text-cyber-cyan">
+              <MapPin className="w-4 h-4" />
+            </div>
+            
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder="Buscar endereço, rua, bairro ou cidade..."
+              value={filterState.search}
+              onClick={() => {
+                hasJustSelectedRef.current = false;
+                if (suggestions.length > 0) setShowSuggestions(true);
+              }}
+              onFocus={() => {
+                hasJustSelectedRef.current = false;
+                if (suggestions.length > 0) setShowSuggestions(true);
+              }}
+              onChange={(e) => {
+                hasJustSelectedRef.current = false;
+                setFilterState(prev => ({ ...prev, search: e.target.value }));
+                setShowSuggestions(true);
+              }}
+              className="w-full bg-slate-900/90 text-xs sm:text-sm text-slate-100 placeholder-slate-400 pl-10 pr-20 py-2 rounded-xl border border-slate-700/80 focus:outline-none focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan transition-all font-sans shadow-inner"
+            />
+            
+            <div className="absolute inset-y-1 right-1 flex items-center gap-1">
+              {filterState.search && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFilterState(prev => ({ ...prev, search: '' }));
+                    setSuggestions([]);
+                    setShowSuggestions(false);
+                  }}
+                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                  title="Limpar busca"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+
+              <button
+                type="submit"
+                className="px-2.5 sm:px-3 py-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs shadow-neon-cyan transition-all transform active:scale-95 shrink-0 cursor-pointer"
+                title="Buscar no mapa (ou pressione Enter)"
+              >
+                {isSearching || isSuggesting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
+                ) : (
+                  <>
+                    <Search className="w-3.5 h-3.5 text-slate-950 stroke-[2.8]" />
+                    <span className="hidden md:inline">Buscar</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {/* Real-time Full-Width Autocomplete Suggestions Dropdown (Sorted by Proximity) */}
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-1.5 glass-panel border border-cyan-500/40 rounded-2xl bg-slate-950/98 shadow-[0_12px_40px_rgba(0,0,0,0.85)] overflow-hidden z-50 animate-fade-in backdrop-blur-2xl">
+              <div className="p-2 flex items-center justify-between border-b border-slate-800/80 px-4 bg-slate-900/50">
+                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Compass className="w-3.5 h-3.5 text-cyber-cyan" />
+                  Sugestões por Proximidade GPS
+                </span>
+                <span className="text-[9px] font-mono text-cyber-cyan font-bold">
+                  {suggestions.length} MAIS PRÓXIMOS
+                </span>
+              </div>
+
+              <div className="divide-y divide-slate-800/60 max-h-72 overflow-y-auto no-scrollbar">
+                {suggestions.map((item) => {
+                  const distanceLabel = formatDistance(item.distanceKm);
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleSelectSuggestion(item)}
+                      className="w-full px-4 py-2.5 text-left flex items-center gap-3 hover:bg-cyan-500/10 transition-colors group cursor-pointer"
+                    >
+                      <div className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 border ${
+                        item.isLocalProperty 
+                          ? 'bg-emerald-500/15 border-emerald-500/30 text-cyber-emerald shadow-sm' 
+                          : 'bg-cyan-500/15 border-cyan-500/30 text-cyber-cyan shadow-sm'
+                      }`}>
+                        {item.isLocalProperty ? (
+                          <Building className="w-3.5 h-3.5" />
+                        ) : (
+                          <MapPin className="w-3.5 h-3.5" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs sm:text-sm font-bold text-white group-hover:text-cyber-cyan transition-colors truncate">
+                            {item.name}
+                          </span>
+                          {distanceLabel && (
+                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyber-cyan border border-cyan-500/30 shrink-0">
+                              📍 {distanceLabel}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-400 truncate mt-0.5 font-sans">
+                          {item.subtext}
+                        </div>
+                      </div>
+                      <span className="text-xs text-slate-500 group-hover:text-cyber-cyan transition-colors shrink-0 font-mono flex items-center gap-1 font-bold">
+                        Ir ➔
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Action Controls & User Roles */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
           {/* Landlord Add Property Button */}
           {userRole === 'LANDLORD' && (
             <button
               onClick={() => setIsWizardModalOpen(true)}
-              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-neon-cyan transition-all transform active:scale-95 shrink-0"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center gap-1 shadow-neon-cyan transition-all transform active:scale-95 shrink-0 cursor-pointer"
               title="Cadastrar Novo Imóvel"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3]" />
@@ -499,132 +621,6 @@ export const Header: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* ================= TIER 2: DEDICATED FULL-WIDTH ADDRESS SEARCH BAR (EXCLUSIVO DO MAPA) ================= */}
-      {activeView === 'MAPA' && (
-        <div className="px-2.5 sm:px-6 py-2 bg-slate-950/60 border-t border-slate-800/40 animate-fade-in">
-          <div ref={searchContainerRef} className="w-full max-w-4xl mx-auto relative">
-          <form onSubmit={handleSearchSubmit} className="relative group flex items-center w-full">
-            <div className="absolute left-3.5 flex items-center pointer-events-none text-cyber-cyan">
-              <MapPin className="w-4 h-4" />
-            </div>
-            
-            <input
-              ref={inputRef}
-              type="text"
-              placeholder="Digite o endereço, rua, avenida, bairro ou cidade..."
-              value={filterState.search}
-              onClick={() => {
-                hasJustSelectedRef.current = false;
-                if (suggestions.length > 0) setShowSuggestions(true);
-              }}
-              onFocus={() => {
-                hasJustSelectedRef.current = false;
-                if (suggestions.length > 0) setShowSuggestions(true);
-              }}
-              onChange={(e) => {
-                hasJustSelectedRef.current = false;
-                setFilterState(prev => ({ ...prev, search: e.target.value }));
-                setShowSuggestions(true);
-              }}
-              className="w-full bg-slate-900/95 text-xs sm:text-sm text-slate-100 placeholder-slate-400 pl-10 pr-20 py-2 sm:py-2.5 rounded-xl border border-slate-700/80 focus:outline-none focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan transition-all font-sans shadow-inner"
-            />
-            
-            <div className="absolute inset-y-1 right-1 flex items-center gap-1">
-              {filterState.search && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilterState(prev => ({ ...prev, search: '' }));
-                    setSuggestions([]);
-                    setShowSuggestions(false);
-                  }}
-                  className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                  title="Limpar busca"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-
-              <button
-                type="submit"
-                className="px-3 sm:px-4 py-1.5 sm:py-2 flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs shadow-neon-cyan transition-all transform active:scale-95 shrink-0"
-                title="Buscar no mapa (ou pressione Enter)"
-              >
-                {isSearching || isSuggesting ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-slate-950" />
-                ) : (
-                  <>
-                    <Search className="w-3.5 h-3.5 text-slate-950 stroke-[2.8]" />
-                    <span className="hidden sm:inline">Buscar</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-
-          {/* Real-time Full-Width Autocomplete Suggestions Dropdown (Sorted by Proximity) */}
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1.5 glass-panel border border-cyan-500/40 rounded-2xl bg-slate-950/98 shadow-[0_12px_40px_rgba(0,0,0,0.85)] overflow-hidden z-50 animate-fade-in backdrop-blur-2xl">
-              <div className="p-2 flex items-center justify-between border-b border-slate-800/80 px-4 bg-slate-900/50">
-                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Compass className="w-3.5 h-3.5 text-cyber-cyan" />
-                  Sugestões por Proximidade GPS
-                </span>
-                <span className="text-[9px] font-mono text-cyber-cyan font-bold">
-                  {suggestions.length} MAIS PRÓXIMOS
-                </span>
-              </div>
-
-              <div className="divide-y divide-slate-800/60 max-h-72 overflow-y-auto no-scrollbar">
-                {suggestions.map((item) => {
-                  const distanceLabel = formatDistance(item.distanceKm);
-
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => handleSelectSuggestion(item)}
-                      className="w-full px-4 py-3 text-left flex items-center gap-3.5 hover:bg-cyan-500/10 transition-colors group cursor-pointer"
-                    >
-                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
-                        item.isLocalProperty 
-                          ? 'bg-emerald-500/15 border-emerald-500/30 text-cyber-emerald shadow-sm' 
-                          : 'bg-cyan-500/15 border-cyan-500/30 text-cyber-cyan shadow-sm'
-                      }`}>
-                        {item.isLocalProperty ? (
-                          <Building className="w-4 h-4" />
-                        ) : (
-                          <MapPin className="w-4 h-4" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs sm:text-sm font-bold text-white group-hover:text-cyber-cyan transition-colors truncate">
-                            {item.name}
-                          </span>
-                          {distanceLabel && (
-                            <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyber-cyan border border-cyan-500/30 shrink-0">
-                              📍 {distanceLabel}
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-[11px] text-slate-400 truncate mt-0.5 font-sans">
-                          {item.subtext}
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-500 group-hover:text-cyber-cyan transition-colors shrink-0 font-mono flex items-center gap-1 font-bold">
-                        Ir ➔
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      )}
     </header>
   );
 };
