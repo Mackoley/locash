@@ -129,6 +129,42 @@ export const Header: React.FC = () => {
       const localMatches: AddressSuggestion[] = [];
       const seenNames = new Set<string>();
 
+      // A. Check if query is a Google Maps URL
+      if (query.includes('google.com/maps') || query.includes('goo.gl/maps') || query.includes('maps.app.goo.gl')) {
+        const coordMatch = query.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+        const placeMatch = query.match(/\/place\/([^/@]+)/);
+        if (coordMatch) {
+          const lat = parseFloat(coordMatch[1]);
+          const lng = parseFloat(coordMatch[2]);
+          const placeName = placeMatch ? decodeURIComponent(placeMatch[1].replace(/\+/g, ' ')) : 'Local do Google Maps';
+          localMatches.unshift({
+            id: `gmaps-url-${lat}-${lng}`,
+            name: `📍 ${placeName}`,
+            subtext: `Coordenadas: ${lat.toFixed(5)}, ${lng.toFixed(5)} • Google Maps`,
+            lat,
+            lng,
+            distanceKm: userLocation ? calculateDistanceKm(userLocation.lat, userLocation.lng, lat, lng) : undefined,
+            isLocalProperty: false
+          });
+        }
+      }
+
+      // B. Check if query is raw Coordinates (e.g. -14.8757649, -40.3705166)
+      const rawCoords = query.trim().match(/^(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)$/);
+      if (rawCoords) {
+        const lat = parseFloat(rawCoords[1]);
+        const lng = parseFloat(rawCoords[2]);
+        localMatches.unshift({
+          id: `coords-${lat}-${lng}`,
+          name: `📍 Coordenadas GPS (${lat.toFixed(5)}, ${lng.toFixed(5)})`,
+          subtext: 'Ir direto para esta coordenada no mapa 3D',
+          lat,
+          lng,
+          distanceKm: userLocation ? calculateDistanceKm(userLocation.lat, userLocation.lng, lat, lng) : undefined,
+          isLocalProperty: false
+        });
+      }
+
       properties.forEach(p => {
         const titleMatch = p.title.toLowerCase().includes(queryLower);
         const neighborhoodMatch = p.neighborhood.toLowerCase().includes(queryLower);
@@ -152,17 +188,21 @@ export const Header: React.FC = () => {
         }
       });
 
-      // 2. Fetch Photon Geocoding API (Fast, CORS-ready, Proximity-biased)
+      // 2. Fetch Multi-source (Photon + Nominatim) in parallel
       let apiMatches: AddressSuggestion[] = [];
+      const latLonBias = userLocation ? `&lat=${userLocation.lat}&lon=${userLocation.lng}` : '';
+
       try {
-        const latLonBias = userLocation ? `&lat=${userLocation.lat}&lon=${userLocation.lng}` : '';
-        const photonRes = await fetch(
-          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}${latLonBias}&limit=8&lang=default`
-        );
-        if (photonRes.ok) {
-          const photonData = await photonRes.json();
-          if (photonData.features && photonData.features.length > 0) {
-            apiMatches = photonData.features.map((feat: any, idx: number) => {
+        const [photonRes, nominatimRes] = await Promise.allSettled([
+          fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}${latLonBias}&limit=6&lang=default`),
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=5&addressdetails=1`)
+        ]);
+
+        // Process Photon
+        if (photonRes.status === 'fulfilled' && photonRes.value.ok) {
+          const photonData = await photonRes.value.json();
+          if (photonData.features) {
+            photonData.features.forEach((feat: any, idx: number) => {
               const [lng, lat] = feat.geometry.coordinates;
               const p = feat.properties || {};
               const street = p.street || p.name || '';
@@ -191,55 +231,57 @@ export const Header: React.FC = () => {
                 ? calculateDistanceKm(userLocation.lat, userLocation.lng, lat, lng)
                 : undefined;
 
-              return {
-                id: `photon-${idx}-${p.osm_id || Math.random()}`,
-                name: mainTitle,
-                subtext: subDetail,
-                lat,
-                lng,
-                distanceKm: dist,
-                isLocalProperty: false
-              };
+              const key = `${lat.toFixed(3)},${lng.toFixed(3)}`;
+              if (!seenNames.has(key)) {
+                seenNames.add(key);
+                apiMatches.push({
+                  id: `photon-${idx}-${p.osm_id || Math.random()}`,
+                  name: mainTitle,
+                  subtext: subDetail,
+                  lat,
+                  lng,
+                  distanceKm: dist,
+                  isLocalProperty: false
+                });
+              }
+            });
+          }
+        }
+
+        // Process Nominatim
+        if (nominatimRes.status === 'fulfilled' && nominatimRes.value.ok) {
+          const nominatimData = await nominatimRes.value.json();
+          if (Array.isArray(nominatimData)) {
+            nominatimData.forEach((item: any) => {
+              const itemLat = parseFloat(item.lat);
+              const itemLng = parseFloat(item.lon);
+              const key = `${itemLat.toFixed(3)},${itemLng.toFixed(3)}`;
+
+              if (!seenNames.has(key)) {
+                seenNames.add(key);
+                const dist = userLocation 
+                  ? calculateDistanceKm(userLocation.lat, userLocation.lng, itemLat, itemLng)
+                  : undefined;
+
+                const parts = item.display_name.split(',');
+                const mainName = parts[0]?.trim() || item.display_name;
+                const sub = parts.slice(1, 4).join(',').trim();
+
+                apiMatches.push({
+                  id: `geo-${item.place_id}`,
+                  name: mainName,
+                  subtext: sub || 'Brasil',
+                  lat: itemLat,
+                  lng: itemLng,
+                  distanceKm: dist,
+                  isLocalProperty: false
+                });
+              }
             });
           }
         }
       } catch (err) {
-        console.warn('Erro na busca Photon:', err);
-      }
-
-      // 3. Fallback to Nominatim if Photon returned no matches
-      if (apiMatches.length === 0) {
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`
-          );
-          if (res.ok) {
-            const data = await res.json();
-            apiMatches = data.map((item: any) => {
-              const itemLat = parseFloat(item.lat);
-              const itemLng = parseFloat(item.lon);
-              const dist = userLocation 
-                ? calculateDistanceKm(userLocation.lat, userLocation.lng, itemLat, itemLng)
-                : undefined;
-
-              const parts = item.display_name.split(',');
-              const mainName = parts[0]?.trim() || item.display_name;
-              const sub = parts.slice(1, 4).join(',').trim();
-
-              return {
-                id: `geo-${item.place_id}`,
-                name: mainName,
-                subtext: sub || 'Brasil',
-                lat: itemLat,
-                lng: itemLng,
-                distanceKm: dist,
-                isLocalProperty: false
-              };
-            });
-          }
-        } catch (err) {
-          console.warn('Erro na busca Nominatim:', err);
-        }
+        console.warn('Erro na busca multi-provedor:', err);
       }
 
       // Combine and SORT strictly by closest distance to user
@@ -291,7 +333,8 @@ export const Header: React.FC = () => {
 
   const handleSearchSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!filterState.search.trim()) return;
+    const query = filterState.search.trim();
+    if (!query) return;
 
     hasJustSelectedRef.current = true;
     setShowSuggestions(false);
@@ -304,7 +347,31 @@ export const Header: React.FC = () => {
       setActiveView('MAPA');
     }
 
-    await searchAddress(filterState.search);
+    // 1. Check Google Maps URL
+    if (query.includes('google.com/maps') || query.includes('goo.gl/maps') || query.includes('maps.app.goo.gl')) {
+      const coordMatch = query.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      const placeMatch = query.match(/\/place\/([^/@]+)/);
+      if (coordMatch) {
+        const lat = parseFloat(coordMatch[1]);
+        const lng = parseFloat(coordMatch[2]);
+        const placeName = placeMatch ? decodeURIComponent(placeMatch[1].replace(/\+/g, ' ')) : 'Local do Google Maps';
+        setSearchTarget({ lat, lng, name: placeName });
+        setIsSearching(false);
+        return;
+      }
+    }
+
+    // 2. Check Raw GPS Coordinates (e.g. -14.8757649, -40.3705166)
+    const rawCoords = query.match(/^(-?\d{1,2}\.\d+)[,\s]+(-?\d{1,3}\.\d+)$/);
+    if (rawCoords) {
+      const lat = parseFloat(rawCoords[1]);
+      const lng = parseFloat(rawCoords[2]);
+      setSearchTarget({ lat, lng, name: `Coordenadas (${lat.toFixed(4)}, ${lng.toFixed(4)})` });
+      setIsSearching(false);
+      return;
+    }
+
+    await searchAddress(query);
     setIsSearching(false);
   };
 
