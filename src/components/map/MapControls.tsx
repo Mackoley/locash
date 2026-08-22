@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, 
   Minus, 
@@ -52,6 +52,28 @@ export const MapControls: React.FC<MapControlsProps> = ({
 }) => {
   const { setIsFilterModalOpen, filteredProperties, setSelectedProperty } = useApp();
   const [isExtraControlsOpen, setIsExtraControlsOpen] = useState<boolean>(false);
+  const extraControlsRef = useRef<HTMLDivElement>(null);
+
+  // Close extra controls / theme popup whenever user clicks, drags or touches anywhere on the map or outside
+  useEffect(() => {
+    if (!isExtraControlsOpen) return;
+
+    const handleOutsideInteraction = (e: MouseEvent | TouchEvent | PointerEvent) => {
+      if (extraControlsRef.current && !extraControlsRef.current.contains(e.target as Node)) {
+        setIsExtraControlsOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleOutsideInteraction, { capture: true });
+    document.addEventListener('touchstart', handleOutsideInteraction, { capture: true });
+    document.addEventListener('mousedown', handleOutsideInteraction, { capture: true });
+
+    return () => {
+      document.removeEventListener('pointerdown', handleOutsideInteraction, { capture: true });
+      document.removeEventListener('touchstart', handleOutsideInteraction, { capture: true });
+      document.removeEventListener('mousedown', handleOutsideInteraction, { capture: true });
+    };
+  }, [isExtraControlsOpen]);
 
   return (
     <>
@@ -112,7 +134,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
         </button>
 
         {/* 3. Botão Discreto para Expandir/Recolher Controles Secundários (3D, Temas, Zoom) */}
-        <div className="relative flex items-center">
+        <div ref={extraControlsRef} className="relative flex items-center">
           {/* Controles Secundários Expandidos em Gaveta Suave */}
           {isExtraControlsOpen && (
             <div className="absolute right-12 top-0 flex flex-col gap-2 p-2 rounded-2xl glass-panel border border-cyan-500/30 bg-slate-950/95 shadow-2xl z-30 animate-fade-in">
