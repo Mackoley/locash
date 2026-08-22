@@ -444,7 +444,27 @@ export const FuturisticMap: React.FC = () => {
   const themeBgClass = themeBgMap[mapTheme] || 'bg-[#080d1a]';
 
   return (
-    <div className={`relative w-full h-full flex-1 overflow-hidden transition-colors duration-500 ${themeBgClass}`}>
+    <div className={`relative w-full h-full flex-1 overflow-hidden transition-all duration-700 ${themeBgClass} map-theme-${mapTheme}`}>
+      {/* Dynamic Map Tiles Shader CSS */}
+      <style>{`
+        .map-theme-CYBER_DARK .maplibregl-canvas {
+          filter: brightness(0.95) contrast(1.15) saturate(1.2);
+          transition: filter 0.5s ease;
+        }
+        .map-theme-MIDNIGHT_BLUE .maplibregl-canvas {
+          filter: hue-rotate(210deg) saturate(2.8) brightness(0.85) contrast(1.4);
+          transition: filter 0.5s ease;
+        }
+        .map-theme-MATRIX_EMERALD .maplibregl-canvas {
+          filter: hue-rotate(95deg) saturate(3.5) brightness(0.9) contrast(1.45);
+          transition: filter 0.5s ease;
+        }
+        .map-theme-OLED_MONOCHROME .maplibregl-canvas {
+          filter: grayscale(100%) brightness(0.75) contrast(2.2);
+          transition: filter 0.5s ease;
+        }
+      `}</style>
+
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 
