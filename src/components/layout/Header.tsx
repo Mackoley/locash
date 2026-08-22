@@ -336,10 +336,10 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Center: Integrated Full Search Bar with Real-Time Proximity Autocomplete */}
-        <div ref={searchContainerRef} className="flex-1 max-w-2xl mx-auto relative">
+        <div ref={searchContainerRef} className="flex-1 max-w-2xl mx-auto relative min-w-0">
           <form onSubmit={handleSearchSubmit} className="relative group flex items-center w-full">
-            <div className="absolute left-3.5 flex items-center pointer-events-none text-cyber-cyan">
-              <MapPin className="w-4 h-4" />
+            <div className="absolute left-2.5 sm:left-3.5 flex items-center pointer-events-none text-cyber-cyan">
+              <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </div>
             
             <input
@@ -360,7 +360,7 @@ export const Header: React.FC = () => {
                 setFilterState(prev => ({ ...prev, search: e.target.value }));
                 setShowSuggestions(true);
               }}
-              className="w-full bg-slate-900/90 text-xs sm:text-sm text-slate-100 placeholder-slate-400 pl-10 pr-20 py-2 rounded-xl border border-slate-700/80 focus:outline-none focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan transition-all font-sans shadow-inner"
+              className="w-full bg-slate-900/90 text-[11px] sm:text-xs md:text-sm text-slate-100 placeholder:text-[10.5px] sm:placeholder:text-xs placeholder-slate-400 pl-7 sm:pl-10 pr-9 sm:pr-20 py-2 rounded-xl border border-slate-700/80 focus:outline-none focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan transition-all font-sans shadow-inner"
             />
             
             <div className="absolute inset-y-1 right-1 flex items-center gap-1">
@@ -381,7 +381,7 @@ export const Header: React.FC = () => {
 
               <button
                 type="submit"
-                className="px-2.5 sm:px-3 py-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs shadow-neon-cyan transition-all transform active:scale-95 shrink-0 cursor-pointer"
+                className="p-1.5 sm:px-3 sm:py-1.5 flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold text-xs shadow-neon-cyan transition-all transform active:scale-95 shrink-0 cursor-pointer"
                 title="Buscar no mapa (ou pressione Enter)"
               >
                 {isSearching || isSuggesting ? (
@@ -511,7 +511,7 @@ export const Header: React.FC = () => {
                   </div>
                 )}
 
-                <div className="flex flex-col text-left max-w-[100px] sm:max-w-[130px]">
+                <div className="hidden sm:flex flex-col text-left max-w-[100px] sm:max-w-[130px]">
                   <span className="text-[11px] font-bold font-sans leading-tight truncate">
                     {currentUser?.name || (userRole === 'LANDLORD' ? 'Locador (Admin)' : 'Inquilino')}
                   </span>
@@ -520,7 +520,7 @@ export const Header: React.FC = () => {
                   </span>
                 </div>
 
-                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                <ChevronDown className={`hidden sm:block w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
                   isProfileDropdownOpen ? 'rotate-180 text-cyan-400' : 'group-hover:text-slate-200'
                 }`} />
               </button>
