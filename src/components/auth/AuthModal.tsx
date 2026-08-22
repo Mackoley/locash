@@ -260,12 +260,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               first_name: firstName.trim(),
               last_name: lastName.trim(),
               phone: formattedPhone,
+              phone_raw: cleanPhoneDigits,
               role: selectedRole
             }
           }
         });
 
         if (error) throw error;
+
+        // Cache phone-to-email mapping locally on the client
+        try {
+          const map = JSON.parse(localStorage.getItem('locash_phone_accounts') || '{}');
+          map[cleanPhoneDigits] = email.trim().toLowerCase();
+          map[formattedPhone] = email.trim().toLowerCase();
+          if (cleanPhoneDigits.length >= 8) {
+            map[cleanPhoneDigits.slice(-8)] = email.trim().toLowerCase();
+            map[cleanPhoneDigits.slice(-9)] = email.trim().toLowerCase();
+          }
+          localStorage.setItem('locash_phone_accounts', JSON.stringify(map));
+        } catch (cacheErr) {}
 
         // Upsert profile in Supabase table
         if (data.user) {
@@ -288,24 +301,45 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         setSuccessMessage('Conta criada com sucesso! Bem-vindo ao LOCASH.');
       } else {
         // Dual Login: Detect if loginIdentifier is email or phone number
-        let targetEmail = loginIdentifier.trim();
+        let targetEmail = loginIdentifier.trim().toLowerCase();
 
         if (!targetEmail.includes('@')) {
-          // It's a phone number: search corresponding email in profiles
+          // It's a phone number: search corresponding email
           const cleanPhone = loginIdentifier.replace(/\D/g, '');
           const formattedPhone = formatBrazilianPhone(loginIdentifier);
 
-          const { data: profileData, error: profileErr } = await supabase
-            .from('profiles')
-            .select('email, role')
-            .or(`phone.eq.${cleanPhone},phone.eq.${formattedPhone}`)
-            .maybeSingle();
+          // 1. Check local client cache first
+          try {
+            const map = JSON.parse(localStorage.getItem('locash_phone_accounts') || '{}');
+            if (map[cleanPhone]) {
+              targetEmail = map[cleanPhone];
+            } else if (map[formattedPhone]) {
+              targetEmail = map[formattedPhone];
+            } else if (cleanPhone.length >= 8 && map[cleanPhone.slice(-8)]) {
+              targetEmail = map[cleanPhone.slice(-8)];
+            }
+          } catch (e) {}
 
-          if (profileErr || !profileData?.email) {
-            throw new Error('Nenhuma conta encontrada com este número de telefone. Cadastre-se ou entre com seu e-mail.');
+          // 2. If not found in local cache, query Supabase profiles
+          if (!targetEmail.includes('@')) {
+            try {
+              const { data: profileList } = await supabase
+                .from('profiles')
+                .select('email, phone')
+                .or(`phone.eq.${cleanPhone},phone.eq.${formattedPhone},phone.ilike.%${cleanPhone.slice(-8)}%`)
+                .limit(1);
+
+              if (profileList && profileList.length > 0 && profileList[0].email) {
+                targetEmail = profileList[0].email;
+              }
+            } catch (dbErr) {
+              console.warn('DB phone query:', dbErr);
+            }
           }
 
-          targetEmail = profileData.email;
+          if (!targetEmail.includes('@')) {
+            throw new Error('Nenhuma conta encontrada com este número de telefone. Verifique o número digitado ou faça login com seu e-mail.');
+          }
         }
 
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -319,6 +353,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           const userMeta = data.user.user_metadata || {};
           const role = (userMeta.role as UserRole) || userRole;
           setUserRole(role);
+
+          // Cache phone-to-email mapping upon login
+          const userPhone = userMeta.phone;
+          if (userPhone && data.user.email) {
+            const cleanP = userPhone.replace(/\D/g, '');
+            try {
+              const map = JSON.parse(localStorage.getItem('locash_phone_accounts') || '{}');
+              map[cleanP] = data.user.email.toLowerCase();
+              map[userPhone] = data.user.email.toLowerCase();
+              if (cleanP.length >= 8) {
+                map[cleanP.slice(-8)] = data.user.email.toLowerCase();
+                map[cleanP.slice(-9)] = data.user.email.toLowerCase();
+              }
+              localStorage.setItem('locash_phone_accounts', JSON.stringify(map));
+            } catch (e) {}
+          }
         }
 
         setSuccessMessage('Login realizado com sucesso!');

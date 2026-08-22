@@ -187,13 +187,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         // Sync with public.profiles table
         try {
-          await supabase.from('profiles').upsert({
+          const profilePayload: any = {
             id: session.user.id,
             email: session.user.email,
             full_name: name,
             avatar_url: avatarUrl,
             role
-          });
+          };
+          if (userMeta.phone) {
+            profilePayload.phone = userMeta.phone;
+          }
+          await supabase.from('profiles').upsert(profilePayload);
         } catch (err) {
           console.warn('Sincronização de perfil:', err);
         }
