@@ -308,7 +308,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           localStorage.setItem('locash_phone_accounts', JSON.stringify(map));
         } catch (cacheErr) {}
 
-        // Upsert profile in Supabase table
+        // Upsert initial profile in Supabase table
         if (data.user) {
           try {
             await supabase.from('profiles').upsert({
@@ -317,15 +317,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               full_name: fullName,
               first_name: firstName.trim(),
               last_name: lastName.trim(),
-              phone: formattedPhone,
-              role: selectedRole
+              phone: formattedPhone
             });
           } catch (profileErr) {
             console.warn('Profile sync:', profileErr);
           }
         }
-
-        setUserRole(selectedRole);
 
         // Automatic instant login
         if (!data.session) {
@@ -339,11 +336,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           }
         }
 
-        setSuccessMessage('Conta criada com sucesso! Bem-vindo(a) à LOCASH.');
-        setTimeout(() => {
-          setSuccessMessage(null);
-          onClose();
-        }, 800);
+        // Close Auth Modal and seamlessly open the Welcome Role Selection Onboarding
+        onClose();
         return;
       } else {
         // Dual Login: Detect if loginIdentifier is email or phone number
@@ -661,41 +655,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           /* Main Real Login/Sign Up Form */
           <>
             <form onSubmit={handleSubmit} className="space-y-3">
-              {/* If Sign Up: Select Role */}
-              {isSignUp && (
-                <div>
-                  <label className="block text-[11px] font-mono text-slate-400 mb-1.5 text-center uppercase tracking-wider font-medium">
-                    Tipo de Conta
-                  </label>
-                  <div className="grid grid-cols-2 gap-2 mb-2.5">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('TENANT')}
-                      className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                        selectedRole === 'TENANT' 
-                          ? 'bg-cyan-500/20 text-cyber-cyan border-cyan-500/60 shadow-[0_0_12px_rgba(0,242,254,0.2)]' 
-                          : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200'
-                      }`}
-                    >
-                      <Home className="w-3.5 h-3.5" />
-                      <span>Locatário (Inquilino)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRole('LANDLORD')}
-                      className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                        selectedRole === 'LANDLORD' 
-                          ? 'bg-purple-600/25 text-purple-300 border-purple-500/60 shadow-[0_0_12px_rgba(168,85,247,0.2)]' 
-                          : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-slate-200'
-                      }`}
-                    >
-                      <Building2 className="w-3.5 h-3.5" />
-                      <span>Locador (Proprietário)</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Sign Up: Nome e Sobrenome em 2 caixas lado a lado */}
               {isSignUp && (
                 <div className="grid grid-cols-2 gap-2">

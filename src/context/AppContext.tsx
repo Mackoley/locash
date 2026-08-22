@@ -155,13 +155,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     role: UserRole;
   } | null>(null);
 
-  // Sync Supabase Auth State (Google OAuth, Email sessions, Profiles)
+  // Sync Supabase Auth State (Google OAuth, Email/Phone sessions, Profiles)
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         const userMeta = session.user.user_metadata || {};
         const role = (userMeta.role as UserRole) || userRole;
-        const isGoogle = session.user.app_metadata?.provider === 'google' || userMeta.iss?.includes('google');
         
         setCurrentUser({
           id: session.user.id,
@@ -172,8 +171,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
         setUserRole(role);
 
-        // Check if first-time social/Google user needs to pick role
-        if (!userMeta.role_confirmed && (isGoogle || !userMeta.role)) {
+        // Check if first-time user (Google or Email/Phone) needs to pick their role with welcome onboarding
+        if (!userMeta.role_confirmed) {
           setIsRoleOnboardingOpen(true);
         }
       }
@@ -185,7 +184,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const role = (userMeta.role as UserRole) || userRole;
         const name = userMeta.full_name || userMeta.name || session.user.email?.split('@')[0] || 'Usuário';
         const avatarUrl = userMeta.avatar_url || userMeta.picture;
-        const isGoogle = session.user.app_metadata?.provider === 'google' || userMeta.iss?.includes('google');
 
         setCurrentUser({
           id: session.user.id,
@@ -196,8 +194,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         });
         setUserRole(role);
 
-        // Check if first-time social/Google user needs to pick role
-        if (!userMeta.role_confirmed && (isGoogle || !userMeta.role)) {
+        // Check if first-time user (Google or Email/Phone) needs to pick their role with welcome onboarding
+        if (!userMeta.role_confirmed) {
           setIsRoleOnboardingOpen(true);
         }
 
