@@ -84,11 +84,11 @@ export const MapControls: React.FC<MapControlsProps> = ({
       </div>
 
       {/* Right Map Navigation Controls (Clean Minimal: Filtros, Localização Atual e Gaveta Extra) */}
-      <div className="absolute right-4 top-4 z-20 flex flex-col items-end gap-2.5">
+      <div className="absolute right-4 top-4 z-20 flex flex-col items-end gap-2">
         {/* 1. Real-Time GPS User Location Button (Sempre Visível) */}
         <button
           onClick={onCenterUser}
-          className={`p-3 rounded-2xl glass-panel hover:glass-panel-glow transition-all border shadow-2xl group bg-slate-950/95 ${
+          className={`w-9 h-9 p-2 rounded-xl glass-panel hover:glass-panel-glow transition-all border shadow-lg flex items-center justify-center group bg-slate-950/90 ${
             hasUserLocation 
               ? 'border-emerald-500/70 text-cyber-emerald shadow-neon-emerald' 
               : 'border-cyan-500/40 text-cyber-cyan hover:border-cyan-400'
@@ -96,26 +96,26 @@ export const MapControls: React.FC<MapControlsProps> = ({
           title="Minha Localização Atual em Tempo Real"
         >
           {isLocating ? (
-            <Loader2 className="w-5 h-5 animate-spin text-cyber-cyan" />
+            <Loader2 className="w-4 h-4 animate-spin text-cyber-cyan" />
           ) : (
-            <Navigation className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            <Navigation className="w-4 h-4 group-hover:scale-110 transition-transform" />
           )}
         </button>
 
         {/* 2. Filtros Avançados Button (Sempre Visível) */}
         <button
           onClick={() => setIsFilterModalOpen(true)}
-          className="p-3 rounded-2xl glass-panel hover:glass-panel-glow text-white hover:text-cyber-cyan transition-all border border-cyan-500/40 shadow-2xl group bg-slate-950/95"
+          className="w-9 h-9 p-2 rounded-xl glass-panel hover:glass-panel-glow text-white hover:text-cyber-cyan transition-all border border-cyan-500/40 shadow-lg flex items-center justify-center group bg-slate-950/90"
           title="Abrir Filtros Avançados"
         >
-          <SlidersHorizontal className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          <SlidersHorizontal className="w-4 h-4 group-hover:scale-110 transition-transform" />
         </button>
 
         {/* 3. Botão Discreto para Expandir/Recolher Controles Secundários (3D, Temas, Zoom) */}
         <div className="relative flex items-center">
           {/* Controles Secundários Expandidos em Gaveta Suave */}
           {isExtraControlsOpen && (
-            <div className="absolute right-14 top-0 flex flex-col gap-2 p-2 rounded-2xl glass-panel border border-cyan-500/30 bg-slate-950/95 shadow-2xl z-30 animate-fade-in">
+            <div className="absolute right-12 top-0 flex flex-col gap-2 p-2 rounded-2xl glass-panel border border-cyan-500/30 bg-slate-950/95 shadow-2xl z-30 animate-fade-in">
               {/* Seletor de Temas (Dark / Light / Satellite) */}
               <div className="flex rounded-xl border border-slate-800 overflow-hidden bg-slate-900/90">
                 <button
@@ -230,7 +230,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
           {/* Botão Gatilho Discreto de Camadas/Config */}
           <button
             onClick={() => setIsExtraControlsOpen(!isExtraControlsOpen)}
-            className={`p-2.5 rounded-2xl glass-panel transition-all border shadow-lg group bg-slate-950/80 ${
+            className={`w-9 h-9 p-2 rounded-xl glass-panel transition-all border shadow-lg flex items-center justify-center group bg-slate-950/90 ${
               isExtraControlsOpen 
                 ? 'border-cyan-500/60 text-cyber-cyan shadow-neon-cyan' 
                 : 'border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
