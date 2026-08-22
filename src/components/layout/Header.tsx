@@ -53,30 +53,18 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 w-full glass-panel border-b border-slate-800/80 bg-cyber-darkest/95 px-2 sm:px-6 py-2 sm:py-2.5 flex items-center justify-between gap-1.5 sm:gap-3">
-      {/* Brand & Logo */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+      {/* Brand & Logo (Icon Only for maximum search bar space) */}
+      <div className="flex items-center shrink-0">
         <button 
           onClick={() => setActiveView('MAPA')}
-          className="flex items-center gap-1.5 sm:gap-2.5 group text-left focus:outline-none"
+          className="group focus:outline-none p-0.5"
+          title="LOCASH Imobiliária - Ir para o Mapa"
         >
           <img 
             src="/logo.png" 
             alt="LOCASH" 
-            className="w-8 h-8 sm:w-10 sm:h-10 object-contain drop-shadow-[0_0_12px_rgba(0,242,254,0.4)] transform group-hover:scale-105 transition-transform duration-300 shrink-0" 
+            className="w-9 h-9 sm:w-10 sm:h-10 object-contain drop-shadow-[0_0_12px_rgba(0,242,254,0.5)] transform group-hover:scale-105 transition-transform duration-300 shrink-0" 
           />
-          <div>
-            <div className="flex items-center gap-1">
-              <span className="font-extrabold text-sm sm:text-lg tracking-wider text-white font-mono flex items-center">
-                LOCA<span className="text-cyber-cyan">SH</span>
-              </span>
-              <span className="text-[8px] sm:text-[9px] font-bold px-1 sm:px-1.5 py-0.2 rounded bg-cyber-cyan/15 text-cyber-cyan border border-cyber-cyan/30 uppercase tracking-widest hidden xs:inline-block">
-                IMOBILIÁRIA
-              </span>
-            </div>
-            <p className="text-[10px] text-slate-400 font-mono hidden md:block">
-              {filteredProperties.length} IMÓVEIS MAPEADOS
-            </p>
-          </div>
         </button>
       </div>
 
