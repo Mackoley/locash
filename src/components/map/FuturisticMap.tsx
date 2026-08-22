@@ -112,7 +112,11 @@ export const FuturisticMap: React.FC = () => {
             type: 'raster',
             source: 'carto-dark-base',
             minzoom: 0,
-            maxzoom: 22
+            maxzoom: 22,
+            paint: {
+              'raster-brightness-min': 0.14,
+              'raster-contrast': 0.25
+            }
           },
           {
             id: 'carto-white-labels-layer',
@@ -121,8 +125,8 @@ export const FuturisticMap: React.FC = () => {
             minzoom: 0,
             maxzoom: 22,
             paint: {
-              'raster-brightness-min': 0.35,
-              'raster-contrast': 0.4
+              'raster-brightness-min': 0.4,
+              'raster-contrast': 0.35
             }
           }
         ]
