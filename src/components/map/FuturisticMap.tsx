@@ -17,7 +17,9 @@ export const FuturisticMap: React.FC = () => {
     userLocation,
     isLocating,
     requestUserLocation,
-    searchTarget
+    searchTarget,
+    currentUser,
+    setIsAuthModalOpen
   } = useApp();
   
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -554,16 +556,25 @@ export const FuturisticMap: React.FC = () => {
         </div>
       `;
 
-      el.addEventListener('click', () => {
-        setSelectedProperty(prop);
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+
         map.flyTo({
           center: [prop.longitude, prop.latitude],
           zoom: 15.5,
           pitch: 55,
           bearing: -15,
-          duration: 1600,
+          duration: 1200,
           essential: true
         });
+
+        if (!currentUser) {
+          // Guest User: Prompt login modal to unlock full details
+          setIsAuthModalOpen(true);
+        } else {
+          // Authenticated User: Open full property detail modal
+          setSelectedProperty(prop);
+        }
       });
 
       const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
@@ -572,7 +583,7 @@ export const FuturisticMap: React.FC = () => {
 
       markersRef.current.push(marker);
     });
-  }, [filteredProperties, selectedProperty, mapVisualMode, mapTheme, setSelectedProperty]);
+  }, [filteredProperties, selectedProperty, mapVisualMode, mapTheme, setSelectedProperty, currentUser, setIsAuthModalOpen]);
 
   // Center on selected property if changed from outside
   useEffect(() => {

@@ -9,12 +9,36 @@ interface PropertyCardProps {
 }
 
 export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
-  const { setSelectedProperty, favorites, toggleFavorite } = useApp();
+  const { 
+    setSelectedProperty, 
+    favorites, 
+    toggleFavorite, 
+    currentUser, 
+    setIsAuthModalOpen 
+  } = useApp();
+  
   const isFav = favorites.includes(property.id);
+
+  const handleCardClick = () => {
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+    } else {
+      setSelectedProperty(property);
+    }
+  };
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!currentUser) {
+      setIsAuthModalOpen(true);
+    } else {
+      toggleFavorite(property.id);
+    }
+  };
 
   return (
     <div 
-      onClick={() => setSelectedProperty(property)}
+      onClick={handleCardClick}
       className="glass-panel rounded-2xl overflow-hidden border border-slate-800/80 hover:border-cyan-500/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-neon-cyan flex flex-col justify-between group cursor-pointer"
     >
       {/* Image Container */}
@@ -32,10 +56,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
         {/* Favorite Action */}
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(property.id);
-          }}
+          onClick={handleFavoriteClick}
           className={`absolute top-3 right-3 p-2 rounded-xl backdrop-blur-md transition-all ${
             isFav 
               ? 'bg-red-500/30 text-red-400 border border-red-500/50 shadow-neon-red' 
