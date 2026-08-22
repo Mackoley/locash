@@ -147,6 +147,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Automatically reset all fields when modal opens or closes or when user logs out
+  React.useEffect(() => {
+    if (isOpen) {
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+      setFirstName('');
+      setLastName('');
+      setPhone('');
+      setLoginIdentifier('');
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      setEmailConfirmationPending(null);
+      setIsForgotPassword(false);
+      setShowPassword(false);
+      setShowConfirmPassword(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const dddRegionInfo = getDddRegion(isSignUp ? phone : loginIdentifier);
@@ -480,6 +499,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               type="button"
               onClick={() => {
                 setIsSignUp(false);
+                setPassword('');
+                setConfirmPassword('');
                 setErrorMessage(null);
                 setSuccessMessage(null);
               }}
@@ -495,6 +516,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               type="button"
               onClick={() => {
                 setIsSignUp(true);
+                setPassword('');
+                setConfirmPassword('');
                 setErrorMessage(null);
                 setSuccessMessage(null);
               }}
