@@ -10,10 +10,12 @@ import {
   Building2, 
   Check, 
   Sparkles,
-  User
+  User,
+  AlertCircle
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
+import { supabase, isSupabaseConfigured } from '../../services/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -29,24 +31,90 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const [name, setName] = useState('');
   const [selectedRole, setSelectedRole] = useState<UserRole>(userRole);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Real Google OAuth Sign In
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      setErrorMessage(null);
+      
+      if (!isSupabaseConfigured()) {
+        // Fallback demo mode
+        setUserRole(selectedRole);
+        setSuccessMessage('Conectado via Google (Modo Rápido)!');
+        setTimeout(() => {
+          setSuccessMessage(null);
+          onClose();
+        }, 800);
+        return;
+      }
+
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent'
+          }
+        }
+      });
+
+      if (error) throw error;
+    } catch (err: any) {
+      console.error('Erro ao conectar com Google:', err);
+      setErrorMessage(err.message || 'Erro ao conectar com o Google. Verifique a configuração do provedor.');
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // Simulate instantaneous authentication
-    setTimeout(() => {
+    setErrorMessage(null);
+
+    try {
+      if (isSupabaseConfigured()) {
+        if (isSignUp) {
+          const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: name,
+                role: selectedRole
+              }
+            }
+          });
+          if (error) throw error;
+          setSuccessMessage('Conta criada com sucesso!');
+        } else {
+          const { error } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+          if (error) throw error;
+          setSuccessMessage('Login realizado com sucesso!');
+        }
+      } else {
+        setSuccessMessage(isSignUp ? 'Conta criada com sucesso!' : 'Login realizado com sucesso!');
+      }
+
       setUserRole(selectedRole);
-      setLoading(false);
-      setSuccessMessage(isSignUp ? 'Conta criada com sucesso!' : 'Login realizado com sucesso!');
       setTimeout(() => {
         setSuccessMessage(null);
         onClose();
-      }, 800);
-    }, 600);
+      }, 900);
+    } catch (err: any) {
+      console.error('Erro de autenticação:', err);
+      setErrorMessage(err.message || 'Erro ao autenticar. Verifique seus dados.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleQuickDemo = (role: UserRole) => {
@@ -236,13 +304,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           </span>
         </div>
 
+        {/* Error Notification */}
+        {errorMessage && (
+          <div className="mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/40 text-red-300 text-xs font-bold flex items-center gap-2 animate-fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
         {/* Social Buttons */}
         <div className="space-y-2">
           {/* Google Button */}
           <button
             type="button"
-            onClick={() => handleQuickDemo(selectedRole)}
-            className="w-full py-2.5 px-4 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-bold flex items-center justify-center gap-3 transition-colors"
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full py-2.5 px-4 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700/80 hover:border-cyan-500/50 text-slate-100 text-xs font-bold flex items-center justify-center gap-3 transition-all shadow-md active:scale-[0.99] disabled:opacity-50"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.8 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" />
@@ -250,7 +327,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               <path fill="#FBBC05" d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15.1c0 2.8.7 5.4 1.9 7.8l3.7-2.9z" />
               <path fill="#34A853" d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2-6.4-4.8L1.9 16.4C3.7 20.1 7.5 23 12 23z" />
             </svg>
-            <span>Google</span>
+            <span>Continuar com o Google</span>
           </button>
 
           {/* Apple Button */}
