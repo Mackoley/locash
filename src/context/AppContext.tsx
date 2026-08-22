@@ -164,34 +164,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Search Address with OpenStreetMap Nominatim Geocoding API
+  // Geocoding Search Address (Multi-Provider: Photon + Nominatim + Local DB)
   const searchAddress = async (query: string): Promise<boolean> => {
     if (!query.trim()) return false;
-    try {
-      const encoded = encodeURIComponent(query.trim());
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encoded}&countrycodes=br&limit=1`, {
-        headers: { 'Accept-Language': 'pt-BR' }
+    const cleanQuery = query.trim().toLowerCase();
+
+    // 1. Check local property/neighborhood match first
+    const localMatch = properties.find(p => 
+      p.neighborhood.toLowerCase().includes(cleanQuery) ||
+      p.publicAddress.toLowerCase().includes(cleanQuery) ||
+      p.title.toLowerCase().includes(cleanQuery) ||
+      p.city.toLowerCase().includes(cleanQuery)
+    );
+
+    if (localMatch) {
+      setSearchTarget({ 
+        lat: localMatch.latitude, 
+        lng: localMatch.longitude, 
+        name: `${localMatch.publicAddress}, ${localMatch.neighborhood}` 
       });
-      const data = await res.json();
-      if (data && data.length > 0) {
-        const item = data[0];
-        const lat = parseFloat(item.lat);
-        const lng = parseFloat(item.lon);
-        setSearchTarget({ lat, lng, name: item.display_name });
-        return true;
-      } else {
-        // Fallback search without country filter
-        const fallbackRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encoded}&limit=1`);
-        const fallbackData = await fallbackRes.json();
-        if (fallbackData && fallbackData.length > 0) {
-          const item = fallbackData[0];
-          setSearchTarget({ lat: parseFloat(item.lat), lng: parseFloat(item.lon), name: item.display_name });
+      return true;
+    }
+
+    // 2. Primary Geocoder: Photon (Fast, no rate limit, supports lat/lon bias)
+    try {
+      const latLonBias = userLocation ? `&lat=${userLocation.lat}&lon=${userLocation.lng}` : '';
+      const photonRes = await fetch(
+        `https://photon.komoot.io/api/?q=${encodeURIComponent(query.trim())}${latLonBias}&limit=1`
+      );
+      if (photonRes.ok) {
+        const photonData = await photonRes.json();
+        if (photonData.features && photonData.features.length > 0) {
+          const feat = photonData.features[0];
+          const [lng, lat] = feat.geometry.coordinates;
+          const p = feat.properties;
+          const name = p.name || p.street || p.city || query;
+          const sub = [p.district, p.city, p.state].filter(Boolean).join(', ');
+          setSearchTarget({ 
+            lat, 
+            lng, 
+            name: sub ? `${name} - ${sub}` : name 
+          });
           return true;
         }
       }
     } catch (e) {
-      console.error('Erro na pesquisa de endereço:', e);
+      console.warn('Photon geocoding error:', e);
     }
+
+    // 3. Fallback Geocoder: Nominatim
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query.trim())}&limit=1`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+          const item = data[0];
+          setSearchTarget({ 
+            lat: parseFloat(item.lat), 
+            lng: parseFloat(item.lon), 
+            name: item.display_name 
+          });
+          return true;
+        }
+      }
+    } catch (e) {
+      console.error('Nominatim geocoding error:', e);
+    }
+
     return false;
   };
 

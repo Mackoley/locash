@@ -129,70 +129,94 @@ export const Header: React.FC = () => {
         }
       });
 
-      // 2. Fetch Nominatim Geocoding API with Proximity Viewbox biasing
+      // 2. Fetch Photon Geocoding API (Fast, CORS-ready, Proximity-biased)
       let apiMatches: AddressSuggestion[] = [];
       try {
-        const viewboxParam = userLocation
-          ? `&viewbox=${userLocation.lng - 0.9},${userLocation.lat + 0.9},${userLocation.lng + 0.9},${userLocation.lat - 0.9}&bounded=0`
-          : '';
-
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=br&limit=7&addressdetails=1${viewboxParam}`,
-          { headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' } }
+        const latLonBias = userLocation ? `&lat=${userLocation.lat}&lon=${userLocation.lng}` : '';
+        const photonRes = await fetch(
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}${latLonBias}&limit=8&lang=default`
         );
+        if (photonRes.ok) {
+          const photonData = await photonRes.json();
+          if (photonData.features && photonData.features.length > 0) {
+            apiMatches = photonData.features.map((feat: any, idx: number) => {
+              const [lng, lat] = feat.geometry.coordinates;
+              const p = feat.properties || {};
+              const street = p.street || p.name || '';
+              const houseNum = p.housenumber ? `, nº ${p.housenumber}` : '';
+              const district = p.district ? ` - ${p.district}` : '';
+              const city = p.city || '';
+              const state = p.state || '';
+              const postcode = p.postcode ? ` • CEP ${p.postcode}` : '';
 
-        if (res.ok) {
-          const data = await res.json();
-          apiMatches = data.map((item: any) => {
-            const addr = item.address || {};
-            const road = addr.road || addr.street || addr.pedestrian || addr.footway || addr.avenue || '';
-            const houseNum = addr.house_number ? `, nº ${addr.house_number}` : '';
-            const district = addr.suburb || addr.neighbourhood || addr.city_district || addr.quarter || '';
-            const city = addr.city || addr.town || addr.municipality || addr.village || addr.county || '';
-            const state = addr.state || '';
-            const postcode = addr.postcode ? ` • CEP ${addr.postcode}` : '';
+              let mainTitle = '';
+              if (p.street) {
+                mainTitle = `${p.street}${houseNum}${district}`;
+              } else if (p.name) {
+                mainTitle = `${p.name}${district}`;
+              } else if (district) {
+                mainTitle = `${p.district}${city ? `, ${city}` : ''}`;
+              } else {
+                mainTitle = `${city || 'Localização'}${state ? ` - ${state}` : ''}`;
+              }
 
-            // Construct Full Main Street & Neighborhood Title
-            let mainTitle = '';
-            if (road) {
-              mainTitle = `${road}${houseNum}${district ? ` - ${district}` : ''}`;
-            } else if (district) {
-              mainTitle = `${district}${city ? `, ${city}` : ''}`;
-            } else if (city) {
-              mainTitle = `${city}${state ? ` - ${state}` : ''}`;
-            } else {
-              mainTitle = item.display_name.split(',').slice(0, 2).join(', ').trim();
-            }
+              let subDetail = [city, state].filter(Boolean).join(' - ');
+              if (postcode) subDetail += postcode;
+              if (!subDetail) subDetail = 'Brasil';
 
-            // Construct Full City, State, CEP & Country Subtitle
-            let subDetail = '';
-            if (city && state) {
-              subDetail = `${city} - ${state}${postcode} • Brasil`;
-            } else if (state) {
-              subDetail = `${state}${postcode} • Brasil`;
-            } else {
-              subDetail = item.display_name.split(',').slice(1, 5).join(', ').trim();
-            }
+              const dist = userLocation
+                ? calculateDistanceKm(userLocation.lat, userLocation.lng, lat, lng)
+                : undefined;
 
-            const itemLat = parseFloat(item.lat);
-            const itemLng = parseFloat(item.lon);
-            const dist = userLocation 
-              ? calculateDistanceKm(userLocation.lat, userLocation.lng, itemLat, itemLng)
-              : undefined;
-
-            return {
-              id: `geo-${item.place_id}`,
-              name: mainTitle,
-              subtext: subDetail,
-              lat: itemLat,
-              lng: itemLng,
-              distanceKm: dist,
-              isLocalProperty: false
-            };
-          });
+              return {
+                id: `photon-${idx}-${p.osm_id || Math.random()}`,
+                name: mainTitle,
+                subtext: subDetail,
+                lat,
+                lng,
+                distanceKm: dist,
+                isLocalProperty: false
+              };
+            });
+          }
         }
       } catch (err) {
-        console.warn('Erro na busca de sugestões geográficas:', err);
+        console.warn('Erro na busca Photon:', err);
+      }
+
+      // 3. Fallback to Nominatim if Photon returned no matches
+      if (apiMatches.length === 0) {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`
+          );
+          if (res.ok) {
+            const data = await res.json();
+            apiMatches = data.map((item: any) => {
+              const itemLat = parseFloat(item.lat);
+              const itemLng = parseFloat(item.lon);
+              const dist = userLocation 
+                ? calculateDistanceKm(userLocation.lat, userLocation.lng, itemLat, itemLng)
+                : undefined;
+
+              const parts = item.display_name.split(',');
+              const mainName = parts[0]?.trim() || item.display_name;
+              const sub = parts.slice(1, 4).join(',').trim();
+
+              return {
+                id: `geo-${item.place_id}`,
+                name: mainName,
+                subtext: sub || 'Brasil',
+                lat: itemLat,
+                lng: itemLng,
+                distanceKm: dist,
+                isLocalProperty: false
+              };
+            });
+          }
+        } catch (err) {
+          console.warn('Erro na busca Nominatim:', err);
+        }
       }
 
       // Combine and SORT strictly by closest distance to user
