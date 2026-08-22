@@ -268,6 +268,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
         if (error) throw error;
 
+        // Check if user already exists
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          throw new Error('Este e-mail já está cadastrado no sistema. Por favor, faça login com sua senha.');
+        }
+
         // Cache phone-to-email mapping locally on the client
         try {
           const map = JSON.parse(localStorage.getItem('locash_phone_accounts') || '{}');
@@ -285,7 +290,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           try {
             await supabase.from('profiles').upsert({
               id: data.user.id,
-              email: email.trim(),
+              email: email.trim().toLowerCase(),
               full_name: fullName,
               first_name: firstName.trim(),
               last_name: lastName.trim(),
@@ -298,7 +303,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         }
 
         setUserRole(selectedRole);
-        setSuccessMessage('Conta criada com sucesso! Bem-vindo ao LOCASH.');
+
+        if (data.session) {
+          setSuccessMessage('Conta criada e conectada com sucesso! Bem-vindo ao LOCASH.');
+          setTimeout(() => {
+            setSuccessMessage(null);
+            onClose();
+          }, 900);
+          return;
+        } else {
+          setSuccessMessage('Conta criada com sucesso! Se a confirmação de e-mail estiver ativa, verifique sua caixa de entrada.');
+          setTimeout(() => {
+            setIsSignUp(false);
+            setSuccessMessage(null);
+          }, 3000);
+        }
       } else {
         // Dual Login: Detect if loginIdentifier is email or phone number
         let targetEmail = loginIdentifier.trim().toLowerCase();
@@ -338,7 +357,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           }
 
           if (!targetEmail.includes('@')) {
-            throw new Error('Telefone não vinculado neste navegador. Como sua conta foi criada antes da sincronização, por favor faça login digitando seu E-MAIL nesta primeira vez para vincular o telefone!');
+            throw new Error('Telefone não localizado. Digite seu e-mail cadastrado ou crie uma nova conta.');
           }
         }
 
@@ -372,15 +391,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         }
 
         setSuccessMessage('Login realizado com sucesso!');
+        setTimeout(() => {
+          setSuccessMessage(null);
+          onClose();
+        }, 800);
       }
-
-      setTimeout(() => {
-        setSuccessMessage(null);
-        onClose();
-      }, 800);
     } catch (err: any) {
       console.error('Erro de autenticação:', err);
-      if (err.message?.includes('Invalid login credentials')) {
+      if (err.message?.includes('Email not confirmed')) {
+        setErrorMessage('E-mail ainda não confirmado. Verifique a caixa de entrada do seu e-mail para ativar sua conta.');
+      } else if (err.message?.includes('Invalid login credentials')) {
         setErrorMessage('E-mail, telefone ou senha incorretos.');
       } else if (err.message?.includes('User already registered')) {
         setErrorMessage('Este e-mail já possui uma conta cadastrada. Faça login.');
