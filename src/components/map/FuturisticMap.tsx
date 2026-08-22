@@ -40,7 +40,7 @@ export const FuturisticMap: React.FC = () => {
               'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
             ],
             tileSize: 256,
-            maxzoom: 19,
+            maxzoom: 17, // MapLibre will automatically overzoom smoothly past zoom 17
             attribution: '&copy; Esri &copy; Maxar &copy; Earthstar Geographics'
           },
           'satellite-labels': {
@@ -52,7 +52,7 @@ export const FuturisticMap: React.FC = () => {
               'https://d.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png'
             ],
             tileSize: 256,
-            maxzoom: 19
+            maxzoom: 18
           }
         },
         layers: [
@@ -89,7 +89,7 @@ export const FuturisticMap: React.FC = () => {
             `https://d.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`
           ],
           tileSize: 256,
-          maxzoom: 19,
+          maxzoom: 18,
           attribution: '&copy; OpenStreetMap &copy; CARTO'
         }
       },
@@ -120,7 +120,7 @@ export const FuturisticMap: React.FC = () => {
       center: initialCenter,
       zoom: userLocation ? 15.5 : 13.8,
       minZoom: 2,
-      maxZoom: 19.5, // Prevent tiles disappearing on extreme zoom
+      maxZoom: 18.2, // Clean max zoom without tile limits
       pitch: 52, // 3D Camera Perspective
       bearing: -18,
       dragRotate: true,
