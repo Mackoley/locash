@@ -214,22 +214,33 @@ export const FuturisticMap: React.FC = () => {
     };
 
     container.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    // Dynamic Zoom-Responsive Scale for Beams and Markers
+    // Dynamic Real-time Zoom-Responsive Scale for 3D Beams, Base Spinner and Markers
     const updateZoomScale = () => {
       const zoom = map.getZoom();
-      // At zoom 10 (state/region): scale is 0.45; at zoom 15 (city/street): scale is 0.85; at zoom 18: scale is 1.0
-      const scale = Math.min(Math.max(0.4 + (zoom - 10) * 0.08, 0.38), 1.0);
-      container.style.setProperty('--beam-zoom-scale', scale.toFixed(3));
+      // True exponential scaling according to zoom perspective:
+      // Zoom 16: scale 1.0 (street level)
+      // Zoom 14: scale 0.58 (neighborhood level)
+      // Zoom 12: scale 0.32 (city level)
+      // Zoom 10: scale 0.16 (state/country level)
+      const scale = Math.min(Math.max(Math.pow(1.32, zoom - 16), 0.15), 1.15);
+      
+      const elements = container.querySelectorAll<HTMLElement>('.custom-price-marker');
+      elements.forEach(markerEl => {
+        markerEl.style.transform = `translate(-50%, -100%) scale(${scale.toFixed(3)})`;
+        markerEl.style.transformOrigin = 'bottom center';
+      });
     };
 
     map.on('zoom', updateZoomScale);
-    updateZoomScale();
+    map.on('move', updateZoomScale);
+    map.on('idle', updateZoomScale);
 
     mapInstanceRef.current = map;
 
     return () => {
       map.off('zoom', updateZoomScale);
+      map.off('move', updateZoomScale);
+      map.off('idle', updateZoomScale);
       container.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
@@ -534,6 +545,15 @@ export const FuturisticMap: React.FC = () => {
         .addTo(map);
 
       markersRef.current.push(marker);
+    });
+
+    // Apply immediate zoom-responsive scale to newly added markers
+    const zoom = map.getZoom();
+    const scale = Math.min(Math.max(Math.pow(1.32, zoom - 16), 0.15), 1.15);
+    const elements = mapContainerRef.current?.querySelectorAll<HTMLElement>('.custom-price-marker');
+    elements?.forEach(markerEl => {
+      markerEl.style.transform = `translate(-50%, -100%) scale(${scale.toFixed(3)})`;
+      markerEl.style.transformOrigin = 'bottom center';
     });
   }, [filteredProperties, selectedProperty, mapVisualMode, mapTheme, setSelectedProperty]);
 

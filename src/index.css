@@ -57,19 +57,18 @@
   background-size: 24px 24px;
 }
 
-/* Custom Marker Styling for Leaflet / MapLibre */
+/* Custom Marker Styling for MapLibre */
 .custom-price-marker {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform: translate(-50%, -100%) scale(var(--beam-zoom-scale, 0.9));
+  transform: translate(-50%, -100%);
   transform-origin: bottom center;
   cursor: pointer;
-  transition: transform 0.1s ease-out;
+  will-change: transform;
 }
 
 .custom-price-marker:hover {
-  transform: translate(-50%, -100%) scale(calc(var(--beam-zoom-scale, 0.9) * 1.15)) !important;
   z-index: 1000 !important;
 }
 
@@ -80,14 +79,13 @@
   position: absolute;
   bottom: 0;
   left: 50%;
-  transform: translateX(-50%) scale(var(--beam-zoom-scale, 0.9));
+  transform: translateX(-50%);
   transform-origin: bottom center;
   pointer-events: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   z-index: 5;
-  transition: transform 0.1s ease-out;
 }
 
 /* Base Ground Flat Plane Container (Tamanho Fixo e Compacto - 32px) */
