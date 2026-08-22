@@ -13,15 +13,6 @@ import {
   LandlordStats,
   MapTheme
 } from '../types';
-import { 
-  INITIAL_PROPERTIES, 
-  INITIAL_ACTIVE_LEASE, 
-  INITIAL_PAYMENTS, 
-  INITIAL_MAINTENANCE_REQUESTS, 
-  INITIAL_DOCUMENTS, 
-  INITIAL_CHAT_MESSAGES, 
-  INITIAL_LANDLORD_STATS 
-} from '../data/mockData';
 import { propertyService } from '../services/propertyService';
 import { chatService } from '../services/chatService';
 import { isSupabaseConfigured } from '../services/supabase';
@@ -81,12 +72,36 @@ interface AppContextType {
   setEditingProperty: (prop: Property | null) => void;
 }
 
+const DEFAULT_ACTIVE_LEASE: Lease = {
+  id: 'lease-active-01',
+  propertyId: 'prop-1',
+  propertyTitle: 'Imóvel em Gestão',
+  propertyAddress: 'Av. Paulista, 1000 - Bela Vista, São Paulo - SP',
+  propertyType: 'APARTAMENTO',
+  landlordId: 'landlord-1',
+  landlordName: 'Locador LOCASH',
+  landlordPhone: '(11) 98765-4321',
+  tenantId: 'tenant-current',
+  tenantName: 'Inquilino LOCASH',
+  tenantEmail: 'inquilino@email.com',
+  tenantPhone: '(11) 99123-4567',
+  status: 'ACTIVE',
+  startDate: '2026-08-01',
+  endDate: '2028-07-31',
+  rentAmount: 3500,
+  dueDay: 5,
+  depositAmount: 10500,
+  adjustmentIndex: 'IPCA',
+  nextAdjustmentDate: '2027-08-01',
+  createdAt: '2026-08-01T12:00:00Z'
+};
+
 const DEFAULT_FILTERS: PropertyFilterState = {
   search: '',
   propertyType: 'TODOS',
   status: 'TODOS',
   minPrice: 0,
-  maxPrice: 25000,
+  maxPrice: 50000,
   bedrooms: 'ANY',
   bathrooms: 'ANY',
   parkingSpaces: 'ANY',
@@ -100,9 +115,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userRole, setUserRole] = useState<UserRole>('TENANT');
   const [activeView, setActiveView] = useState<string>('MAPA');
-  // Initial State from memory / cloud
-  const [properties, setProperties] = useState<Property[]>(INITIAL_PROPERTIES);
-  const [favorites, setFavorites] = useState<string[]>(['prop-1', 'prop-3']);
+  // Pure Cloud State (Loaded directly from Supabase Cloud)
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [filterState, setFilterState] = useState<PropertyFilterState>(DEFAULT_FILTERS);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState<boolean>(false);
@@ -277,23 +292,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Lease State
-  const [activeLease] = useState<Lease>(INITIAL_ACTIVE_LEASE);
-  const [payments, setPayments] = useState<LeasePayment[]>(() => {
-    const saved = localStorage.getItem('locash_payments');
-    return saved ? JSON.parse(saved) : INITIAL_PAYMENTS;
-  });
-  const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>(() => {
-    const saved = localStorage.getItem('locash_maint');
-    return saved ? JSON.parse(saved) : INITIAL_MAINTENANCE_REQUESTS;
-  });
-  const [documents, setDocuments] = useState<LeaseDocument[]>(() => {
-    const saved = localStorage.getItem('locash_docs');
-    return saved ? JSON.parse(saved) : INITIAL_DOCUMENTS;
-  });
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
-    const saved = localStorage.getItem('locash_chat');
-    return saved ? JSON.parse(saved) : INITIAL_CHAT_MESSAGES;
-  });
+  const [activeLease] = useState<Lease>(DEFAULT_ACTIVE_LEASE);
+  const [payments, setPayments] = useState<LeasePayment[]>([]);
+  const [maintenanceRequests, setMaintenanceRequests] = useState<MaintenanceRequest[]>([]);
+  const [documents, setDocuments] = useState<LeaseDocument[]>([]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   // Sync to local storage
   useEffect(() => {

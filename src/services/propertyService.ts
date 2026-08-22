@@ -1,12 +1,11 @@
 import { supabase, isSupabaseConfigured } from './supabase';
 import { Property } from '../types';
-import { INITIAL_PROPERTIES } from '../data/mockData';
 
 export const propertyService = {
   // Fetch all properties from Supabase cloud
   async getAll(): Promise<Property[]> {
     if (!isSupabaseConfigured()) {
-      return INITIAL_PROPERTIES;
+      return [];
     }
 
     try {
@@ -16,12 +15,12 @@ export const propertyService = {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Erro ao carregar imóveis do Supabase, usando padrão:', error.message);
-        return INITIAL_PROPERTIES;
+        console.warn('Erro ao carregar imóveis do Supabase:', error.message);
+        return [];
       }
 
       if (!data || data.length === 0) {
-        return INITIAL_PROPERTIES;
+        return [];
       }
 
       // Map Supabase columns to TypeScript Property model
@@ -62,7 +61,7 @@ export const propertyService = {
       }));
     } catch (err) {
       console.error('Falha na requisição de imóveis ao Supabase:', err);
-      return INITIAL_PROPERTIES;
+      return [];
     }
   },
 

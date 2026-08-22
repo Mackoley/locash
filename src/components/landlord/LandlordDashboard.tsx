@@ -25,7 +25,14 @@ import {
   Pie, 
   Cell 
 } from 'recharts';
-import { REVENUE_CHART_DATA, OCCUPANCY_PIE_DATA } from '../../data/mockData';
+const REVENUE_CHART_DATA = [
+  { mes: 'Mar', receita: 18500 },
+  { mes: 'Abr', receita: 19800 },
+  { mes: 'Mai', receita: 22400 },
+  { mes: 'Jun', receita: 24100 },
+  { mes: 'Jul', receita: 26800 },
+  { mes: 'Ago', receita: 28400 },
+];
 
 export const LandlordDashboard: React.FC = () => {
   const { landlordStats, setActiveView, properties, setSelectedProperty } = useApp();
