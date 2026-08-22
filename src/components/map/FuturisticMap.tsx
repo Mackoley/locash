@@ -427,12 +427,12 @@ export const FuturisticMap: React.FC = () => {
           transform: translateX(-50%);
           pointer-events: none;
         ">
-          <!-- 1. Pilar Cilíndrico Volumétrico -->
+          <!-- 1. Pilar Cilíndrico Volumétrico Subindo ao Céu -->
           <div class="beam-cylinder-body">
             <div class="beam-laser-core"></div>
           </div>
 
-          <!-- 2. Base Circular 3D no Plano do Solo (Efeito Spinner Windows) -->
+          <!-- 2. Base Circular 3D no Solo (Efeito Spinner Windows Grande e Nítido) -->
           <div class="beam-ground-base">
             <div class="beam-ground-glow-disk"></div>
             <div class="beam-windows-spinner"></div>
@@ -461,7 +461,7 @@ export const FuturisticMap: React.FC = () => {
         ${beamHtml}
         <div style="
           position: relative;
-          z-index: 10;
+          z-index: 25;
           display: flex;
           align-items: center;
           gap: 6px;
@@ -472,11 +472,11 @@ export const FuturisticMap: React.FC = () => {
           backdrop-filter: blur(14px);
           box-shadow: ${isSelected 
             ? `0 0 25px ${currentAccent.primary}ee, 0 6px 20px rgba(0,0,0,0.5)` 
-            : isLight ? '0 6px 18px rgba(15,23,42,0.2), 0 1px 3px rgba(15,23,42,0.1)' : '0 4px 14px rgba(0,0,0,0.8)'};
+            : isLight ? '0 6px 18px rgba(15,23,42,0.22), 0 1px 3px rgba(15,23,42,0.1)' : '0 4px 14px rgba(0,0,0,0.85)'};
           transition: all 0.2s ease;
           transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
           cursor: pointer;
-          margin-bottom: 6px;
+          margin-bottom: 22px;
         ">
           <span style="
             width: 7px;
@@ -495,14 +495,16 @@ export const FuturisticMap: React.FC = () => {
           ">${formattedPrice}</span>
         </div>
         <div style="
-          width: 0;
-          height: 0;
-          border-left: 5px solid transparent;
-          border-right: 5px solid transparent;
-          border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#94a3b8' : statusBorder};
-          margin-top: -6px;
-          margin-bottom: 2px;
-          z-index: 10;
+          position: absolute;
+          bottom: 2px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 2px;
+          height: 22px;
+          background: linear-gradient(to top, #ffffff, ${statusColor});
+          box-shadow: 0 0 8px ${statusColor};
+          z-index: 20;
+          pointer-events: none;
         "></div>
       `;
 

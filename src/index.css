@@ -84,74 +84,77 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 2;
+  z-index: 5;
 }
 
-/* Base Ground Flat Plane Container (Perfeita Perspectiva 3D no Solo) */
+/* Base Ground Flat Plane Container (Perfeita Perspectiva 3D no Solo - 72px de Diâmetro) */
 .beam-ground-base {
   position: absolute;
-  bottom: 0px;
+  bottom: -20px;
   left: 50%;
-  transform: translateX(-50%) rotateX(65deg);
-  width: 44px;
-  height: 44px;
+  transform: translateX(-50%) rotateX(68deg);
+  width: 72px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  z-index: 10;
 }
 
-/* Windows-Style Loading Spinner Ring (Giro Suave com Rastro de Luz) */
+/* Windows-Style Loading Spinner Ring (Giro Suave com Rastro de Luz Branca e Ciano) */
 .beam-windows-spinner {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 2.5px solid transparent;
+  border: 3px solid rgba(255, 255, 255, 0.25);
   border-top-color: #ffffff;
   border-right-color: var(--beam-color, #00f2fe);
-  border-bottom-color: rgba(255, 255, 255, 0.2);
-  filter: drop-shadow(0 0 8px var(--beam-color, #00f2fe)) drop-shadow(0 0 3px #ffffff);
-  animation: windowsSpin 1.1s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  box-shadow: 
+    0 0 16px var(--beam-color, #00f2fe),
+    0 0 28px var(--beam-color, #00f2fe),
+    inset 0 0 12px var(--beam-color, #00f2fe);
+  animation: windowsSpin 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
-/* Outer Soft Glow Ring on Ground */
+/* Outer Soft Glow Disk on Ground */
 .beam-ground-glow-disk {
   position: absolute;
-  inset: -6px;
+  inset: -10px;
   border-radius: 50%;
-  background: radial-gradient(circle, var(--beam-color-trans, rgba(0, 242, 254, 0.5)) 0%, transparent 70%);
-  opacity: 0.8;
+  background: radial-gradient(circle, var(--beam-color-trans, rgba(0, 242, 254, 0.6)) 0%, transparent 75%);
+  opacity: 0.9;
 }
 
 /* Point of Origin Dot (Exato Ponto do Imóvel no Mapa) */
 .beam-ground-dot {
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 6px #ffffff, 0 0 14px var(--beam-color, #00f2fe);
-  z-index: 5;
+  box-shadow: 0 0 8px #ffffff, 0 0 18px var(--beam-color, #00f2fe);
+  z-index: 15;
 }
 
 /* Volumetric Vertical Light Beam Pillar */
 .beam-cylinder-body {
   position: absolute;
-  bottom: 4px;
+  bottom: 0px;
   left: 50%;
   transform: translateX(-50%);
-  width: 36px;
-  height: 260px;
+  width: 48px;
+  height: 280px;
   background: linear-gradient(
     to top,
     var(--beam-color, #00f2fe) 0%,
-    var(--beam-color-trans, rgba(0, 242, 254, 0.65)) 25%,
+    var(--beam-color-trans, rgba(0, 242, 254, 0.75)) 20%,
     var(--beam-color-fade, rgba(0, 242, 254, 0.2)) 70%,
     transparent 100%
   );
-  clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%);
-  filter: drop-shadow(0 0 16px var(--beam-color, #00f2fe));
-  opacity: 0.82;
+  clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+  filter: drop-shadow(0 0 20px var(--beam-color, #00f2fe));
+  opacity: 0.85;
   animation: beamGlowPulse 3s infinite ease-in-out;
 }
 
@@ -161,10 +164,10 @@
   left: 50%;
   top: 0;
   bottom: 0;
-  width: 2.5px;
+  width: 3px;
   transform: translateX(-50%);
   background: linear-gradient(to top, #ffffff 0%, rgba(255, 255, 255, 0.85) 40%, transparent 100%);
-  box-shadow: 0 0 6px #ffffff, 0 0 12px var(--beam-color, #00f2fe);
+  box-shadow: 0 0 8px #ffffff, 0 0 16px var(--beam-color, #00f2fe);
 }
 
 /* Keyframes: Giro Contínuo Tipo Mouse Windows */
