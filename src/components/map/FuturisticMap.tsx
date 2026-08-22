@@ -133,30 +133,34 @@ export const FuturisticMap: React.FC = () => {
       };
     }
 
-    // CYBER_LIGHT (Clean light map with crisp dark gray/slate typography)
+    // CYBER_LIGHT (Vibrant, high-contrast, crystal-clear map with distinct streets, lush green parks, and sharp dark labels)
     return {
       version: 8,
       sources: {
-        'carto-light-tiles': {
+        'carto-voyager-tiles': {
           type: 'raster',
           tiles: [
-            'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-            'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-            'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
-            'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png'
+            'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+            'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+            'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+            'https://d.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png'
           ],
           tileSize: 256,
-          maxzoom: 18,
+          maxzoom: 19,
           attribution: '&copy; OpenStreetMap &copy; CARTO'
         }
       },
       layers: [
         {
-          id: 'carto-light-layer',
+          id: 'carto-voyager-layer',
           type: 'raster',
-          source: 'carto-light-tiles',
+          source: 'carto-voyager-tiles',
           minzoom: 0,
-          maxzoom: 22
+          maxzoom: 22,
+          paint: {
+            'raster-contrast': 0.12,
+            'raster-saturation': 0.08
+          }
         }
       ]
     };
@@ -450,14 +454,14 @@ export const FuturisticMap: React.FC = () => {
           display: flex;
           align-items: center;
           gap: 6px;
-          padding: 4px 10px;
-          background: ${statusBg};
-          border: 1.5px solid ${isSelected ? currentAccent.primary : statusBorder};
+          padding: 5px 12px;
+          background: ${isLight ? '#ffffff' : statusBg};
+          border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
           border-radius: 9999px;
           backdrop-filter: blur(14px);
           box-shadow: ${isSelected 
             ? `0 0 25px ${currentAccent.primary}ee, 0 4px 15px rgba(0,0,0,0.4)` 
-            : isLight ? '0 4px 14px rgba(0,0,0,0.12), 0 0 10px rgba(2,132,199,0.15)' : '0 4px 14px rgba(0,0,0,0.7)'};
+            : isLight ? '0 6px 18px rgba(15,23,42,0.18), 0 1px 3px rgba(15,23,42,0.1)' : '0 4px 14px rgba(0,0,0,0.7)'};
           transition: all 0.2s ease;
           transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
           cursor: pointer;
