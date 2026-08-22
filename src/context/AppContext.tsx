@@ -209,11 +209,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (e) {
+      console.warn('Erro ao deslogar:', e);
+    }
+
+    // Clear any cached auth tokens in localStorage
+    try {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('sb-') || key.includes('auth') || key.includes('supabase')) {
+          localStorage.removeItem(key);
+        }
+      });
     } catch (e) {}
+
     setCurrentUser(null);
     setUserRole('TENANT');
     setActiveView('MAPA');
+    setIsAuthModalOpen(true);
   };
 
   // Load properties and chat from Supabase Cloud on startup + Live WebSockets Sync

@@ -368,49 +368,59 @@ export const Header: React.FC = () => {
             </button>
           )}
 
-          {/* User Profile Trigger & Dropdown Menu */}
-          <div ref={profileDropdownRef} className="relative shrink-0">
+          {/* Auth Button (when logged out) or User Profile Dropdown (when logged in) */}
+          {!currentUser ? (
             <button
-              onClick={() => setIsProfileDropdownOpen(prev => !prev)}
-              className={`p-1 sm:px-2.5 sm:py-1 rounded-xl border transition-all flex items-center gap-2 shadow-sm shrink-0 group cursor-pointer ${
-                isProfileDropdownOpen
-                  ? 'bg-cyan-950/80 border-cyan-400 ring-2 ring-cyan-500/20 text-white'
-                  : userRole === 'LANDLORD'
-                    ? 'bg-purple-950/50 hover:bg-purple-900/70 border-purple-500/40 text-purple-200'
-                    : 'bg-cyan-950/50 hover:bg-cyan-900/70 border-cyan-500/40 text-cyan-200'
-              }`}
-              title="Menu do Usuário"
+              onClick={() => setIsAuthModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-600/30 to-cyan-500/30 hover:from-blue-600/50 hover:to-cyan-500/50 border border-cyan-500/50 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm hover:shadow-neon-cyan transition-all shrink-0 cursor-pointer group"
+              title="Fazer Login ou Criar Conta"
             >
-              {currentUser?.avatarUrl ? (
-                <div className="relative">
-                  <img 
-                    src={currentUser.avatarUrl} 
-                    alt={currentUser.name} 
-                    className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-cyan-400 shadow-sm"
-                  />
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-slate-950"></span>
-                </div>
-              ) : (
-                <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center ${
-                  userRole === 'LANDLORD' ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'
-                }`}>
-                  {userRole === 'LANDLORD' ? <Building className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
-                </div>
-              )}
-
-              <div className="flex flex-col text-left max-w-[100px] sm:max-w-[130px]">
-                <span className="text-[11px] font-bold font-sans leading-tight truncate">
-                  {currentUser?.name || (userRole === 'LANDLORD' ? 'Locador (Admin)' : 'Inquilino')}
-                </span>
-                <span className="text-[9px] text-slate-400 font-mono leading-none truncate">
-                  {userRole === 'LANDLORD' ? '🏢 Locador' : '🏠 Inquilino'}
-                </span>
-              </div>
-
-              <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                isProfileDropdownOpen ? 'rotate-180 text-cyan-400' : 'group-hover:text-slate-200'
-              }`} />
+              <User className="w-3.5 h-3.5 text-cyber-cyan group-hover:scale-110 transition-transform" />
+              <span>Entrar</span>
             </button>
+          ) : (
+            <div ref={profileDropdownRef} className="relative shrink-0">
+              <button
+                onClick={() => setIsProfileDropdownOpen(prev => !prev)}
+                className={`p-1 sm:px-2.5 sm:py-1 rounded-xl border transition-all flex items-center gap-2 shadow-sm shrink-0 group cursor-pointer ${
+                  isProfileDropdownOpen
+                    ? 'bg-cyan-950/80 border-cyan-400 ring-2 ring-cyan-500/20 text-white'
+                    : userRole === 'LANDLORD'
+                      ? 'bg-purple-950/50 hover:bg-purple-900/70 border-purple-500/40 text-purple-200'
+                      : 'bg-cyan-950/50 hover:bg-cyan-900/70 border-cyan-500/40 text-cyan-200'
+                }`}
+                title="Menu do Usuário"
+              >
+                {currentUser?.avatarUrl ? (
+                  <div className="relative">
+                    <img 
+                      src={currentUser.avatarUrl} 
+                      alt={currentUser.name} 
+                      className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover border border-cyan-400 shadow-sm"
+                    />
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 border border-slate-950"></span>
+                  </div>
+                ) : (
+                  <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center ${
+                    userRole === 'LANDLORD' ? 'bg-purple-500/20 text-purple-400' : 'bg-cyan-500/20 text-cyan-400'
+                  }`}>
+                    {userRole === 'LANDLORD' ? <Building className="w-3.5 h-3.5" /> : <User className="w-3.5 h-3.5" />}
+                  </div>
+                )}
+
+                <div className="flex flex-col text-left max-w-[100px] sm:max-w-[130px]">
+                  <span className="text-[11px] font-bold font-sans leading-tight truncate">
+                    {currentUser?.name || (userRole === 'LANDLORD' ? 'Locador (Admin)' : 'Inquilino')}
+                  </span>
+                  <span className="text-[9px] text-slate-400 font-mono leading-none truncate">
+                    {userRole === 'LANDLORD' ? '🏢 Locador' : '🏠 Inquilino'}
+                  </span>
+                </div>
+
+                <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                  isProfileDropdownOpen ? 'rotate-180 text-cyan-400' : 'group-hover:text-slate-200'
+                }`} />
+              </button>
 
             {/* Profile Dropdown Menu */}
             {isProfileDropdownOpen && (
@@ -505,6 +515,7 @@ export const Header: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
 
