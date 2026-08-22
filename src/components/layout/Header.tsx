@@ -70,6 +70,8 @@ export const Header: React.FC = () => {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const hasJustSelectedRef = useRef<boolean>(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Close dropdown on click outside
@@ -92,6 +94,11 @@ export const Header: React.FC = () => {
       clearTimeout(debounceTimerRef.current);
     }
 
+    if (hasJustSelectedRef.current) {
+      setShowSuggestions(false);
+      return;
+    }
+
     if (query.length < 2) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -99,6 +106,11 @@ export const Header: React.FC = () => {
     }
 
     debounceTimerRef.current = setTimeout(async () => {
+      if (hasJustSelectedRef.current) {
+        setShowSuggestions(false);
+        return;
+      }
+
       setIsSuggesting(true);
       const queryLower = query.toLowerCase();
 
@@ -227,7 +239,14 @@ export const Header: React.FC = () => {
 
       const topResults = combined.slice(0, 6);
       setSuggestions(topResults);
-      setShowSuggestions(topResults.length > 0);
+
+      if (hasJustSelectedRef.current) {
+        setShowSuggestions(false);
+      } else {
+        const isFocused = document.activeElement === inputRef.current;
+        setShowSuggestions(isFocused && topResults.length > 0);
+      }
+
       setIsSuggesting(false);
     }, 280);
 
@@ -239,12 +258,13 @@ export const Header: React.FC = () => {
   }, [filterState.search, properties, userLocation]);
 
   const handleSelectSuggestion = (suggestion: AddressSuggestion) => {
+    hasJustSelectedRef.current = true;
     setFilterState(prev => ({ ...prev, search: suggestion.name }));
     setShowSuggestions(false);
     
     // Blur search input so mobile keyboard dismisses and dropdown closes
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
+    if (inputRef.current) {
+      inputRef.current.blur();
     }
 
     if (activeView !== 'MAPA') {
@@ -262,9 +282,10 @@ export const Header: React.FC = () => {
     if (e) e.preventDefault();
     if (!filterState.search.trim()) return;
 
+    hasJustSelectedRef.current = true;
     setShowSuggestions(false);
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
+    if (inputRef.current) {
+      inputRef.current.blur();
     }
 
     setIsSearching(true);
@@ -395,16 +416,20 @@ export const Header: React.FC = () => {
             </div>
             
             <input
+              ref={inputRef}
               type="text"
               placeholder="Digite o endereço, rua, avenida, bairro ou cidade..."
               value={filterState.search}
               onClick={() => {
+                hasJustSelectedRef.current = false;
                 if (suggestions.length > 0) setShowSuggestions(true);
               }}
               onFocus={() => {
+                hasJustSelectedRef.current = false;
                 if (suggestions.length > 0) setShowSuggestions(true);
               }}
               onChange={(e) => {
+                hasJustSelectedRef.current = false;
                 setFilterState(prev => ({ ...prev, search: e.target.value }));
                 setShowSuggestions(true);
               }}
