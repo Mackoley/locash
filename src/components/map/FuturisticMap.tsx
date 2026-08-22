@@ -215,12 +215,21 @@ export const FuturisticMap: React.FC = () => {
 
     container.addEventListener('mousedown', handleMouseDown);
     window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    container.addEventListener('auxclick', handleAuxClick);
+    // Dynamic Zoom-Responsive Scale for Beams and Markers
+    const updateZoomScale = () => {
+      const zoom = map.getZoom();
+      // At zoom 10 (state/region): scale is 0.45; at zoom 15 (city/street): scale is 0.85; at zoom 18: scale is 1.0
+      const scale = Math.min(Math.max(0.4 + (zoom - 10) * 0.08, 0.38), 1.0);
+      container.style.setProperty('--beam-zoom-scale', scale.toFixed(3));
+    };
+
+    map.on('zoom', updateZoomScale);
+    updateZoomScale();
 
     mapInstanceRef.current = map;
 
     return () => {
+      map.off('zoom', updateZoomScale);
       container.removeEventListener('mousedown', handleMouseDown);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
@@ -464,45 +473,45 @@ export const FuturisticMap: React.FC = () => {
           z-index: 25;
           display: flex;
           align-items: center;
-          gap: 6px;
-          padding: 5px 12px;
+          gap: 5px;
+          padding: 3px 9px;
           background: ${isLight ? '#ffffff' : statusBg};
           border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
           border-radius: 9999px;
-          backdrop-filter: blur(14px);
+          backdrop-filter: blur(12px);
           box-shadow: ${isSelected 
-            ? `0 0 25px ${currentAccent.primary}ee, 0 6px 20px rgba(0,0,0,0.5)` 
-            : isLight ? '0 6px 18px rgba(15,23,42,0.22), 0 1px 3px rgba(15,23,42,0.1)' : '0 4px 14px rgba(0,0,0,0.85)'};
+            ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.5)` 
+            : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
           transition: all 0.2s ease;
-          transform: ${isSelected ? 'scale(1.15)' : 'scale(1)'};
+          transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
           cursor: pointer;
-          margin-bottom: 22px;
+          margin-bottom: 10px;
         ">
           <span style="
-            width: 7px;
-            height: 7px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: ${statusColor};
-            box-shadow: 0 0 8px ${statusColor};
+            box-shadow: 0 0 6px ${statusColor};
             display: inline-block;
           "></span>
           <span style="
             font-family: 'JetBrains Mono', monospace;
             font-weight: 800;
-            font-size: 11px;
+            font-size: 10.5px;
             color: ${textColor};
             letter-spacing: -0.02em;
           ">${formattedPrice}</span>
         </div>
         <div style="
           position: absolute;
-          bottom: 2px;
+          bottom: 0px;
           left: 50%;
           transform: translateX(-50%);
-          width: 2px;
-          height: 22px;
+          width: 1.5px;
+          height: 10px;
           background: linear-gradient(to top, #ffffff, ${statusColor});
-          box-shadow: 0 0 8px ${statusColor};
+          box-shadow: 0 0 6px ${statusColor};
           z-index: 20;
           pointer-events: none;
         "></div>
