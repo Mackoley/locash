@@ -312,8 +312,8 @@ export const Header: React.FC = () => {
     <header className="sticky top-0 z-40 w-full glass-panel border-b border-slate-800/80 bg-cyber-darkest/95 shadow-[0_4px_25px_rgba(0,0,0,0.5)]">
       {/* ================= SINGLE TIER: LOGO + INTEGRATED SEARCH BAR + ACTIONS & USER MENU ================= */}
       <div className="px-2.5 sm:px-6 py-2 flex items-center justify-between gap-2.5 sm:gap-4">
-        {/* Left: Brand & Logo */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        {/* Left: Brand & Logo (Hidden on mobile to maximize search bar space) */}
+        <div className="hidden sm:flex items-center gap-2 sm:gap-2.5 shrink-0">
           <button 
             onClick={() => setActiveView('MAPA')}
             className="flex items-center gap-2 sm:gap-2.5 group text-left focus:outline-none cursor-pointer"
