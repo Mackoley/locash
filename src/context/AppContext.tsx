@@ -39,6 +39,8 @@ interface AppContextType {
   setIsAuthModalOpen: (open: boolean) => void;
   isRoleOnboardingOpen: boolean;
   setIsRoleOnboardingOpen: (open: boolean) => void;
+  isProfileModalOpen: boolean;
+  setIsProfileModalOpen: (open: boolean) => void;
   currentUser: {
     id: string;
     email: string;
@@ -134,6 +136,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isWizardModalOpen, setIsWizardModalOpen] = useState<boolean>(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isRoleOnboardingOpen, setIsRoleOnboardingOpen] = useState<boolean>(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [mapVisualMode, setMapVisualMode] = useState<'NORMAL' | 'HEATMAP' | 'BEAMS_3D'>('NORMAL');
   const [mapTheme, setMapThemeState] = useState<MapTheme>(() => {
     const saved = localStorage.getItem('locash_map_theme');
@@ -708,6 +711,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsAuthModalOpen,
         isRoleOnboardingOpen,
         setIsRoleOnboardingOpen,
+        isProfileModalOpen,
+        setIsProfileModalOpen,
         currentUser,
         logout,
         mapVisualMode,

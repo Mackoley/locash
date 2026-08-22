@@ -65,6 +65,7 @@ export const Header: React.FC = () => {
     searchAddress,
     setSearchTarget,
     setIsAuthModalOpen,
+    setIsProfileModalOpen,
     currentUser,
     logout,
     userLocation
@@ -464,7 +465,7 @@ export const Header: React.FC = () => {
                   <button
                     onClick={() => {
                       setIsProfileDropdownOpen(false);
-                      setIsAuthModalOpen(true);
+                      setIsProfileModalOpen(true);
                     }}
                     className="w-full px-3 py-2.5 rounded-xl text-left text-xs font-semibold text-slate-200 hover:text-white hover:bg-cyan-500/15 flex items-center gap-2.5 transition-all group cursor-pointer"
                   >
