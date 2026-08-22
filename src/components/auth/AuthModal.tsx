@@ -460,13 +460,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/85 backdrop-blur-2xl animate-fade-in">
-      {/* Background Ambient Glows */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-96 h-96 bg-cyan-500/15 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-80 h-80 bg-blue-600/20 rounded-full blur-[100px] pointer-events-none" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/40 backdrop-blur-md animate-fade-in">
       
       {/* Cyber Glass Login & Signup Card */}
-      <div className="relative w-full max-w-md rounded-3xl glass-panel border border-cyan-500/40 bg-[#070d1d]/95 p-6 sm:p-8 shadow-[0_0_60px_rgba(0,242,254,0.18)] my-auto overflow-hidden animate-scale-up">
+      <div className="relative w-full max-w-md rounded-3xl glass-panel border border-cyan-500/40 bg-[#070d1d]/95 p-6 sm:p-8 shadow-[0_0_60px_rgba(0,242,254,0.22)] my-auto overflow-hidden animate-scale-up">
         
         {/* Top Edge Ambient Light Bar */}
         <div className="absolute top-0 inset-x-8 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#00f2fe]" />
