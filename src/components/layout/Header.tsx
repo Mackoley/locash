@@ -242,6 +242,11 @@ export const Header: React.FC = () => {
     setFilterState(prev => ({ ...prev, search: suggestion.name }));
     setShowSuggestions(false);
     
+    // Blur search input so mobile keyboard dismisses and dropdown closes
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
     if (activeView !== 'MAPA') {
       setActiveView('MAPA');
     }
@@ -258,6 +263,10 @@ export const Header: React.FC = () => {
     if (!filterState.search.trim()) return;
 
     setShowSuggestions(false);
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+
     setIsSearching(true);
     if (activeView !== 'MAPA') {
       setActiveView('MAPA');
@@ -389,10 +398,16 @@ export const Header: React.FC = () => {
               type="text"
               placeholder="Digite o endereço, rua, avenida, bairro ou cidade..."
               value={filterState.search}
+              onClick={() => {
+                if (suggestions.length > 0) setShowSuggestions(true);
+              }}
               onFocus={() => {
                 if (suggestions.length > 0) setShowSuggestions(true);
               }}
-              onChange={(e) => setFilterState(prev => ({ ...prev, search: e.target.value }))}
+              onChange={(e) => {
+                setFilterState(prev => ({ ...prev, search: e.target.value }));
+                setShowSuggestions(true);
+              }}
               className="w-full bg-slate-900/95 text-xs sm:text-sm text-slate-100 placeholder-slate-400 pl-10 pr-20 py-2 sm:py-2.5 rounded-xl border border-slate-700/80 focus:outline-none focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan transition-all font-sans shadow-inner"
             />
             
