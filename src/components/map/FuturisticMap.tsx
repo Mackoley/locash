@@ -28,7 +28,7 @@ export const FuturisticMap: React.FC = () => {
   const hasAutoCenteredRef = useRef<boolean>(false);
   const [is3DView, setIs3DView] = useState(true);
 
-  // Generate Tile Specification for Cyber Dark, Cyber Light, or Real Satellite
+  // Generate Tile Specification for Cyber Dark, Cyber Light, or Hybrid Satellite
   const getStyleSpec = (theme: MapTheme): maplibregl.StyleSpecification => {
     if (theme === 'SATELLITE') {
       return {
@@ -40,16 +40,35 @@ export const FuturisticMap: React.FC = () => {
               'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
             ],
             tileSize: 256,
+            maxzoom: 19,
             attribution: '&copy; Esri &copy; Maxar &copy; Earthstar Geographics'
+          },
+          'satellite-labels': {
+            type: 'raster',
+            tiles: [
+              'https://a.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
+              'https://b.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
+              'https://c.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png',
+              'https://d.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}@2x.png'
+            ],
+            tileSize: 256,
+            maxzoom: 19
           }
         },
         layers: [
           {
-            id: 'satellite-layer',
+            id: 'satellite-base',
             type: 'raster',
             source: 'satellite-tiles',
             minzoom: 0,
-            maxzoom: 20
+            maxzoom: 22
+          },
+          {
+            id: 'satellite-street-labels',
+            type: 'raster',
+            source: 'satellite-labels',
+            minzoom: 0,
+            maxzoom: 22
           }
         ]
       };
@@ -70,6 +89,7 @@ export const FuturisticMap: React.FC = () => {
             `https://d.basemaps.cartocdn.com/${tileType}/{z}/{x}/{y}@2x.png`
           ],
           tileSize: 256,
+          maxzoom: 19,
           attribution: '&copy; OpenStreetMap &copy; CARTO'
         }
       },
@@ -79,7 +99,7 @@ export const FuturisticMap: React.FC = () => {
           type: 'raster',
           source: 'carto-tiles',
           minzoom: 0,
-          maxzoom: 20
+          maxzoom: 22
         }
       ]
     };
@@ -99,6 +119,8 @@ export const FuturisticMap: React.FC = () => {
       style: getStyleSpec(mapTheme),
       center: initialCenter,
       zoom: userLocation ? 15.5 : 13.8,
+      minZoom: 2,
+      maxZoom: 19.5, // Prevent tiles disappearing on extreme zoom
       pitch: 52, // 3D Camera Perspective
       bearing: -18,
       dragRotate: true,
