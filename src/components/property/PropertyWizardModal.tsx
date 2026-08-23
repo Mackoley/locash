@@ -56,6 +56,15 @@ export const PropertyWizardModal: React.FC = () => {
 
   const totalSteps = 6;
 
+  // Auto-sync initial position with userLocation when wizard opens
+  useEffect(() => {
+    if (isWizardModalOpen && userLocation) {
+      setLatitude(userLocation.lat);
+      setLongitude(userLocation.lng);
+      reverseGeocodeCoordinates(userLocation.lat, userLocation.lng);
+    }
+  }, [isWizardModalOpen]);
+
   // Initialize Interactive Mini-Map when reaching Step 2 safely
   useEffect(() => {
     if (!isWizardModalOpen || currentStep !== 2) {

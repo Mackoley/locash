@@ -104,9 +104,9 @@
 /* Base Ground Flat Plane Container (Tamanho Fixo e Compacto - 32px) */
 .beam-ground-base {
   position: absolute;
-  bottom: -8px;
+  bottom: 0px;
   left: 50%;
-  transform: translateX(-50%) rotateX(68deg);
+  transform: translate(-50%, 50%) rotateX(68deg);
   width: 32px;
   height: 32px;
   display: flex;

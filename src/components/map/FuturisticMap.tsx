@@ -405,89 +405,37 @@ export const FuturisticMap: React.FC = () => {
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
-    // 1. Group properties into proximity clusters (detect collision within ~70 meters)
-    const clusterThresholdDeg = 0.00065;
-    const clusters: Property[][] = [];
+    // Render each property at its EXACT registered geographic coordinate with rock-solid ground anchor
+    filteredProperties.forEach((prop: Property, idx: number) => {
+      const latNum = Number(prop.latitude);
+      const lngNum = Number(prop.longitude);
+      if (isNaN(latNum) || isNaN(lngNum)) return;
 
-    filteredProperties.forEach((prop: Property) => {
-      const lat = Number(prop.latitude);
-      const lng = Number(prop.longitude);
-      if (isNaN(lat) || isNaN(lng)) return;
+      const isSelected = selectedProperty?.id === prop.id;
+      const isFeatured = prop.featured;
 
-      let foundCluster = false;
-      for (const cluster of clusters) {
-        const center = cluster[0];
-        const dLat = Math.abs(Number(center.latitude) - lat);
-        const dLng = Math.abs(Number(center.longitude) - lng);
-        if (dLat < clusterThresholdDeg && dLng < clusterThresholdDeg) {
-          cluster.push(prop);
-          foundCluster = true;
-          break;
-        }
+      let statusColor = currentAccent.available;
+      let statusBorder = `${currentAccent.available}88`;
+      let statusBg = currentAccent.availableBg;
+      let textColor = currentAccent.textColor;
+
+      if (prop.status === 'RESERVADO') {
+        statusColor = '#f59e0b';
+        statusBorder = 'rgba(245, 158, 11, 0.7)';
+      } else if (prop.status === 'EM NEGOCIAÇÃO') {
+        statusColor = isLight ? '#7c3aed' : '#a855f7';
+        statusBorder = isLight ? 'rgba(124, 58, 237, 0.7)' : 'rgba(168, 85, 247, 0.7)';
+      } else if (prop.status === 'ALUGADO') {
+        statusColor = '#ef4444';
+        statusBorder = 'rgba(239, 68, 68, 0.7)';
       }
-      if (!foundCluster) {
-        clusters.push([prop]);
-      }
-    });
 
-    // 2. Render each cluster with true geographic micro-offsets so pins are 100% fixed to the ground in 3D
-    clusters.forEach(cluster => {
-      const clusterSize = cluster.length;
+      const formattedPrice = `R$ ${prop.rentPrice.toLocaleString('pt-BR')}`;
 
-      cluster.forEach((prop: Property, idx: number) => {
-        const isSelected = selectedProperty?.id === prop.id;
-        const isFeatured = prop.featured;
-
-        // Geographic micro-offset in degrees (~18 meters along street)
-        let dispLat = 0;
-        let dispLng = 0;
-
-        if (clusterSize === 2) {
-          dispLng = idx === 0 ? -0.00018 : 0.00018;
-          dispLat = 0;
-        } else if (clusterSize === 3) {
-          if (idx === 0) { dispLng = -0.00022; dispLat = -0.00006; }
-          else if (idx === 1) { dispLng = 0; dispLat = 0.00018; }
-          else { dispLng = 0.00022; dispLat = -0.00006; }
-        } else if (clusterSize === 4) {
-          if (idx === 0) { dispLng = -0.00020; dispLat = -0.00012; }
-          else if (idx === 1) { dispLng = 0.00020; dispLat = -0.00012; }
-          else if (idx === 2) { dispLng = -0.00020; dispLat = 0.00012; }
-          else { dispLng = 0.00020; dispLat = 0.00012; }
-        } else if (clusterSize > 4) {
-          const angle = (2 * Math.PI * idx) / clusterSize - Math.PI / 2;
-          const radius = 0.00022 + (clusterSize > 6 ? 0.00008 : 0);
-          dispLng = Math.cos(angle) * radius * 1.25;
-          dispLat = Math.sin(angle) * radius * 0.9;
-        }
-
-        const latNum = Number(prop.latitude);
-        const lngNum = Number(prop.longitude);
-        const finalLat = latNum + dispLat;
-        const finalLng = lngNum + dispLng;
-
-        let statusColor = currentAccent.available;
-        let statusBorder = `${currentAccent.available}88`;
-        let statusBg = currentAccent.availableBg;
-        let textColor = currentAccent.textColor;
-
-        if (prop.status === 'RESERVADO') {
-          statusColor = '#f59e0b';
-          statusBorder = 'rgba(245, 158, 11, 0.7)';
-        } else if (prop.status === 'EM NEGOCIAÇÃO') {
-          statusColor = isLight ? '#7c3aed' : '#a855f7';
-          statusBorder = isLight ? 'rgba(124, 58, 237, 0.7)' : 'rgba(168, 85, 247, 0.7)';
-        } else if (prop.status === 'ALUGADO') {
-          statusColor = '#ef4444';
-          statusBorder = 'rgba(239, 68, 68, 0.7)';
-        }
-
-        const formattedPrice = `R$ ${prop.rentPrice.toLocaleString('pt-BR')}`;
-
-        const el = document.createElement('div');
-        el.className = 'custom-price-marker group';
-        el.style.position = 'relative';
-        el.style.zIndex = isSelected ? '100' : `${30 + idx}`;
+      const el = document.createElement('div');
+      el.className = 'custom-price-marker group';
+      el.style.position = 'relative';
+      el.style.zIndex = isSelected ? '100' : `${30 + idx}`;
 
         const showBeam = mapVisualMode === 'BEAMS_3D';
 
@@ -575,14 +523,6 @@ export const FuturisticMap: React.FC = () => {
                 color: ${textColor};
                 letter-spacing: -0.02em;
               ">${formattedPrice}</span>
-              ${clusterSize > 1 ? `
-                <span style="
-                  font-size: 9px;
-                  opacity: 0.65;
-                  font-weight: 700;
-                  margin-left: 1px;
-                ">#${idx + 1}</span>
-              ` : ''}
             </div>
 
             <!-- 2. Downward Pin Arrow -->
@@ -610,40 +550,39 @@ export const FuturisticMap: React.FC = () => {
           </div>
         `;
 
-        // Elevate z-index on mouse hover
-        el.addEventListener('mouseenter', () => {
-          el.style.zIndex = '9999';
-        });
-        el.addEventListener('mouseleave', () => {
-          el.style.zIndex = isSelected ? '100' : `${30 + idx}`;
-        });
-
-        el.addEventListener('click', (e) => {
-          e.stopPropagation();
-
-          map.flyTo({
-            center: [finalLng, finalLat],
-            zoom: 16.5,
-            duration: 1000,
-            essential: true
-          });
-
-          if (!currentUser) {
-            setIsAuthModalOpen(true);
-          } else {
-            setSelectedProperty(prop);
-          }
-        });
-
-        const marker = new maplibregl.Marker({ 
-          element: el, 
-          anchor: 'bottom'
-        })
-          .setLngLat([finalLng, finalLat])
-          .addTo(map);
-
-        markersRef.current.push(marker);
+      // Elevate z-index on mouse hover
+      el.addEventListener('mouseenter', () => {
+        el.style.zIndex = '9999';
       });
+      el.addEventListener('mouseleave', () => {
+        el.style.zIndex = isSelected ? '100' : `${30 + idx}`;
+      });
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+
+        map.flyTo({
+          center: [lngNum, latNum],
+          zoom: 16.5,
+          duration: 1000,
+          essential: true
+        });
+
+        if (!currentUser) {
+          setIsAuthModalOpen(true);
+        } else {
+          setSelectedProperty(prop);
+        }
+      });
+
+      const marker = new maplibregl.Marker({ 
+        element: el, 
+        anchor: 'bottom'
+      })
+        .setLngLat([lngNum, latNum])
+        .addTo(map);
+
+      markersRef.current.push(marker);
     });
   }, [filteredProperties, selectedProperty, mapVisualMode, mapTheme, setSelectedProperty, currentUser, setIsAuthModalOpen]);
 
