@@ -170,7 +170,13 @@ export const FuturisticMap: React.FC = () => {
 
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
 
-    // Middle Mouse Button Drag Rotation & Pitch
+    // Enable all native MapLibre rotation and pitch handlers
+    map.dragRotate.enable();
+    map.touchPitch.enable();
+    map.touchZoomRotate.enable();
+    map.touchZoomRotate.enableRotation();
+
+    // Middle Mouse Button (Scroll Button) & Right-Click Drag Rotation & Pitch
     let isMiddleDragging = false;
     let startX = 0;
     let startY = 0;
@@ -178,8 +184,9 @@ export const FuturisticMap: React.FC = () => {
     let startPitch = 0;
 
     const handleMouseDown = (e: MouseEvent) => {
-      if (e.button === 1) {
+      if (e.button === 1 || (e.button === 0 && (e.ctrlKey || e.metaKey))) {
         e.preventDefault();
+        e.stopPropagation();
         isMiddleDragging = true;
         startX = e.clientX;
         startY = e.clientY;
@@ -192,6 +199,7 @@ export const FuturisticMap: React.FC = () => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isMiddleDragging) return;
       e.preventDefault();
+      e.stopPropagation();
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
 
@@ -203,7 +211,7 @@ export const FuturisticMap: React.FC = () => {
     };
 
     const handleMouseUp = (e: MouseEvent) => {
-      if (e.button === 1 || isMiddleDragging) {
+      if (isMiddleDragging) {
         isMiddleDragging = false;
         container.style.cursor = '';
       }
@@ -212,11 +220,36 @@ export const FuturisticMap: React.FC = () => {
     const handleAuxClick = (e: MouseEvent) => {
       if (e.button === 1) {
         e.preventDefault();
+        e.stopPropagation();
       }
     };
 
-    // Attach Middle-Click Scroll Drag Rotation listeners
-    container.addEventListener('mousedown', handleMouseDown);
+    // Support Shift + Scroll Wheel for direct Bearing Rotation
+    const handleWheel = (e: WheelEvent) => {
+      if (e.shiftKey) {
+        e.preventDefault();
+        const currentBearing = map.getBearing();
+        map.setBearing(currentBearing + (e.deltaY > 0 ? 10 : -10));
+      } else if (e.altKey) {
+        e.preventDefault();
+        const currentPitch = map.getPitch();
+        map.setPitch(Math.min(Math.max(currentPitch + (e.deltaY > 0 ? -6 : 6), 0), 80));
+      }
+    };
+
+    const canvas = map.getCanvas();
+    const canvasContainer = map.getCanvasContainer();
+
+    // Attach listeners directly to canvas, container, and window
+    canvas.addEventListener('mousedown', handleMouseDown, { capture: true });
+    canvasContainer.addEventListener('mousedown', handleMouseDown, { capture: true });
+    container.addEventListener('mousedown', handleMouseDown, { capture: true });
+    canvas.addEventListener('auxclick', handleAuxClick, { capture: true });
+    container.addEventListener('auxclick', handleAuxClick, { capture: true });
+    canvas.addEventListener('wheel', handleWheel, { passive: false, capture: true });
+    window.addEventListener('mousemove', handleMouseMove, { capture: true });
+    window.addEventListener('mouseup', handleMouseUp, { capture: true });
+
     // 2.5km Visible Screen Radius Zoom Rule (Zoom >= 14.0)
     const BEAM_ZOOM_THRESHOLD = 14.0;
     const updateBeamZoomClass = () => {
@@ -238,10 +271,14 @@ export const FuturisticMap: React.FC = () => {
     window.addEventListener('orientationchange', handleWindowResize);
 
     return () => {
-      container.removeEventListener('mousedown', handleMouseDown);
-      container.removeEventListener('auxclick', handleAuxClick);
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mousedown', handleMouseDown, { capture: true } as any);
+      canvasContainer.removeEventListener('mousedown', handleMouseDown, { capture: true } as any);
+      container.removeEventListener('mousedown', handleMouseDown, { capture: true } as any);
+      canvas.removeEventListener('auxclick', handleAuxClick, { capture: true } as any);
+      container.removeEventListener('auxclick', handleAuxClick, { capture: true } as any);
+      canvas.removeEventListener('wheel', handleWheel, { capture: true } as any);
+      window.removeEventListener('mousemove', handleMouseMove, { capture: true } as any);
+      window.removeEventListener('mouseup', handleMouseUp, { capture: true } as any);
       window.removeEventListener('resize', handleWindowResize);
       window.removeEventListener('orientationchange', handleWindowResize);
       map.off('zoom', updateBeamZoomClass);
