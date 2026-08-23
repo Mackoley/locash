@@ -18,9 +18,11 @@ import {
   ShieldAlert,
   Clock,
   Building2,
-  Trash2
+  Trash2,
+  Edit3,
+  Eye,
+  CheckSquare
 } from 'lucide-react';
-import { energyOcrService } from '../../services/energyOcrService';
 import { EnergyAccount } from '../../types';
 
 export const EnergyInboxModal: React.FC = () => {
@@ -36,43 +38,81 @@ export const EnergyInboxModal: React.FC = () => {
 
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [ocrStatus, setOcrStatus] = useState<string>('Processando fatura com IA & OCR...');
   const [activeAccountPreview, setActiveAccountPreview] = useState<EnergyAccount | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showRawText, setShowRawText] = useState<boolean>(false);
+  const [rawTextContent, setRawTextContent] = useState<string>('');
+
+  // Editable Form State (PRD #19 & #60)
+  const [editMode, setEditMode] = useState<boolean>(false);
+  const [editAmount, setEditAmount] = useState<string>('');
+  const [editKwh, setEditKwh] = useState<string>('');
+  const [editUc, setEditUc] = useState<string>('');
+  const [editDueDate, setEditDueDate] = useState<string>('');
+  const [editPeriod, setEditPeriod] = useState<string>('');
+  const [editPropertyId, setEditPropertyId] = useState<string>('');
+  const [editBarcode, setEditBarcode] = useState<string>('');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isEnergyInboxModalOpen) return null;
 
+  const populateEditFields = (acc: EnergyAccount, rawSample?: string) => {
+    setActiveAccountPreview(acc);
+    setEditAmount(acc.amountTotal ? acc.amountTotal.toString() : '');
+    setEditKwh(acc.consumptionKwh ? acc.consumptionKwh.toString() : '');
+    setEditUc(acc.consumerUnit || '');
+    setEditDueDate(acc.dueDate || '');
+    setEditPeriod(acc.billingPeriod || '');
+    setEditPropertyId(acc.propertyId || (properties[0]?.id || ''));
+    setEditBarcode(acc.barcode || '');
+    if (rawSample) setRawTextContent(rawSample);
+  };
+
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
     setDuplicateWarning(null);
+    setOcrStatus('Iniciando reconhecimento ótico de caracteres (OCR)...');
 
     const res = await processEnergyBill(file, 'manual_upload');
     setIsProcessing(false);
 
     if (res.isDuplicate) {
       setDuplicateWarning(res.error || 'Fatura em duplicidade.');
-      if (res.account) setActiveAccountPreview(res.account);
+      if (res.account) populateEditFields(res.account, res.parsedResult?.rawTextSample);
     } else if (res.success && res.account) {
-      setActiveAccountPreview(res.account);
+      populateEditFields(res.account, res.parsedResult?.rawTextSample);
+    } else if (!res.success) {
+      setDuplicateWarning(res.error || 'Não foi possível ler a fatura. Você pode preencher os campos manualmente.');
     }
   };
 
-  const handleSimulateDemoBill = async () => {
-    setIsProcessing(true);
-    setDuplicateWarning(null);
+  const handleConfirmEdited = async () => {
+    if (!activeAccountPreview) return;
 
-    // Create a mock File object
-    const mockFile = new File(['NEOENERGIA COELBA FATURA DEMO'], 'fatura-coelba-agosto-2026.pdf', { type: 'application/pdf' });
-    const res = await processEnergyBill(mockFile, 'email');
-    setIsProcessing(false);
+    const selectedProp = properties.find(p => p.id === editPropertyId) || properties[0];
+    const parsedAmount = parseFloat(editAmount.replace(',', '.')) || activeAccountPreview.amountTotal || 0;
+    const parsedKwh = parseInt(editKwh, 10) || activeAccountPreview.consumptionKwh || 0;
 
-    if (res.isDuplicate) {
-      setDuplicateWarning(res.error || 'Fatura em duplicidade.');
-      if (res.account) setActiveAccountPreview(res.account);
-    } else if (res.success && res.account) {
-      setActiveAccountPreview(res.account);
-    }
+    const finalAccount: EnergyAccount = {
+      ...activeAccountPreview,
+      propertyId: selectedProp ? selectedProp.id : activeAccountPreview.propertyId,
+      propertyTitle: selectedProp ? selectedProp.title : activeAccountPreview.propertyTitle,
+      consumerUnit: editUc.trim() || activeAccountPreview.consumerUnit,
+      amountTotal: parsedAmount,
+      consumptionKwh: parsedKwh,
+      dueDate: editDueDate || activeAccountPreview.dueDate,
+      billingPeriod: editPeriod.trim() || activeAccountPreview.billingPeriod,
+      barcode: editBarcode.trim() || activeAccountPreview.barcode,
+      editedManually: editMode,
+      ocrConfidence: editMode ? 100 : activeAccountPreview.ocrConfidence
+    };
+
+    await confirmEnergyAccount(finalAccount);
+    setActiveAccountPreview(null);
+    setIsEnergyInboxModalOpen(false);
   };
 
   const copyToClipboard = (text: string, field: string) => {
@@ -82,8 +122,8 @@ export const EnergyInboxModal: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/70 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-3xl rounded-3xl glass-panel border border-cyan-500/40 bg-[#070d1d]/98 p-5 sm:p-7 shadow-[0_0_60px_rgba(0,242,254,0.25)] my-auto overflow-hidden animate-scale-up max-h-[90vh] flex flex-col font-mono">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-slate-950/70 backdrop-blur-md animate-fade-in font-mono">
+      <div className="relative w-full max-w-3xl rounded-3xl glass-panel border border-cyan-500/40 bg-[#070d1d]/98 p-5 sm:p-7 shadow-[0_0_60px_rgba(0,242,254,0.25)] my-auto overflow-hidden animate-scale-up max-h-[90vh] flex flex-col">
         
         {/* Top Glowing Bar */}
         <div className="absolute top-0 inset-x-8 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent shadow-[0_0_12px_#00f2fe]" />
@@ -96,15 +136,15 @@ export const EnergyInboxModal: React.FC = () => {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase font-bold text-cyber-cyan tracking-wider">
-                  CAIXA DE ENTRADA INTELIGENTE
+                <span className="text-[10px] uppercase font-bold text-cyber-cyan tracking-wider">
+                  CAIXA DE ENTRADA & OCR REAL
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/40">
                   {inboxDocuments.length} Pendentes
                 </span>
               </div>
-              <h2 className="text-base sm:text-lg font-bold text-white font-mono">
-                Recebimento & OCR de Faturas (Coelba)
+              <h2 className="text-base sm:text-lg font-bold text-white">
+                Reconhecimento de Faturas Coelba
               </h2>
             </div>
           </div>
@@ -155,29 +195,16 @@ export const EnergyInboxModal: React.FC = () => {
 
             <div>
               <p className="text-xs font-bold text-white">
-                Arraste o PDF ou foto da conta de energia aqui
+                Enviar Foto Real ou PDF da Conta de Energia
               </p>
               <p className="text-[10px] text-slate-400 mt-0.5">
-                Formatos aceitos: PDF, JPG, PNG (Leitura automática de UC, kWh, Valor e Vencimento)
+                Formatos aceitos: JPG, PNG, PDF (Reconhecimento ótico via Tesseract.js & PDF.js)
               </p>
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-[10px] px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
-                📁 Selecionar Arquivo
-              </span>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSimulateDemoBill();
-                }}
-                className="text-[10px] px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 transition-colors flex items-center gap-1"
-              >
-                <Sparkles className="w-3 h-3" />
-                <span>Simular Envio Coelba</span>
-              </button>
-            </div>
+            <span className="text-[10px] px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
+              📁 Selecionar Arquivo do Computador / Celular
+            </span>
           </div>
 
           {/* Processing Animation */}
@@ -185,100 +212,200 @@ export const EnergyInboxModal: React.FC = () => {
             <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/40 flex items-center gap-3 animate-pulse">
               <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin shrink-0" />
               <div className="text-xs">
-                <p className="font-bold text-white">Processando Fatura com IA & OCR Coelba...</p>
-                <p className="text-[10px] text-slate-400">Identificando UC, extraindo consumo kWh, valores e validando hash de segurança.</p>
+                <p className="font-bold text-white">Processando com OCR & IA...</p>
+                <p className="text-[10px] text-slate-400">{ocrStatus}</p>
               </div>
             </div>
           )}
 
-          {/* Duplicity Warning Banner (PRD #20) */}
+          {/* Duplicity Warning Banner */}
           {duplicateWarning && (
             <div className="p-3.5 rounded-2xl bg-amber-950/30 border border-amber-500/40 flex items-center gap-3 text-amber-300 text-xs">
               <ShieldAlert className="w-5 h-5 shrink-0" />
               <div>
-                <span className="font-bold block">Fatura Já Registrada (Anti-Duplicidade Ativo)</span>
+                <span className="font-bold block">Aviso de Processamento</span>
                 <span className="text-[11px] text-slate-300">{duplicateWarning}</span>
               </div>
             </div>
           )}
 
-          {/* Extracted Bill Preview & Verification */}
+          {/* Extracted Bill Preview & Verification / Editing */}
           {activeAccountPreview && (
-            <div className="p-4 rounded-2xl bg-slate-900/95 border border-cyan-500/40 space-y-4 animate-scale-up">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+            <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/95 border border-cyan-500/40 space-y-4 animate-scale-up">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                  <span className="text-xs font-bold text-white">Dados Extraídos da Fatura</span>
+                  <span className="text-xs font-bold text-white">Dados da Fatura Identificada</span>
                 </div>
-                <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/30">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Confiança IA: {activeAccountPreview.ocrConfidence}%</span>
-                </div>
-              </div>
-
-              {/* 4 Metric Highlights */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">Total a Pagar</span>
-                  <span className="text-sm font-extrabold text-emerald-400">
-                    R$ {activeAccountPreview.amountTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">Consumo</span>
-                  <span className="text-sm font-extrabold text-amber-300">
-                    {activeAccountPreview.consumptionKwh} kWh
-                  </span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">Vencimento</span>
-                  <span className="text-sm font-bold text-white">
-                    {new Date(activeAccountPreview.dueDate).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800">
-                  <span className="text-[10px] text-slate-400 block">Competência</span>
-                  <span className="text-sm font-bold text-cyber-cyan">
-                    {activeAccountPreview.billingPeriod}
-                  </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setEditMode(!editMode)}
+                    className="flex items-center gap-1 text-[11px] font-bold text-amber-300 hover:text-amber-200 bg-amber-500/10 px-2.5 py-1 rounded-md border border-amber-500/30 transition-colors"
+                  >
+                    <Edit3 className="w-3 h-3" />
+                    <span>{editMode ? 'Concluir Edição' : 'Editar / Ajustar'}</span>
+                  </button>
+                  <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/30">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Confiança: {activeAccountPreview.ocrConfidence}%</span>
+                  </div>
                 </div>
               </div>
 
-              {/* UC and Property Binding Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-slate-300">
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-                  <span className="text-slate-400">Unidade Consumidora:</span>
-                  <span className="font-bold text-white">{activeAccountPreview.consumerUnit}</span>
-                </div>
-
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-950 border border-slate-800/80">
-                  <span className="text-slate-400">Imóvel Vinculado:</span>
-                  <span className="font-bold text-cyber-cyan truncate max-w-[150px]">{activeAccountPreview.propertyTitle}</span>
-                </div>
-              </div>
-
-              {/* Barcode / Pix Copia e Cola */}
-              {activeAccountPreview.barcode && (
-                <div className="p-2.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
-                  <div className="flex items-center justify-between text-[10px] text-slate-400">
-                    <span className="flex items-center gap-1">
-                      <Barcode className="w-3.5 h-3.5" />
-                      Linha Digitável / Código de Barras
+              {/* Editable / Display Form Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                {/* Total a Pagar */}
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                  <label className="text-[10px] text-slate-400 block font-bold">Total a Pagar (R$)</label>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                      className="w-full bg-slate-900 border border-cyan-500/50 rounded-lg px-2.5 py-1 text-sm font-bold text-emerald-400 focus:outline-none"
+                    />
+                  ) : (
+                    <span className="text-base font-extrabold text-emerald-400 block">
+                      R$ {parseFloat(editAmount || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
+                  )}
+                </div>
+
+                {/* Consumo kWh */}
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                  <label className="text-[10px] text-slate-400 block font-bold">Consumo (kWh)</label>
+                  {editMode ? (
+                    <input
+                      type="number"
+                      value={editKwh}
+                      onChange={(e) => setEditKwh(e.target.value)}
+                      className="w-full bg-slate-900 border border-amber-500/50 rounded-lg px-2.5 py-1 text-sm font-bold text-amber-300 focus:outline-none"
+                    />
+                  ) : (
+                    <span className="text-base font-extrabold text-amber-300 block">
+                      {editKwh || 0} kWh
+                    </span>
+                  )}
+                </div>
+
+                {/* Unidade Consumidora (UC) */}
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                  <label className="text-[10px] text-slate-400 block font-bold">Conta Contrato / UC</label>
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={editUc}
+                      onChange={(e) => setEditUc(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
+                    />
+                  ) : (
+                    <span className="text-xs font-bold text-white block">
+                      {editUc || 'Não identificada'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Data de Vencimento */}
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                  <label className="text-[10px] text-slate-400 block font-bold">Data de Vencimento</label>
+                  {editMode ? (
+                    <input
+                      type="date"
+                      value={editDueDate}
+                      onChange={(e) => setEditDueDate(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
+                    />
+                  ) : (
+                    <span className="text-xs font-bold text-white block">
+                      {editDueDate ? new Date(editDueDate).toLocaleDateString('pt-BR') : 'Não identificada'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Competência */}
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                  <label className="text-[10px] text-slate-400 block font-bold">Competência (Mês/Ano)</label>
+                  {editMode ? (
+                    <input
+                      type="text"
+                      value={editPeriod}
+                      onChange={(e) => setEditPeriod(e.target.value)}
+                      placeholder="Ex: AGO/2026"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
+                    />
+                  ) : (
+                    <span className="text-xs font-bold text-cyber-cyan block">
+                      {editPeriod || 'Agosto/2026'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Imóvel Vinculado */}
+                <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                  <label className="text-[10px] text-slate-400 block font-bold">Vincular ao Imóvel</label>
+                  <select
+                    value={editPropertyId}
+                    onChange={(e) => setEditPropertyId(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:border-cyber-cyan focus:outline-none"
+                  >
+                    {properties.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.title} ({p.neighborhood})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Barcode Field */}
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+                <div className="flex items-center justify-between text-[10px] text-slate-400">
+                  <span className="flex items-center gap-1 font-bold">
+                    <Barcode className="w-3.5 h-3.5" />
+                    Linha Digitável / Código de Barras
+                  </span>
+                  {editBarcode && (
                     <button
-                      onClick={() => copyToClipboard(activeAccountPreview.barcode!, 'barcode')}
+                      onClick={() => copyToClipboard(editBarcode, 'barcode')}
                       className="text-cyber-cyan hover:underline flex items-center gap-0.5"
                     >
                       {copiedField === 'barcode' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                       <span>{copiedField === 'barcode' ? 'Copiado!' : 'Copiar'}</span>
                     </button>
-                  </div>
-                  <code className="text-[10px] text-slate-200 block truncate select-all">
-                    {activeAccountPreview.barcode}
+                  )}
+                </div>
+                {editMode ? (
+                  <input
+                    type="text"
+                    value={editBarcode}
+                    onChange={(e) => setEditBarcode(e.target.value)}
+                    placeholder="846..."
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
+                  />
+                ) : (
+                  <code className="text-[10px] text-slate-300 block truncate">
+                    {editBarcode || 'Não localizado na imagem'}
                   </code>
+                )}
+              </div>
+
+              {/* Raw OCR Text Toggle */}
+              {rawTextContent && (
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowRawText(!showRawText)}
+                    className="text-[10px] text-slate-400 hover:text-cyber-cyan flex items-center gap-1 transition-colors"
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span>{showRawText ? 'Ocultar Texto Lido pelo OCR' : 'Ver Texto Bruto Reconhecido pelo OCR'}</span>
+                  </button>
+                  {showRawText && (
+                    <pre className="mt-2 p-3 rounded-xl bg-black/80 border border-slate-800 text-[10px] text-slate-400 max-h-36 overflow-y-auto whitespace-pre-wrap">
+                      {rawTextContent}
+                    </pre>
+                  )}
                 </div>
               )}
 
@@ -293,21 +420,17 @@ export const EnergyInboxModal: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={async () => {
-                    await confirmEnergyAccount(activeAccountPreview);
-                    setActiveAccountPreview(null);
-                    setIsEnergyInboxModalOpen(false);
-                  }}
+                  onClick={handleConfirmEdited}
                   className="flex-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-extrabold text-xs shadow-lg shadow-emerald-500/20 transition-all flex items-center justify-center gap-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  <span>Aprovar & Lançar Despesa Financeira</span>
+                  <span>Aprovar & Lançar Despesa no Imóvel</span>
                 </button>
               </div>
             </div>
           )}
 
-          {/* Pending Inbox Items Queue (PRD #37) */}
+          {/* Pending Inbox Items Queue */}
           {inboxDocuments.length > 0 && (
             <div className="space-y-2 pt-2">
               <span className="text-xs font-bold text-slate-300 block">
@@ -334,7 +457,7 @@ export const EnergyInboxModal: React.FC = () => {
                   <div className="flex items-center gap-2 shrink-0">
                     {doc.extractedData && (
                       <button
-                        onClick={() => setActiveAccountPreview(doc.extractedData as EnergyAccount)}
+                        onClick={() => populateEditFields(doc.extractedData as EnergyAccount)}
                         className="px-3 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-[11px] font-bold hover:bg-cyan-500/30 transition-all"
                       >
                         Revisar
