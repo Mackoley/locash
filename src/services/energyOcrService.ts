@@ -69,6 +69,77 @@ async function fileToBase64(file: File): Promise<string> {
 }
 
 /**
+ * AI Rate Limiter & Token Budget Guardian (Proteção contra Loops, Bugs e Ataques)
+ */
+class AiRateLimiter {
+  private static MAX_PER_MINUTE = 6;
+  private static MAX_PER_HOUR = 40;
+  private static STORAGE_KEY = 'locash_ai_request_log';
+  private static CACHE_KEY = 'locash_ai_hash_cache';
+
+  // Check rate limit before executing AI call
+  static checkRateLimit(): { allowed: boolean; reason?: string } {
+    try {
+      const now = Date.now();
+      const raw = localStorage.getItem(this.STORAGE_KEY);
+      let timestamps: number[] = raw ? JSON.parse(raw) : [];
+
+      // Filter timestamps within the last 1 hour
+      timestamps = timestamps.filter(t => now - t < 3600000);
+
+      // Check last 1 minute count
+      const lastMinuteCount = timestamps.filter(t => now - t < 60000).length;
+      if (lastMinuteCount >= this.MAX_PER_MINUTE) {
+        return {
+          allowed: false,
+          reason: 'Bloqueio de Segurança Ativo: Limite de 6 requisições de IA por minuto atingido para proteger seu orçamento. Aguarde alguns segundos.'
+        };
+      }
+
+      // Check last 1 hour count
+      if (timestamps.length >= this.MAX_PER_HOUR) {
+        return {
+          allowed: false,
+          reason: 'Bloqueio de Segurança Ativo: Limite horário de 40 análises por IA atingido. Proteção anti-disparo ativada.'
+        };
+      }
+
+      return { allowed: true };
+    } catch (e) {
+      return { allowed: true };
+    }
+  }
+
+  // Record a successful call timestamp
+  static recordCall(): void {
+    try {
+      const now = Date.now();
+      const raw = localStorage.getItem(this.STORAGE_KEY);
+      let timestamps: number[] = raw ? JSON.parse(raw) : [];
+      timestamps.push(now);
+      timestamps = timestamps.filter(t => now - t < 3600000);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(timestamps));
+    } catch (e) {}
+  }
+
+  // Get cached result by hash (Consumes 0 Tokens)
+  static getCachedResult(hash: string): ParsedBillResult | null {
+    try {
+      const raw = localStorage.getItem(`${this.CACHE_KEY}_${hash}`);
+      if (raw) return JSON.parse(raw);
+    } catch (e) {}
+    return null;
+  }
+
+  // Save cached result
+  static setCachedResult(hash: string, result: ParsedBillResult): void {
+    try {
+      localStorage.setItem(`${this.CACHE_KEY}_${hash}`, JSON.stringify(result));
+    } catch (e) {}
+  }
+}
+
+/**
  * Optimize image before sending to Gemini Vision (reduces 15MB camera photos to crisp ~300KB in 50ms)
  */
 async function optimizeImageForAi(file: File): Promise<{ base64: string; mimeType: string }> {
@@ -147,7 +218,7 @@ export async function calculateDocumentHash(fileOrContent: File | string): Promi
 
 export const energyOcrService = {
   /**
-   * Process a bill file using Multimodal Gemini Vision AI (Primary) with Tesseract OCR fallback
+   * Process a bill file using Multimodal Gemini Vision AI (Primary) with Rate Limiting & Zero-Token Cache
    */
   async processDocument(
     file: File,
@@ -157,9 +228,24 @@ export const energyOcrService = {
     const documentHash = await calculateDocumentHash(file);
     const apiKey = getGeminiApiKey();
 
+    onProgress?.('Verificando cache de segurança e anti-duplicidade...', 15);
+
+    // 1. Zero-Token Cache Check: If already processed this exact bill, return instantly without spending tokens!
+    const cached = AiRateLimiter.getCachedResult(documentHash);
+    if (cached) {
+      onProgress?.('Fatura identificada no cache local (0 tokens consumidos)!', 100);
+      return cached;
+    }
+
+    // 2. Token Budget & Rate Limiting Check
+    const rateCheck = AiRateLimiter.checkRateLimit();
+    if (!rateCheck.allowed) {
+      throw new Error(rateCheck.reason);
+    }
+
     onProgress?.('Otimizando imagem para a IA Gemini...', 25);
 
-    // 1. Try Gemini Vision Multimodal AI first for 100% precision
+    // 3. Try Gemini Vision Multimodal AI first for 100% precision
     if (apiKey) {
       try {
         const { base64, mimeType } = await optimizeImageForAi(file);
@@ -168,16 +254,20 @@ export const energyOcrService = {
         const geminiResult = await this.extractWithGeminiVision(apiKey, base64, mimeType, documentHash, knownConnections, onProgress);
         
         if (geminiResult) {
+          // Record call for rate limiting & save to cache
+          AiRateLimiter.recordCall();
+          AiRateLimiter.setCachedResult(documentHash, geminiResult);
+
           onProgress?.('Validação da IA concluída com sucesso!', 100);
           return geminiResult;
         }
       } catch (geminiErr) {
-        console.error('Falha no Gemini Vision, ativando OCR local de contingência:', geminiErr);
+        console.error('Falha no Gemini Vision, ativando leitura de contingência:', geminiErr);
       }
     }
 
-    // 2. Fallback to Local OCR (PDF.js / Tesseract) if offline or Gemini fails
-    onProgress?.('Processando com motor OCR local de contingência...', 65);
+    // 4. Fallback to Local OCR (PDF.js / Tesseract) if offline or Gemini fails
+    onProgress?.('Processando com motor local de contingência...', 65);
     let extractedText = '';
     const mimeType = file.type || (file.name.toLowerCase().endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
     try {
@@ -190,11 +280,13 @@ export const energyOcrService = {
         extractedText = await this.extractTextWithTesseract(file, onProgress);
       }
     } catch (e) {
-      console.error('Falha no OCR local:', e);
+      console.error('Falha no leitor local:', e);
     }
 
     onProgress?.('Interpretando dados...', 95);
-    return this.parseGenericElectricityBill(extractedText, documentHash, knownConnections);
+    const fallbackResult = this.parseGenericElectricityBill(extractedText, documentHash, knownConnections);
+    AiRateLimiter.setCachedResult(documentHash, fallbackResult);
+    return fallbackResult;
   },
 
   /**
