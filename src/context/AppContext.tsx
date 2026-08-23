@@ -953,6 +953,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         providerName: parsed.providerName,
         connectionId: matchedConnection?.id,
         consumerUnit: parsed.consumerUnit,
+        installationCode: parsed.installationCode,
         holderName: parsed.holderName,
         billingPeriod: parsed.billingPeriod,
         issueDate: parsed.issueDate,

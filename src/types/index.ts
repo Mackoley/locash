@@ -253,6 +253,7 @@ export interface EnergyAccount {
   providerName: string;
   connectionId?: string;
   consumerUnit: string; // Unidade Consumidora (UC)
+  installationCode?: string; // Código da Instalação (ex: 0011180635)
   holderName?: string;
   billingPeriod: string; // 'Agosto/2026' ou '08/2026'
   issueDate?: string;
