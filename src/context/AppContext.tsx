@@ -56,6 +56,7 @@ interface AppContextType {
   mapTheme: MapTheme;
   setMapTheme: (theme: MapTheme) => void;
   userLocation: { lat: number; lng: number } | null;
+  setUserLocation: (loc: { lat: number; lng: number } | null) => void;
   isLocating: boolean;
   requestUserLocation: () => void;
   searchTarget: { lat: number; lng: number; name: string } | null;
@@ -313,10 +314,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsLocating(false);
       },
       (err) => {
-        console.warn('Localização GPS não concedida:', err.message);
-        setIsLocating(false);
+        console.warn('GPS Alta Precisão demorou ou falhou, tentando modo balanceado:', err.message);
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            setUserLocation(coords);
+            localStorage.setItem('locash_user_gps', JSON.stringify(coords));
+            setIsLocating(false);
+          },
+          (err2) => {
+            console.warn('Localização GPS não concedida:', err2.message);
+            setIsLocating(false);
+          },
+          { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+        );
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
@@ -720,6 +733,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         mapTheme,
         setMapTheme,
         userLocation,
+        setUserLocation,
         isLocating,
         requestUserLocation,
         searchTarget,
