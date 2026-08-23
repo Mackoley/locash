@@ -465,7 +465,10 @@ export const FuturisticMap: React.FC = () => {
       el.style.flexDirection = 'column';
       el.style.alignItems = 'center';
       el.style.width = 'max-content';
-      el.style.position = 'relative';
+      // MapLibre positions marker elements absolutely. Overriding it with
+      // `relative` puts later markers into normal document flow, causing their
+      // price badges to accumulate a horizontal offset.
+      el.style.position = 'absolute';
       el.style.cursor = 'pointer';
       el.style.userSelect = 'none';
       el.style.zIndex = isSelected ? '100' : `${30 + idx}`;
