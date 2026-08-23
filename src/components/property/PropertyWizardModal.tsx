@@ -197,28 +197,115 @@ export const PropertyWizardModal: React.FC = () => {
     setIsGeocoding(false);
   };
 
-  // Set Location to Landlord's Current Location
+  // Map of Brazilian States to standard UFs
+  const stateToUf: Record<string, string> = {
+    'Bahia': 'BA', 'São Paulo': 'SP', 'Rio de Janeiro': 'RJ', 'Minas Gerais': 'MG',
+    'Paraná': 'PR', 'Rio Grande do Sul': 'RS', 'Santa Catarina': 'SC', 'Pernambuco': 'PE',
+    'Ceará': 'CE', 'Goiás': 'GO', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES',
+    'Maranhão': 'MA', 'Amazonas': 'AM', 'Pará': 'PA', 'Paraíba': 'PB',
+    'Mato Grosso': 'MT', 'Mato Grosso do Sul': 'MS', 'Alagoas': 'AL', 'Piauí': 'PI',
+    'Rio Grande do Norte': 'RN', 'Sergipe': 'SE', 'Rondônia': 'RO', 'Tocantins': 'TO',
+    'Acre': 'AC', 'Amapá': 'AP', 'Roraima': 'RR'
+  };
+
+  // Reverse Geocode (Coordinates -> Full Address Form Fields)
+  const reverseGeocodeCoordinates = async (lat: number, lng: number) => {
+    setIsGeocoding(true);
+    try {
+      // 1. Primary: Nominatim Reverse Geocoding with pt-BR address details
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+        headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        const addr = data.address || {};
+        
+        const road = addr.road || addr.street || addr.pedestrian || addr.footway || addr.path || addr.avenue || '';
+        const houseNumber = addr.house_number || '';
+        const fullStreet = road ? (houseNumber ? `${road}, ${houseNumber}` : road) : '';
+        
+        const neigh = addr.suburb || addr.neighbourhood || addr.city_district || addr.quarter || addr.district || '';
+        const cityName = addr.city || addr.town || addr.municipality || addr.village || '';
+        const stateName = addr.state || '';
+        const uf = stateToUf[stateName] || stateName;
+
+        if (fullStreet) setPublicAddress(fullStreet);
+        if (neigh) setNeighborhood(neigh);
+        if (cityName) setCity(cityName);
+        if (uf) setState(uf);
+
+        const displayName = [fullStreet || road, neigh, cityName, uf].filter(Boolean).join(', ');
+        setGeocodedAddressName(displayName || data.display_name || `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
+        
+        // Auto-update suggested title if empty or default
+        if (!title || title.startsWith('Apartamento em') || title.startsWith('Casa em') || title.startsWith('Imóvel em') || title.startsWith('Studio em')) {
+          setTitle(`${propertyType} em ${neigh || cityName || 'Localização Nobre'}`);
+        }
+        setIsGeocoding(false);
+        return;
+      }
+    } catch (e) {
+      console.warn('Falha no Nominatim reverse, tentando Photon fallback:', e);
+    }
+
+    // 2. Fallback: Photon Reverse Geocoding
+    try {
+      const photonRes = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`);
+      if (photonRes.ok) {
+        const pData = await photonRes.json();
+        if (pData.features && pData.features[0]) {
+          const p = pData.features[0].properties || {};
+          const street = [p.street, p.housenumber].filter(Boolean).join(', ') || p.name || '';
+          const neigh = p.district || p.suburb || '';
+          const cityName = p.city || '';
+          const stateName = p.state || '';
+          const uf = stateToUf[stateName] || stateName;
+
+          if (street) setPublicAddress(street);
+          if (neigh) setNeighborhood(neigh);
+          if (cityName) setCity(cityName);
+          if (uf) setState(uf);
+          setGeocodedAddressName([street, neigh, cityName, uf].filter(Boolean).join(', '));
+        }
+      }
+    } catch (_) {}
+    
+    setIsGeocoding(false);
+  };
+
+  // Set Location to Landlord's Current Location and Auto-Fill Address Fields
   const handleUseCurrentLocation = () => {
+    setIsGeocoding(true);
     if (userLocation) {
       setLatitude(userLocation.lat);
       setLongitude(userLocation.lng);
-      setGeocodedAddressName(`Sua localização (${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)})`);
       if (miniMapInstanceRef.current && miniMapMarkerRef.current) {
         miniMapMarkerRef.current.setLngLat([userLocation.lng, userLocation.lat]);
         miniMapInstanceRef.current.flyTo({ center: [userLocation.lng, userLocation.lat], zoom: 16 });
       }
+      reverseGeocodeCoordinates(userLocation.lat, userLocation.lng);
     } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setLatitude(lat);
-        setLongitude(lng);
-        setGeocodedAddressName(`Sua localização (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
-        if (miniMapInstanceRef.current && miniMapMarkerRef.current) {
-          miniMapMarkerRef.current.setLngLat([lng, lat]);
-          miniMapInstanceRef.current.flyTo({ center: [lng, lat], zoom: 16 });
-        }
-      });
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          setLatitude(lat);
+          setLongitude(lng);
+          if (miniMapInstanceRef.current && miniMapMarkerRef.current) {
+            miniMapMarkerRef.current.setLngLat([lng, lat]);
+            miniMapInstanceRef.current.flyTo({ center: [lng, lat], zoom: 16 });
+          }
+          reverseGeocodeCoordinates(lat, lng);
+        },
+        (err) => {
+          console.warn('Erro ao obter GPS:', err);
+          setIsGeocoding(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } else {
+      setIsGeocoding(false);
     }
   };
 
@@ -348,17 +435,29 @@ export const PropertyWizardModal: React.FC = () => {
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-bold text-cyber-cyan flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  2. Localização Exata no Mapa
+                  2. Localização Exata & Endereço
                 </h4>
-                <button
-                  type="button"
-                  onClick={handleUseCurrentLocation}
-                  className="px-2.5 py-1 rounded-lg bg-slate-900 border border-cyan-500/40 text-cyber-cyan text-[11px] font-mono flex items-center gap-1 hover:bg-slate-800"
-                >
-                  <Crosshair className="w-3 h-3" />
-                  Usar meu GPS
-                </button>
               </div>
+
+              {/* Botão de Localização Automática com GPS / IA */}
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                disabled={isGeocoding}
+                className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 hover:from-cyan-500/30 hover:to-purple-500/30 text-cyber-cyan border border-cyan-400/50 flex items-center justify-center gap-2 font-bold text-xs shadow-[0_0_25px_rgba(0,242,254,0.2)] transition-all"
+              >
+                {isGeocoding ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin text-cyber-cyan" />
+                    <span>Identificando rua, bairro e cidade pelo GPS...</span>
+                  </>
+                ) : (
+                  <>
+                    <Crosshair className="w-4 h-4 text-cyber-cyan animate-pulse" />
+                    <span>📍 Usar Minha Localização Atual (Preenchimento Automático)</span>
+                  </>
+                )}
+              </button>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">

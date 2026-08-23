@@ -145,6 +145,72 @@ export const PropertyEditModal: React.FC = () => {
 
   if (!editingProperty) return null;
 
+  const stateToUf: Record<string, string> = {
+    'Bahia': 'BA', 'São Paulo': 'SP', 'Rio de Janeiro': 'RJ', 'Minas Gerais': 'MG',
+    'Paraná': 'PR', 'Rio Grande do Sul': 'RS', 'Santa Catarina': 'SC', 'Pernambuco': 'PE',
+    'Ceará': 'CE', 'Goiás': 'GO', 'Distrito Federal': 'DF', 'Espírito Santo': 'ES',
+    'Maranhão': 'MA', 'Amazonas': 'AM', 'Pará': 'PA', 'Paraíba': 'PB',
+    'Mato Grosso': 'MT', 'Mato Grosso do Sul': 'MS', 'Alagoas': 'AL', 'Piauí': 'PI',
+    'Rio Grande do Norte': 'RN', 'Sergipe': 'SE', 'Rondônia': 'RO', 'Tocantins': 'TO',
+    'Acre': 'AC', 'Amapá': 'AP', 'Roraima': 'RR'
+  };
+
+  const reverseGeocodeCoordinates = async (lat: number, lng: number) => {
+    setIsGeocoding(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+        headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const addr = data.address || {};
+        const road = addr.road || addr.street || addr.pedestrian || addr.footway || addr.avenue || '';
+        const houseNumber = addr.house_number || '';
+        const fullStreet = road ? (houseNumber ? `${road}, ${houseNumber}` : road) : '';
+        const neigh = addr.suburb || addr.neighbourhood || addr.city_district || addr.quarter || addr.district || '';
+        const cityName = addr.city || addr.town || addr.municipality || addr.village || '';
+        const stateName = addr.state || '';
+        const uf = stateToUf[stateName] || stateName;
+
+        if (fullStreet) setPublicAddress(fullStreet);
+        if (neigh) setNeighborhood(neigh);
+        if (cityName) setCity(cityName);
+        if (uf) setState(uf);
+        setIsGeocoding(false);
+        return;
+      }
+    } catch (e) {
+      console.warn('Erro no reverse geocoding:', e);
+    }
+    setIsGeocoding(false);
+  };
+
+  const handleUseCurrentLocation = () => {
+    setIsGeocoding(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          setLatitude(lat);
+          setLongitude(lng);
+          if (miniMapInstanceRef.current && miniMapMarkerRef.current) {
+            miniMapMarkerRef.current.setLngLat([lng, lat]);
+            miniMapInstanceRef.current.flyTo({ center: [lng, lat], zoom: 16 });
+          }
+          reverseGeocodeCoordinates(lat, lng);
+        },
+        (err) => {
+          console.warn('Erro ao obter GPS:', err);
+          setIsGeocoding(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    } else {
+      setIsGeocoding(false);
+    }
+  };
+
   const handleGeocodeSearch = async () => {
     const fullQuery = `${publicAddress}, ${neighborhood}, ${city}, ${state}`.trim();
     if (!fullQuery) return;
@@ -391,12 +457,24 @@ export const PropertyEditModal: React.FC = () => {
 
           {/* Address & Mini-map */}
           <div className="space-y-2 pt-2 border-t border-slate-800">
-            <label className="text-slate-400 font-bold block">Endereço e Posição no Mapa</label>
+            <div className="flex items-center justify-between">
+              <label className="text-slate-400 font-bold block">Endereço e Posição no Mapa</label>
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                disabled={isGeocoding}
+                className="px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyber-cyan border border-cyan-500/40 text-[11px] font-bold flex items-center gap-1.5 transition-all"
+              >
+                {isGeocoding ? <Loader2 className="w-3 h-3 animate-spin" /> : <Crosshair className="w-3 h-3" />}
+                <span>Usar meu GPS</span>
+              </button>
+            </div>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={publicAddress}
                 onChange={(e) => setPublicAddress(e.target.value)}
+                placeholder="Rua, Avenida, Número..."
                 className="flex-1 bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white font-sans text-sm focus:border-cyber-cyan focus:outline-none"
               />
               <button
