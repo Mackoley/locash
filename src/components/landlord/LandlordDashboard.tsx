@@ -12,7 +12,9 @@ import {
   TrendingUp, 
   Calendar,
   MessageSquare,
-  ArrowUpRight
+  ArrowUpRight,
+  Zap,
+  Sparkles
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -35,7 +37,18 @@ const REVENUE_CHART_DATA = [
 ];
 
 export const LandlordDashboard: React.FC = () => {
-  const { landlordStats, setActiveView, properties, setSelectedProperty } = useApp();
+  const { 
+    landlordStats, 
+    setActiveView, 
+    properties, 
+    setSelectedProperty, 
+    energyAccounts, 
+    energyConnections, 
+    setIsEnergyInboxModalOpen 
+  } = useApp();
+
+  const totalEnergyThisMonth = energyAccounts.reduce((acc, c) => acc + c.amountTotal, 0);
+  const totalKwhThisMonth = energyAccounts.reduce((acc, c) => acc + c.consumptionKwh, 0);
 
   return (
     <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full no-scrollbar pb-20 md:pb-8">
@@ -99,6 +112,47 @@ export const LandlordDashboard: React.FC = () => {
           accentColor="purple"
           icon={<Wrench className="w-5 h-5" />}
         />
+      </div>
+
+      {/* AutoBills — Telemetria de Energia & Patrimônio (PRD #25, #68 & #70) */}
+      <div className="p-4 sm:p-5 rounded-3xl glass-panel border border-amber-500/30 bg-gradient-to-r from-amber-950/20 via-slate-950/90 to-cyan-950/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg font-mono">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 shadow-md shrink-0">
+            <Zap className="w-6 h-6 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">
+                LOCASH AUTOBILLS • NEOENERGIA COELBA
+              </span>
+              <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-400 text-[9px] font-bold border border-emerald-500/30">
+                🟢 {energyConnections.length} UCs Monitoradas
+              </span>
+            </div>
+            <h3 className="text-sm sm:text-base font-bold text-white mt-0.5">
+              Energia Total: R$ {totalEnergyThisMonth.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} ({totalKwhThisMonth} kWh)
+            </h3>
+            <p className="text-[11px] text-slate-400">
+              Contas lidas por IA com conciliação contábil automática e auditoria de consumo.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <button
+            onClick={() => setIsEnergyInboxModalOpen(true)}
+            className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5"
+          >
+            <span>Enviar Conta</span>
+          </button>
+          <button
+            onClick={() => setActiveView('ENERGIA')}
+            className="flex-1 md:flex-initial px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-cyan-500 hover:from-amber-400 hover:to-cyan-400 text-slate-950 text-xs font-extrabold shadow-md transition-all flex items-center justify-center gap-1.5"
+          >
+            <span>Ver Telemetria</span>
+            <ArrowUpRight className="w-3.5 h-3.5 stroke-[3]" />
+          </button>
+        </div>
       </div>
 
       {/* Analytics Charts Grid */}

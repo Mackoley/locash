@@ -1,0 +1,422 @@
+import React, { useState } from 'react';
+import { useApp } from '../../context/AppContext';
+import { GlassCard } from '../ui/GlassCard';
+import { StatCard } from '../ui/StatCard';
+import { 
+  Zap, 
+  Plus, 
+  UploadCloud, 
+  Inbox, 
+  CheckCircle2, 
+  AlertTriangle, 
+  TrendingUp, 
+  Calendar, 
+  Barcode, 
+  Copy, 
+  Check, 
+  Sparkles, 
+  Building2, 
+  ArrowUpRight, 
+  ShieldCheck, 
+  FileText, 
+  Trash2,
+  Mail,
+  Phone,
+  Flame,
+  Info
+} from 'lucide-react';
+import { 
+  ResponsiveContainer, 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  Tooltip, 
+  Legend,
+  LineChart,
+  Line
+} from 'recharts';
+import { EnergyAccount } from '../../types';
+
+export const EnergyDashboardView: React.FC = () => {
+  const { 
+    energyAccounts, 
+    energyConnections, 
+    setIsEnergyConnectionModalOpen, 
+    setIsEnergyInboxModalOpen,
+    deleteEnergyAccount,
+    deleteEnergyConnection,
+    properties,
+    inboxDocuments
+  } = useApp();
+
+  const [timeRange, setTimeRange] = useState<'6M' | '12M' | '24M'>('6M');
+  const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<string>('TODOS');
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+
+  // Filter accounts
+  const filteredAccounts = energyAccounts.filter(acc => {
+    if (selectedPropertyFilter === 'TODOS') return true;
+    return acc.propertyId === selectedPropertyFilter;
+  });
+
+  // Calculate Aggregated Metrics (PRD #25 & #28)
+  const latestAccount = filteredAccounts[0];
+  const totalYearlyAmount = filteredAccounts.reduce((acc, c) => acc + c.amountTotal, 0);
+  const totalKwh = filteredAccounts.reduce((acc, c) => acc + c.consumptionKwh, 0);
+  const avgKwh = filteredAccounts.length > 0 ? Math.round(totalKwh / filteredAccounts.length) : 0;
+  const currentKwh = latestAccount ? latestAccount.consumptionKwh : 0;
+  const currentAmount = latestAccount ? latestAccount.amountTotal : 0;
+  const variation = latestAccount?.historyComparison?.variationPercentage ?? 12.8;
+
+  // Chart data formatting
+  const chartData = [...filteredAccounts].reverse().map(acc => ({
+    mes: acc.billingPeriod.substring(0, 3),
+    kwh: acc.consumptionKwh,
+    valor: acc.amountTotal,
+    media: avgKwh
+  }));
+
+  const copyText = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedCode(id);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  return (
+    <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full no-scrollbar pb-24 md:pb-8 font-mono">
+      {/* Top Banner & Quick Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-5 rounded-3xl border-slate-800 bg-[#070d1d]/90">
+        <div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 shadow-md">
+              <Zap className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest">
+                  LOCASH AUTOBILLS v1.0
+                </span>
+                <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/40">
+                  IA ATIVA
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                GESTÃO & TELEMETRIA DE ENERGIA
+              </h1>
+            </div>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            Recebimento automático de faturas Neoenergia Coelba via E-mail e WhatsApp com conciliação contábil.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            onClick={() => setIsEnergyInboxModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyber-cyan border border-cyber-cyan/30 text-xs font-bold transition-all relative"
+          >
+            <Inbox className="w-4 h-4" />
+            <span>Caixa de Entrada</span>
+            {inboxDocuments.length > 0 && (
+              <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 text-[9px] font-extrabold flex items-center justify-center shadow">
+                {inboxDocuments.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            onClick={() => setIsEnergyConnectionModalOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-cyan-500 hover:from-amber-400 hover:to-cyan-400 text-slate-950 text-xs font-extrabold shadow-lg shadow-cyan-500/20 transition-all"
+          >
+            <Plus className="w-4 h-4 stroke-[3]" />
+            <span>Cadastrar UC</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 4 Main KPI Cards (PRD #25) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="Conta Atual (Coelba)"
+          value={`R$ ${currentAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          subtitle={`Competência ${latestAccount?.billingPeriod || 'Agosto/2026'}`}
+          accentColor="amber"
+          icon={<Zap className="w-5 h-5 text-amber-300" />}
+          trend={{ value: `${variation > 0 ? `+${variation}%` : `${variation}%`} vs média`, isPositive: variation <= 0 }}
+        />
+
+        <StatCard
+          title="Consumo do Mês"
+          value={`${currentKwh} kWh`}
+          subtitle={`Média histórica: ${avgKwh} kWh`}
+          accentColor="cyan"
+          icon={<Flame className="w-5 h-5 text-cyber-cyan" />}
+          trend={{ value: `${currentKwh - avgKwh} kWh diferença`, isPositive: currentKwh <= avgKwh }}
+        />
+
+        <StatCard
+          title="Custo Anual Acumulado"
+          value={`R$ ${totalYearlyAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+          subtitle={`${filteredAccounts.length} faturas processadas`}
+          accentColor="emerald"
+          icon={<Calendar className="w-5 h-5 text-emerald-400" />}
+        />
+
+        <StatCard
+          title="Impacto no Aluguel"
+          value={`${properties.length > 0 ? ((currentAmount / (properties[0].rentPrice || 2500)) * 100).toFixed(1) : '8.7'}%`}
+          subtitle="Representatividade operacional"
+          accentColor="purple"
+          icon={<Building2 className="w-5 h-5 text-purple-300" />}
+        />
+      </div>
+
+      {/* Proactive Anomaly Alert Box (PRD #29 & #34) */}
+      {variation >= 25 ? (
+        <div className="p-4 rounded-2xl bg-red-950/30 border border-red-500/50 flex items-start gap-3 text-red-200 text-xs shadow-lg">
+          <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-bold text-white text-sm">Alerta de Anomalia de Consumo (+{variation}%)</span>
+            <p className="text-slate-300">
+              O consumo de energia no imóvel <b>{latestAccount?.propertyTitle}</b> aumentou <b>{variation}%</b> acima da média histórica dos últimos 6 meses ({avgKwh} kWh).
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="p-4 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <Sparkles className="w-4 h-4 text-cyber-cyan shrink-0" />
+            <span className="text-slate-300">
+              <b>Insight do Locash:</b> O consumo de energia está estável e dentro da média operacional patrimonial prevista.
+            </span>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 font-bold shrink-0">
+            NORMAL
+          </span>
+        </div>
+      )}
+
+      {/* Consumption Chart (Recharts) (PRD #27) */}
+      <GlassCard className="p-5 border-slate-800 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div>
+            <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-cyber-cyan" />
+              <span>Histórico de Consumo (kWh) e Faturamento (R$)</span>
+            </h3>
+            <p className="text-[11px] text-slate-400">
+              Evolução mês a mês das faturas lidas pela IA da Neoenergia Coelba
+            </p>
+          </div>
+
+          <div className="flex items-center gap-1.5 text-xs">
+            {(['6M', '12M', '24M'] as const).map(range => (
+              <button
+                key={range}
+                onClick={() => setTimeRange(range)}
+                className={`px-3 py-1 rounded-xl text-xs font-bold border transition-all ${
+                  timeRange === range
+                    ? 'bg-cyber-cyan/20 border-cyber-cyan text-cyber-cyan shadow-sm'
+                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {range}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="h-64 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <XAxis dataKey="mes" stroke="#64748b" fontSize={11} />
+              <YAxis stroke="#64748b" fontSize={11} />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#070d1d', 
+                  borderColor: '#00f2fe',
+                  borderRadius: '12px',
+                  fontFamily: 'monospace',
+                  fontSize: '11px'
+                }} 
+              />
+              <Legend wrapperStyle={{ fontSize: '11px' }} />
+              <Bar dataKey="kwh" name="Consumo (kWh)" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="valor" name="Valor (R$)" fill="#00f2fe" radius={[6, 6, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </GlassCard>
+
+      {/* Grid: 2 Sections (Active Connections & Invoices Table) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        
+        {/* Left: Registered Consumer Units (UCs) (PRD #5) */}
+        <div className="lg:col-span-1 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <Zap className="w-3.5 h-3.5 text-amber-300" />
+              <span>UCs Cadastradas ({energyConnections.length})</span>
+            </h3>
+            <button
+              onClick={() => setIsEnergyConnectionModalOpen(true)}
+              className="text-[11px] text-cyber-cyan hover:underline font-bold"
+            >
+              + Adicionar
+            </button>
+          </div>
+
+          {energyConnections.length === 0 ? (
+            <div className="p-6 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-2">
+              <Zap className="w-6 h-6 text-slate-600 mx-auto" />
+              <p className="text-xs text-slate-400">Nenhuma Unidade Consumidora cadastrada ainda.</p>
+              <button
+                onClick={() => setIsEnergyConnectionModalOpen(true)}
+                className="px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold"
+              >
+                Cadastrar Primeira UC
+              </button>
+            </div>
+          ) : (
+            energyConnections.map(conn => (
+              <div
+                key={conn.id}
+                className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/40 space-y-2 text-xs transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-white truncate">{conn.propertyTitle}</span>
+                  <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px] font-bold border border-emerald-500/30 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    {conn.status}
+                  </span>
+                </div>
+
+                <div className="text-[11px] text-slate-400 space-y-0.5">
+                  <div className="flex justify-between">
+                    <span>Distribuidora:</span>
+                    <span className="text-slate-200 font-bold">{conn.providerName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>UC / Conta Contrato:</span>
+                    <span className="text-amber-300 font-bold">{conn.consumerUnit}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Titular:</span>
+                    <span className="text-slate-200 truncate max-w-[120px]">{conn.holderName}</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500">
+                  <div className="flex items-center gap-2 text-slate-400">
+                    {conn.emailEnabled && (
+                      <span title="E-mail Ativo">
+                        <Mail className="w-3 h-3 text-cyber-cyan" />
+                      </span>
+                    )}
+                    {conn.whatsappEnabled && (
+                      <span title="WhatsApp Ativo">
+                        <Phone className="w-3 h-3 text-emerald-400" />
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => deleteEnergyConnection(conn.id)}
+                    className="text-slate-500 hover:text-red-400 transition-colors"
+                    title="Remover UC"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Right: Invoices Table History (PRD #26) */}
+        <div className="lg:col-span-2 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+              <FileText className="w-3.5 h-3.5 text-cyber-cyan" />
+              <span>Histórico de Faturas Processadas</span>
+            </h3>
+            <button
+              onClick={() => setIsEnergyInboxModalOpen(true)}
+              className="text-[11px] text-amber-300 hover:underline font-bold"
+            >
+              + Enviar Fatura
+            </button>
+          </div>
+
+          <div className="glass-panel rounded-2xl border-slate-800 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800 text-[10px] uppercase font-mono">
+                  <tr>
+                    <th className="p-3">Competência</th>
+                    <th className="p-3">Imóvel / UC</th>
+                    <th className="p-3">Consumo</th>
+                    <th className="p-3">Valor</th>
+                    <th className="p-3">Vencimento</th>
+                    <th className="p-3">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/80 font-mono text-[11px]">
+                  {filteredAccounts.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-6 text-center text-slate-500">
+                        Nenhuma fatura registrada nesta seleção.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredAccounts.map(acc => (
+                      <tr key={acc.id} className="hover:bg-slate-900/60 transition-colors">
+                        <td className="p-3 font-bold text-white">
+                          {acc.billingPeriod}
+                        </td>
+                        <td className="p-3">
+                          <div className="text-white font-bold truncate max-w-[120px]">{acc.propertyTitle}</div>
+                          <div className="text-[10px] text-amber-300/80">UC: {acc.consumerUnit}</div>
+                        </td>
+                        <td className="p-3 font-bold text-amber-300">
+                          {acc.consumptionKwh} kWh
+                        </td>
+                        <td className="p-3 font-bold text-emerald-400">
+                          R$ {acc.amountTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="p-3 text-slate-300">
+                          {new Date(acc.dueDate).toLocaleDateString('pt-BR')}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-1.5">
+                            {acc.barcode && (
+                              <button
+                                onClick={() => copyText(acc.barcode!, `bar-${acc.id}`)}
+                                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+                                title="Copiar Código de Barras"
+                              >
+                                {copiedCode === `bar-${acc.id}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Barcode className="w-3.5 h-3.5" />}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => deleteEnergyAccount(acc.id)}
+                              className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 transition-colors"
+                              title="Excluir Registro"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};

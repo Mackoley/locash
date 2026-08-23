@@ -10,7 +10,8 @@ import {
   Building, 
   PlusCircle,
   FileCheck2,
-  ShieldCheck
+  ShieldCheck,
+  Zap
 } from 'lucide-react';
 
 export const SidebarNav: React.FC = () => {
@@ -21,7 +22,8 @@ export const SidebarNav: React.FC = () => {
     favorites, 
     chatMessages, 
     setIsWizardModalOpen,
-    landlordStats
+    landlordStats,
+    energyAccounts
   } = useApp();
 
   const tenantNavItems = [
@@ -36,6 +38,7 @@ export const SidebarNav: React.FC = () => {
     { id: 'DASHBOARD_LOCADOR', label: 'Carteira Imobiliária', icon: LayoutDashboard },
     { id: 'MAPA', label: 'Mapa de Gestão', icon: Map },
     { id: 'MEUS_IMOVEIS', label: 'Meus Imóveis', icon: Building, badge: landlordStats.totalProperties },
+    { id: 'ENERGIA', label: 'Energia & AutoBills', icon: Zap, badge: energyAccounts.length },
     { id: 'CENTRAL_LOCACAO', label: 'Central de Locações', icon: FileCheck2, highlight: true },
     { id: 'MENSAGENS', label: 'Mensagens', icon: MessageSquare, badge: chatMessages.length }
   ];

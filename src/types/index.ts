@@ -196,3 +196,109 @@ export interface LandlordStats {
   totalLeadsCount: number;
   occupancyRate: number; // e.g. 78%
 }
+
+// ==============================================================================
+// LOCASH AutoBills — Tipos e Modelos de Dados de Energia e Faturas
+// ==============================================================================
+
+export interface EnergyProvider {
+  id: string;
+  name: string; // 'Neoenergia Coelba'
+  code: string; // 'COELBA'
+  state: string; // 'BA'
+  active: boolean;
+}
+
+export type EnergyConnectionStatus = 'ACTIVE' | 'PENDING' | 'INACTIVE' | 'ERROR';
+
+export interface EnergyConnection {
+  id: string;
+  userId: string;
+  propertyId: string;
+  propertyTitle: string;
+  providerId: string;
+  providerName: string;
+  consumerUnit: string; // Unidade Consumidora (UC / Conta Contrato)
+  holderName: string; // Nome do Titular da Conta
+  holderDocumentMasked?: string; // CPF/CNPJ Mascarado (ex: ***.456.789-**)
+  emailEnabled: boolean;
+  whatsappEnabled: boolean;
+  automaticRegistration: boolean; // Registro automático de despesa se confiança >= 95%
+  inboxEmailAddress?: string; // Endereço de e-mail exclusivo (ex: energia+uc123@inbox.locash.app)
+  status: EnergyConnectionStatus;
+  lastReceivedAt?: string;
+  lastProcessedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type EnergyProcessingStatus = 
+  | 'received'
+  | 'processing'
+  | 'processed'
+  | 'pending_confirmation'
+  | 'confirmed'
+  | 'duplicate'
+  | 'invalid'
+  | 'error';
+
+export type EnergyDocumentSource = 'email' | 'whatsapp' | 'manual_upload';
+
+export interface EnergyAccount {
+  id: string;
+  userId: string;
+  propertyId: string;
+  propertyTitle: string;
+  providerId: string;
+  providerName: string;
+  connectionId?: string;
+  consumerUnit: string; // Unidade Consumidora (UC)
+  holderName?: string;
+  billingPeriod: string; // 'Agosto/2026' ou '08/2026'
+  issueDate?: string;
+  dueDate: string; // '2026-09-10'
+  consumptionKwh: number; // ex: 247 kWh
+  previousReading?: number;
+  currentReading?: number;
+  nextReadingDate?: string;
+  billingDays?: number;
+  amountTotal: number; // R$ 218.43
+  energyAmount?: number;
+  taxAmount?: number; // ICMS, PIS, COFINS
+  feeAmount?: number; // CIP / Iluminação Pública
+  fineAmount?: number;
+  interestAmount?: number;
+  discountAmount?: number;
+  invoiceNumber?: string;
+  barcode?: string;
+  pixCode?: string;
+  documentUrl?: string;
+  documentHash: string; // SHA-256 anti-duplicidade
+  source: EnergyDocumentSource;
+  processingStatus: EnergyProcessingStatus;
+  ocrConfidence: number; // 0 a 100%
+  editedManually?: boolean;
+  historyComparison?: {
+    sixMonthAvgKwh: number;
+    variationPercentage: number; // ex: +12.8%
+    isAnomaly: boolean; // true se variação > 25%
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InboxDocument {
+  id: string;
+  userId: string;
+  channel: EnergyDocumentSource;
+  sender: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  storagePath: string;
+  documentHash: string;
+  status: EnergyProcessingStatus;
+  extractedData?: Partial<EnergyAccount>;
+  errorMessage?: string;
+  createdAt: string;
+}

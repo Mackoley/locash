@@ -11,10 +11,16 @@ import {
   LeaseDocument, 
   ChatMessage, 
   LandlordStats,
-  MapTheme
+  MapTheme,
+  EnergyProvider,
+  EnergyConnection,
+  EnergyAccount,
+  InboxDocument
 } from '../types';
 import { propertyService } from '../services/propertyService';
 import { chatService } from '../services/chatService';
+import { energyService } from '../services/energyService';
+import { energyOcrService, ParsedBillResult } from '../services/energyOcrService';
 import { supabase, isSupabaseConfigured } from '../services/supabase';
 
 interface AppContextType {
@@ -83,6 +89,23 @@ interface AppContextType {
   deleteProperty: (id: string) => void;
   editingProperty: Property | null;
   setEditingProperty: (prop: Property | null) => void;
+
+  // AutoBills — Gestão de Energia & Faturas Inteligentes
+  energyConnections: EnergyConnection[];
+  energyAccounts: EnergyAccount[];
+  inboxDocuments: InboxDocument[];
+  isEnergyConnectionModalOpen: boolean;
+  setIsEnergyConnectionModalOpen: (open: boolean) => void;
+  isEnergyInboxModalOpen: boolean;
+  setIsEnergyInboxModalOpen: (open: boolean) => void;
+  selectedEnergyPropertyId: string | null;
+  setSelectedEnergyPropertyId: (propertyId: string | null) => void;
+  addEnergyConnection: (connection: Omit<EnergyConnection, 'id' | 'createdAt' | 'updatedAt'>) => Promise<EnergyConnection>;
+  updateEnergyConnection: (id: string, data: Partial<EnergyConnection>) => Promise<void>;
+  deleteEnergyConnection: (id: string) => Promise<void>;
+  processEnergyBill: (file: File, source?: 'manual_upload' | 'email' | 'whatsapp') => Promise<{ success: boolean; account?: EnergyAccount; error?: string; isDuplicate?: boolean; parsedResult?: ParsedBillResult }>;
+  confirmEnergyAccount: (account: EnergyAccount) => Promise<void>;
+  deleteEnergyAccount: (id: string) => Promise<void>;
 }
 
 const DEFAULT_ACTIVE_LEASE: Lease = {
@@ -143,6 +166,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('locash_map_theme');
     return (saved as MapTheme) || 'CYBER_DARK';
   });
+
+  // AutoBills — Gestão de Energia & Faturas Inteligentes
+  const [energyConnections, setEnergyConnections] = useState<EnergyConnection[]>([]);
+  const [energyAccounts, setEnergyAccounts] = useState<EnergyAccount[]>([]);
+  const [inboxDocuments, setInboxDocuments] = useState<InboxDocument[]>([]);
+  const [isEnergyConnectionModalOpen, setIsEnergyConnectionModalOpen] = useState<boolean>(false);
+  const [isEnergyInboxModalOpen, setIsEnergyInboxModalOpen] = useState<boolean>(false);
+  const [selectedEnergyPropertyId, setSelectedEnergyPropertyId] = useState<string | null>(null);
 
   const setMapTheme = (theme: MapTheme) => {
     setMapThemeState(theme);
@@ -276,6 +307,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     loadCloudData();
+
+    // Load AutoBills Data (Connections, Accounts & Inbox)
+    energyService.getConnections().then(conns => {
+      if (isMounted && conns) setEnergyConnections(conns);
+    });
+    energyService.getAccounts().then(accs => {
+      if (isMounted && accs) setEnergyAccounts(accs);
+    });
+    energyService.getInboxDocuments().then(docs => {
+      if (isMounted && docs) setInboxDocuments(docs);
+    });
 
     // Subscribe to live property updates across all connected clients
     const unsubProperties = propertyService.subscribeToChanges(async () => {
@@ -703,6 +745,202 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       : 0
   };
 
+  // AutoBills — Handlers
+  const addEnergyConnection = async (connectionData: Omit<EnergyConnection, 'id' | 'createdAt' | 'updatedAt'>): Promise<EnergyConnection> => {
+    const newConn: EnergyConnection = {
+      ...connectionData,
+      id: `conn-${Date.now()}`,
+      inboxEmailAddress: `energia+${connectionData.consumerUnit}@inbox.locash.app`,
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    const updated = [newConn, ...energyConnections];
+    setEnergyConnections(updated);
+    await energyService.saveConnections(updated);
+    return newConn;
+  };
+
+  const updateEnergyConnection = async (id: string, data: Partial<EnergyConnection>) => {
+    const updated = energyConnections.map(c => c.id === id ? { ...c, ...data, updatedAt: new Date().toISOString() } : c);
+    setEnergyConnections(updated);
+    await energyService.saveConnections(updated);
+  };
+
+  const deleteEnergyConnection = async (id: string) => {
+    const updated = energyConnections.filter(c => c.id !== id);
+    setEnergyConnections(updated);
+    await energyService.saveConnections(updated);
+  };
+
+  const confirmEnergyAccount = async (account: EnergyAccount) => {
+    // 1. Save or update energy account
+    const isExisting = energyAccounts.some(a => a.id === account.id || a.documentHash === account.documentHash);
+    const updatedAccounts = isExisting
+      ? energyAccounts.map(a => (a.id === account.id || a.documentHash === account.documentHash) ? { ...account, processingStatus: 'confirmed' as const, updatedAt: new Date().toISOString() } : a)
+      : [{ ...account, processingStatus: 'confirmed' as const }, ...energyAccounts];
+    
+    setEnergyAccounts(updatedAccounts);
+    await energyService.saveAccounts(updatedAccounts);
+
+    // 2. Automatically register into existing Financial Transactions / Payments (PRD #22 & #23)
+    const paymentId = `pay-energy-${account.id}`;
+    if (!payments.some(p => p.id === paymentId)) {
+      const newPayment: LeasePayment = {
+        id: paymentId,
+        leaseId: account.propertyId,
+        tenantId: activeLease.tenantId,
+        landlordId: currentUser?.id || 'landlord-1',
+        referenceMonth: account.billingPeriod,
+        dueDate: account.dueDate,
+        amount: account.amountTotal,
+        status: 'PENDENTE',
+        paymentMethod: 'PIX / BOLETO ENERGIA',
+        invoiceUrl: account.documentUrl || '#fatura-coelba'
+      };
+      setPayments(prev => [newPayment, ...prev]);
+    }
+
+    // 3. Update connection last processed
+    if (account.consumerUnit) {
+      setEnergyConnections(prev => prev.map(c => 
+        c.consumerUnit === account.consumerUnit 
+          ? { ...c, lastReceivedAt: new Date().toISOString(), lastProcessedAt: new Date().toISOString() } 
+          : c
+      ));
+    }
+
+    // 4. Remove from pending inbox documents
+    setInboxDocuments(prev => prev.filter(d => d.documentHash !== account.documentHash));
+  };
+
+  const processEnergyBill = async (
+    file: File,
+    source: 'manual_upload' | 'email' | 'whatsapp' = 'manual_upload'
+  ): Promise<{ success: boolean; account?: EnergyAccount; error?: string; isDuplicate?: boolean; parsedResult?: ParsedBillResult }> => {
+    try {
+      // A. Extract OCR & AI fields from Coelba invoice
+      const knownUcs = energyConnections.map(c => ({
+        consumerUnit: c.consumerUnit,
+        propertyId: c.propertyId,
+        propertyTitle: c.propertyTitle
+      }));
+
+      const parsed = await energyOcrService.processDocument(file, knownUcs);
+
+      // B. Check for Duplicity via documentHash or (UC + billingPeriod) (PRD #20 & #21)
+      const duplicate = energyAccounts.find(a => 
+        a.documentHash === parsed.documentHash || 
+        (a.consumerUnit === parsed.consumerUnit && a.billingPeriod === parsed.billingPeriod)
+      );
+
+      if (duplicate) {
+        return {
+          success: false,
+          isDuplicate: true,
+          account: duplicate,
+          error: `Esta fatura da UC ${parsed.consumerUnit} (${parsed.billingPeriod}) já está registrada no sistema.`
+        };
+      }
+
+      // C. Match Property via UC (PRD #6 & #38)
+      const matchedConnection = energyConnections.find(c => c.consumerUnit === parsed.consumerUnit);
+      const matchedProperty = properties.find(p => p.id === matchedConnection?.propertyId) || properties[0];
+
+      // Calculate historical variation
+      const previousAccountsForProperty = energyAccounts.filter(a => a.consumerUnit === parsed.consumerUnit);
+      const sixMonthAvgKwh = previousAccountsForProperty.length > 0
+        ? Math.round(previousAccountsForProperty.reduce((acc, c) => acc + c.consumptionKwh, 0) / previousAccountsForProperty.length)
+        : 219;
+      const variationPercentage = previousAccountsForProperty.length > 0
+        ? Number((((parsed.consumptionKwh - sixMonthAvgKwh) / sixMonthAvgKwh) * 100).toFixed(1))
+        : 12.8;
+      const isAnomaly = Math.abs(variationPercentage) >= 25; // PRD #29 (Alerta de aumento > 25%)
+
+      const autoRegister = matchedConnection?.automaticRegistration && parsed.ocrConfidence >= 95;
+
+      const newAccount: EnergyAccount = {
+        id: `ea-${Date.now()}`,
+        userId: currentUser?.id || 'landlord-1',
+        propertyId: matchedProperty?.id || (properties[0]?.id || 'prop-1'),
+        propertyTitle: matchedProperty?.title || 'Imóvel em Gestão',
+        providerId: 'prov-coelba',
+        providerName: parsed.providerName,
+        connectionId: matchedConnection?.id,
+        consumerUnit: parsed.consumerUnit,
+        holderName: parsed.holderName,
+        billingPeriod: parsed.billingPeriod,
+        issueDate: parsed.issueDate,
+        dueDate: parsed.dueDate,
+        consumptionKwh: parsed.consumptionKwh,
+        previousReading: parsed.previousReading,
+        currentReading: parsed.currentReading,
+        nextReadingDate: parsed.nextReadingDate,
+        billingDays: parsed.billingDays,
+        amountTotal: parsed.amountTotal,
+        energyAmount: parsed.energyAmount,
+        taxAmount: parsed.taxAmount,
+        feeAmount: parsed.feeAmount,
+        invoiceNumber: parsed.invoiceNumber,
+        barcode: parsed.barcode,
+        pixCode: parsed.pixCode,
+        documentUrl: URL.createObjectURL(file),
+        documentHash: parsed.documentHash,
+        source,
+        processingStatus: autoRegister ? 'confirmed' : 'pending_confirmation',
+        ocrConfidence: parsed.ocrConfidence,
+        historyComparison: {
+          sixMonthAvgKwh,
+          variationPercentage,
+          isAnomaly
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      if (autoRegister) {
+        await confirmEnergyAccount(newAccount);
+      } else {
+        // Add to Inbox
+        const inboxDoc: InboxDocument = {
+          id: `inbox-${Date.now()}`,
+          userId: currentUser?.id || 'landlord-1',
+          channel: source,
+          sender: source === 'email' ? 'fatura@neoenergia.com' : source === 'whatsapp' ? 'Neoenergia Coelba (+55 71 3370-6350)' : 'Upload Manual',
+          fileName: file.name,
+          mimeType: file.type || 'application/pdf',
+          fileSize: file.size,
+          storagePath: 'documents/energy',
+          documentHash: parsed.documentHash,
+          status: 'pending_confirmation',
+          extractedData: newAccount,
+          createdAt: new Date().toISOString()
+        };
+        const updatedInbox = [inboxDoc, ...inboxDocuments];
+        setInboxDocuments(updatedInbox);
+        await energyService.saveInboxDocuments(updatedInbox);
+      }
+
+      return {
+        success: true,
+        account: newAccount,
+        parsedResult: parsed
+      };
+    } catch (err: any) {
+      console.error('Erro ao processar fatura de energia:', err);
+      return {
+        success: false,
+        error: err.message || 'Falha ao processar e ler o documento da fatura.'
+      };
+    }
+  };
+
+  const deleteEnergyAccount = async (id: string) => {
+    const updated = energyAccounts.filter(a => a.id !== id);
+    setEnergyAccounts(updated);
+    await energyService.saveAccounts(updated);
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -758,7 +996,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         editProperty,
         deleteProperty,
         editingProperty,
-        setEditingProperty
+        setEditingProperty,
+        energyConnections,
+        energyAccounts,
+        inboxDocuments,
+        isEnergyConnectionModalOpen,
+        setIsEnergyConnectionModalOpen,
+        isEnergyInboxModalOpen,
+        setIsEnergyInboxModalOpen,
+        selectedEnergyPropertyId,
+        setSelectedEnergyPropertyId,
+        addEnergyConnection,
+        updateEnergyConnection,
+        deleteEnergyConnection,
+        processEnergyBill,
+        confirmEnergyAccount,
+        deleteEnergyAccount
       }}
     >
       {children}

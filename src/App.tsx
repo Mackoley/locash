@@ -17,6 +17,9 @@ import { LandlordDashboard } from './components/landlord/LandlordDashboard';
 import { LandlordProperties } from './components/landlord/LandlordProperties';
 import { LeaseHub } from './components/tenant/LeaseHub';
 import { StandaloneChat } from './components/chat/StandaloneChat';
+import { EnergyDashboardView } from './components/energy/EnergyDashboardView';
+import { EnergyConnectionModal } from './components/energy/EnergyConnectionModal';
+import { EnergyInboxModal } from './components/energy/EnergyInboxModal';
 
 export const AppContent: React.FC = () => {
   const { activeView, isAuthModalOpen, setIsAuthModalOpen } = useApp();
@@ -39,6 +42,7 @@ export const AppContent: React.FC = () => {
           {activeView === 'CENTRAL_LOCACAO' && <LeaseHub />}
           {activeView === 'DASHBOARD_LOCADOR' && <LandlordDashboard />}
           {activeView === 'MEUS_IMOVEIS' && <LandlordProperties />}
+          {activeView === 'ENERGIA' && <EnergyDashboardView />}
           {activeView === 'MENSAGENS' && <StandaloneChat />}
         </main>
       </div>
@@ -51,6 +55,8 @@ export const AppContent: React.FC = () => {
       <PropertyFiltersModal />
       <PropertyWizardModal />
       <PropertyEditModal />
+      <EnergyConnectionModal />
+      <EnergyInboxModal />
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       <RoleOnboardingModal />
       <UserProfileModal />
