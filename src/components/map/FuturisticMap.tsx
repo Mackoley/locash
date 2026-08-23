@@ -477,18 +477,13 @@ export const FuturisticMap: React.FC = () => {
           --beam-color-trans: ${statusColor}cc;
           --beam-color-fade: ${statusColor}33;
           position: absolute;
-          bottom: 0px;
+          bottom: 50%;
           left: 50%;
           transform: translateX(-50%);
           pointer-events: none;
         ">
           <div class="beam-cylinder-body">
             <div class="beam-laser-core"></div>
-          </div>
-          <div class="beam-ground-base">
-            <div class="beam-ground-glow-disk"></div>
-            <div class="beam-windows-spinner"></div>
-            <div class="beam-ground-dot"></div>
           </div>
         </div>
       ` : '';
