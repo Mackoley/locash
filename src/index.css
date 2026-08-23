@@ -76,6 +76,36 @@
   z-index: 1000 !important;
 }
 
+/* Zoom Responsive Property Markers */
+/* Zoom Próximo (Bairro e Rua - zoom >= 13.5): Balão completo de preço com setinha */
+.custom-price-marker .marker-full-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.custom-price-marker .marker-compact-dot {
+  display: none;
+}
+
+/* Zoom Afastado (Cidade e Região - zoom < 13.5): Ponto compacto preciso de 12px */
+.zoom-far .custom-price-marker .marker-full-badge {
+  display: none;
+}
+.zoom-far .custom-price-marker .marker-compact-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* Hover em zoom afastado: abre o balão de preço temporariamente */
+.zoom-far .custom-price-marker:hover .marker-full-badge {
+  display: flex;
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+}
+
 /* ==============================================================================
    3D Holographic Cylinder Beam & Windows Spinner Ground Base (2.5km Zoom Rule)
    ============================================================================== */

@@ -250,16 +250,18 @@ export const FuturisticMap: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove, { capture: true });
     window.addEventListener('mouseup', handleMouseUp, { capture: true });
 
-    // 2.5km Visible Screen Radius Zoom Rule (Zoom >= 14.0)
+    // 2.5km Visible Screen Radius Zoom Rule & Responsive Far/Near Marker Adapter
     const BEAM_ZOOM_THRESHOLD = 14.0;
-    const updateBeamZoomClass = () => {
-      const isCloseEnough = map.getZoom() >= BEAM_ZOOM_THRESHOLD;
-      container.classList.toggle('beams-zoom-active', isCloseEnough);
+    const FAR_ZOOM_THRESHOLD = 13.5;
+    const updateZoomClasses = () => {
+      const currentZoom = map.getZoom();
+      container.classList.toggle('beams-zoom-active', currentZoom >= BEAM_ZOOM_THRESHOLD);
+      container.classList.toggle('zoom-far', currentZoom < FAR_ZOOM_THRESHOLD);
     };
 
-    map.on('zoom', updateBeamZoomClass);
-    map.on('render', updateBeamZoomClass);
-    updateBeamZoomClass();
+    map.on('zoom', updateZoomClasses);
+    map.on('render', updateZoomClasses);
+    updateZoomClasses();
 
     mapInstanceRef.current = map;
 
@@ -281,8 +283,8 @@ export const FuturisticMap: React.FC = () => {
       window.removeEventListener('mouseup', handleMouseUp, { capture: true } as any);
       window.removeEventListener('resize', handleWindowResize);
       window.removeEventListener('orientationchange', handleWindowResize);
-      map.off('zoom', updateBeamZoomClass);
-      map.off('render', updateBeamZoomClass);
+      map.off('zoom', updateZoomClasses);
+      map.off('render', updateZoomClasses);
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -510,53 +512,75 @@ export const FuturisticMap: React.FC = () => {
         ${heatHtml}
         ${beamHtml}
 
-        <!-- 1. Price Badge Pill firmly anchored -->
-        <div style="
-          position: relative;
-          z-index: 25;
-          display: flex;
-          align-items: center;
-          gap: 5px;
-          padding: 3.5px 10px;
-          background: ${isLight ? '#ffffff' : statusBg};
-          border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-          border-radius: 9999px;
-          backdrop-filter: blur(12px);
-          box-shadow: ${isSelected 
-            ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
-            : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
-          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-          transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
-          white-space: nowrap;
-        " class="hover:scale-110">
-          <span style="
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: ${statusColor};
-            box-shadow: 0 0 6px ${statusColor};
-            display: inline-block;
-            flex-shrink: 0;
-          "></span>
-          <span style="
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 800;
-            font-size: 11px;
-            color: ${textColor};
-            letter-spacing: -0.02em;
-          ">${formattedPrice}</span>
+        <!-- 1. Full Price Badge Pill with Arrow (Zoom Próximo >= 13.5) -->
+        <div class="marker-full-badge">
+          <div style="
+            position: relative;
+            z-index: 25;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3.5px 10px;
+            background: ${isLight ? '#ffffff' : statusBg};
+            border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+            border-radius: 9999px;
+            backdrop-filter: blur(12px);
+            box-shadow: ${isSelected 
+              ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
+              : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+            transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
+            white-space: nowrap;
+          " class="hover:scale-110">
+            <span style="
+              width: 6px;
+              height: 6px;
+              border-radius: 50%;
+              background: ${statusColor};
+              box-shadow: 0 0 6px ${statusColor};
+              display: inline-block;
+              flex-shrink: 0;
+            "></span>
+            <span style="
+              font-family: 'JetBrains Mono', monospace;
+              font-weight: 800;
+              font-size: 11px;
+              color: ${textColor};
+              letter-spacing: -0.02em;
+            ">${formattedPrice}</span>
+          </div>
+
+          <!-- Downward Pin Arrow Tip touching the exact street coordinate -->
+          <div style="
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+            margin-top: -1px;
+            z-index: 24;
+          "></div>
         </div>
 
-        <!-- 2. Downward Pin Arrow Tip touching the exact street coordinate -->
-        <div style="
-          width: 0;
-          height: 0;
-          border-left: 5px solid transparent;
-          border-right: 5px solid transparent;
-          border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-          margin-top: -1px;
-          z-index: 24;
-        "></div>
+        <!-- 2. Compact Precision Micro-Dot (Zoom Afastado < 13.5) -->
+        <div class="marker-compact-dot" style="
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: ${statusColor};
+          border: 2px solid #ffffff;
+          box-shadow: 0 0 10px ${statusColor}, 0 2px 6px rgba(0,0,0,0.7);
+          cursor: pointer;
+          transition: transform 0.15s ease;
+        ">
+          <span style="
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: #ffffff;
+            display: inline-block;
+          "></span>
+        </div>
       `;
 
       // Elevate z-index on mouse hover
