@@ -39,17 +39,17 @@ export const LandlordDashboard: React.FC = () => {
 
   return (
     <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full no-scrollbar pb-20 md:pb-8">
-      {/* Cockpit Title Header */}
+      {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 glass-panel p-5 rounded-3xl border-slate-800">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-cyber-cyan animate-pulse shadow-neon-cyan" />
             <h1 className="text-xl sm:text-2xl font-extrabold text-white font-mono tracking-tight">
-              COCKPIT DO LOCADOR
+              CARTEIRA IMOBILIÁRIA
             </h1>
           </div>
           <p className="text-xs text-slate-400 font-mono mt-1">
-            Gêmeo Digital e Telemetria em Tempo Real da Carteira Imobiliária
+            Gestão Executiva e Telemetria em Tempo Real do Seu Patrimônio
           </p>
         </div>
 

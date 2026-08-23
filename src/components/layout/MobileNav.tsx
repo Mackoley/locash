@@ -22,7 +22,7 @@ export const MobileNav: React.FC = () => {
   ];
 
   const landlordTabs = [
-    { id: 'DASHBOARD_LOCADOR', label: 'Cockpit', icon: LayoutDashboard },
+    { id: 'DASHBOARD_LOCADOR', label: 'Carteira', icon: LayoutDashboard },
     { id: 'MAPA', label: 'Mapa', icon: Map },
     { id: 'MEUS_IMOVEIS', label: 'Imóveis', icon: Building, badge: landlordStats.totalProperties },
     { id: 'CENTRAL_LOCACAO', label: 'Locação', icon: Home },

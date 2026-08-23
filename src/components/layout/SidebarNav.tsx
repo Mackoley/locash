@@ -33,7 +33,7 @@ export const SidebarNav: React.FC = () => {
   ];
 
   const landlordNavItems = [
-    { id: 'DASHBOARD_LOCADOR', label: 'Cockpit Geral', icon: LayoutDashboard },
+    { id: 'DASHBOARD_LOCADOR', label: 'Carteira Imobiliária', icon: LayoutDashboard },
     { id: 'MAPA', label: 'Mapa de Gestão', icon: Map },
     { id: 'MEUS_IMOVEIS', label: 'Meus Imóveis', icon: Building, badge: landlordStats.totalProperties },
     { id: 'CENTRAL_LOCACAO', label: 'Central de Locações', icon: FileCheck2, highlight: true },
@@ -49,7 +49,7 @@ export const SidebarNav: React.FC = () => {
         <div>
           <div className="px-3 mb-2 flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest font-mono">
-              {userRole === 'LANDLORD' ? 'PAINEL DO LOCADOR' : 'NAVEGAÇÃO LOCATÁRIO'}
+              {userRole === 'LANDLORD' ? 'CARTEIRA IMOBILIÁRIA' : 'NAVEGAÇÃO LOCATÁRIO'}
             </span>
             <span className="w-2 h-2 rounded-full bg-cyber-cyan animate-pulse shadow-neon-cyan" />
           </div>
