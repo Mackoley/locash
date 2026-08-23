@@ -221,31 +221,10 @@ export const FuturisticMap: React.FC = () => {
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
 
-    // Dynamic Real-time Zoom-Responsive Scale for 3D Beams, Base Spinner and Markers (Higher Zoom Reduction Ratio)
-    const updateZoomScale = () => {
-      const zoom = map.getZoom();
-      // Exponential reduction curve:
-      // Zoom 16: scale 1.0 (street level)
-      // Zoom 14.5: scale 0.60 (neighborhood)
-      // Zoom 13: scale 0.32 (city overview)
-      // Zoom 11.5: scale 0.16 (metropolitan area)
-      // Zoom <= 10: scale 0.07 (micro-beacon / pin dot)
-      const scale = Math.min(Math.max(Math.pow(1.52, zoom - 16), 0.07), 1.15);
-      
-      const scalers = container.querySelectorAll<HTMLElement>('.marker-zoom-scaler');
-      scalers.forEach(scaler => {
-        scaler.style.transform = `scale(${scale.toFixed(3)})`;
-      });
-    };
-
-    map.on('zoom', updateZoomScale);
-    map.on('render', updateZoomScale);
-
     mapInstanceRef.current = map;
 
     const handleWindowResize = () => {
       map.resize();
-      updateZoomScale();
     };
 
     window.addEventListener('resize', handleWindowResize);
@@ -258,8 +237,6 @@ export const FuturisticMap: React.FC = () => {
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('resize', handleWindowResize);
       window.removeEventListener('orientationchange', handleWindowResize);
-      map.off('zoom', updateZoomScale);
-      map.off('render', updateZoomScale);
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -491,39 +468,36 @@ export const FuturisticMap: React.FC = () => {
         "></div>
       ` : '';
 
-      const currentZoom = map.getZoom();
-      const currentScale = Math.min(Math.max(Math.pow(1.52, currentZoom - 16), 0.07), 1.15);
-
       el.innerHTML = `
-        <div class="marker-zoom-scaler" style="
-          transform: scale(${currentScale.toFixed(3)});
-          transform-origin: bottom center;
+        <div style="
           display: flex;
           flex-direction: column;
           align-items: center;
           position: relative;
-          will-change: transform;
+          user-select: none;
+          cursor: pointer;
         ">
           ${heatHtml}
           ${beamHtml}
+          
+          <!-- 1. Price Badge Pill -->
           <div style="
             position: relative;
             z-index: 25;
             display: flex;
             align-items: center;
             gap: 5px;
-            padding: 3px 9px;
+            padding: 3.5px 10px;
             background: ${isLight ? '#ffffff' : statusBg};
             border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
             border-radius: 9999px;
             backdrop-filter: blur(12px);
             box-shadow: ${isSelected 
-              ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.5)` 
+              ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
               : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
-            transition: all 0.2s ease;
+            transition: transform 0.2s ease;
             transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
-            cursor: pointer;
-            margin-bottom: 10px;
+            white-space: nowrap;
           ">
             <span style="
               width: 6px;
@@ -532,26 +506,38 @@ export const FuturisticMap: React.FC = () => {
               background: ${statusColor};
               box-shadow: 0 0 6px ${statusColor};
               display: inline-block;
+              flex-shrink: 0;
             "></span>
             <span style="
               font-family: 'JetBrains Mono', monospace;
               font-weight: 800;
-              font-size: 10.5px;
+              font-size: 11px;
               color: ${textColor};
               letter-spacing: -0.02em;
             ">${formattedPrice}</span>
           </div>
+
+          <!-- 2. Downward Pin Arrow -->
           <div style="
-            position: absolute;
-            bottom: 0px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 1.5px;
-            height: 10px;
-            background: linear-gradient(to top, #ffffff, ${statusColor});
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+            margin-top: -1px;
+            z-index: 24;
+          "></div>
+
+          <!-- 3. Ground Anchor Dot touching the exact street coordinate -->
+          <div style="
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: ${statusColor};
+            border: 1px solid #ffffff;
             box-shadow: 0 0 6px ${statusColor};
-            z-index: 20;
-            pointer-events: none;
+            margin-top: 1px;
+            z-index: 23;
           "></div>
         </div>
       `;
