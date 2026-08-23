@@ -209,16 +209,16 @@ export const energyOcrService = {
     onProgress?: (status: string, percent: number) => void
   ): Promise<ParsedBillResult | null> {
     const prompt = `Você é um extrator de alta precisão especialista em contas de energia elétrica brasileiras (Neoenergia Coelba, Enel, Cemig, CPFL, Light, Equatorial, etc.).
-Analise esta fatura/documento e extraia rigorosamente os dados no seguinte formato JSON puro:
+Analise a fatura enviada e extraia estritamente os dados impressos nesta imagem, sem usar dados fictícios ou exemplos anteriores. Retorne no seguinte formato JSON puro:
 {
-  "providerName": "Nome da concessionária (ex: Neoenergia Coelba)",
+  "providerName": "Nome da concessionária (ex: Neoenergia Coelba, Enel, etc.)",
   "consumerUnit": "Código do cliente / Unidade Consumidora (UC) / Conta Contrato",
   "installationCode": "Código da Instalação se presente",
   "holderName": "Nome completo do cliente titular",
-  "billingPeriod": "Mês/Ano de referência no formato MM/AAAA (ex: 07/2026)",
-  "dueDate": "Data de vencimento no formato AAAA-MM-DD (ex: 2026-08-04)",
-  "amountTotal": número decimal do total a pagar (ex: 105.99),
-  "consumptionKwh": número inteiro do consumo faturado em kWh (ex: 178),
+  "billingPeriod": "Mês/Ano de referência no formato MM/AAAA ou texto impresso",
+  "dueDate": "Data de vencimento no formato AAAA-MM-DD",
+  "amountTotal": número decimal do total a pagar,
+  "consumptionKwh": número inteiro do consumo faturado em kWh,
   "barcode": "Linha digitável / código de barras se visível",
   "accessKey": "Chave de acesso da nota fiscal eletrônica de 44 dígitos se visível"
 }
@@ -284,12 +284,12 @@ Retorne SOMENTE o JSON puro, sem blocos markdown ou texto adicional.`;
           consumerUnit: String(parsed.consumerUnit || '').trim(),
           installationCode: parsed.installationCode ? String(parsed.installationCode).trim() : undefined,
           holderName: parsed.holderName ? String(parsed.holderName).trim() : undefined,
-          billingPeriod: parsed.billingPeriod || '07/2026',
-          dueDate: parsed.dueDate || new Date(Date.now() + 15 * 86400000).toISOString().split('T')[0],
+          billingPeriod: parsed.billingPeriod ? String(parsed.billingPeriod).trim() : '',
+          dueDate: parsed.dueDate || '',
           consumptionKwh,
           previousReading: 0,
           currentReading: consumptionKwh,
-          nextReadingDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+          nextReadingDate: '',
           billingDays: 30,
           amountTotal,
           energyAmount: Number((amountTotal * 0.72).toFixed(2)),
