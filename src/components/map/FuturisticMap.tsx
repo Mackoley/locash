@@ -430,7 +430,7 @@ export const FuturisticMap: React.FC = () => {
       }
     });
 
-    // 2. Render each cluster with dynamic spider offsets to prevent overlapping
+    // 2. Render each cluster with true geographic micro-offsets so pins are 100% fixed to the ground in 3D
     clusters.forEach(cluster => {
       const clusterSize = cluster.length;
 
@@ -438,28 +438,33 @@ export const FuturisticMap: React.FC = () => {
         const isSelected = selectedProperty?.id === prop.id;
         const isFeatured = prop.featured;
 
-        // Calculate Spider-Fan Offsets (dx, dy in pixels)
-        let offsetX = 0;
-        let offsetY = 0;
+        // Geographic micro-offset in degrees (~18 meters along street)
+        let dispLat = 0;
+        let dispLng = 0;
 
         if (clusterSize === 2) {
-          offsetX = idx === 0 ? -48 : 48;
-          offsetY = -6;
+          dispLng = idx === 0 ? -0.00018 : 0.00018;
+          dispLat = 0;
         } else if (clusterSize === 3) {
-          if (idx === 0) { offsetX = -54; offsetY = 0; }
-          else if (idx === 1) { offsetX = 0; offsetY = -34; }
-          else { offsetX = 54; offsetY = 0; }
+          if (idx === 0) { dispLng = -0.00022; dispLat = -0.00006; }
+          else if (idx === 1) { dispLng = 0; dispLat = 0.00018; }
+          else { dispLng = 0.00022; dispLat = -0.00006; }
         } else if (clusterSize === 4) {
-          if (idx === 0) { offsetX = -50; offsetY = -24; }
-          else if (idx === 1) { offsetX = 50; offsetY = -24; }
-          else if (idx === 2) { offsetX = -50; offsetY = 16; }
-          else { offsetX = 50; offsetY = 16; }
+          if (idx === 0) { dispLng = -0.00020; dispLat = -0.00012; }
+          else if (idx === 1) { dispLng = 0.00020; dispLat = -0.00012; }
+          else if (idx === 2) { dispLng = -0.00020; dispLat = 0.00012; }
+          else { dispLng = 0.00020; dispLat = 0.00012; }
         } else if (clusterSize > 4) {
           const angle = (2 * Math.PI * idx) / clusterSize - Math.PI / 2;
-          const radius = 54 + (clusterSize > 6 ? 18 : 0);
-          offsetX = Math.round(Math.cos(angle) * radius * 1.25);
-          offsetY = Math.round(Math.sin(angle) * radius * 0.85);
+          const radius = 0.00022 + (clusterSize > 6 ? 0.00008 : 0);
+          dispLng = Math.cos(angle) * radius * 1.25;
+          dispLat = Math.sin(angle) * radius * 0.9;
         }
+
+        const latNum = Number(prop.latitude);
+        const lngNum = Number(prop.longitude);
+        const finalLat = latNum + dispLat;
+        const finalLng = lngNum + dispLng;
 
         let statusColor = currentAccent.available;
         let statusBorder = `${currentAccent.available}88`;
@@ -523,32 +528,6 @@ export const FuturisticMap: React.FC = () => {
           "></div>
         ` : '';
 
-        // Spider Connector Line if displaced from anchor
-        const isOffset = offsetX !== 0 || offsetY !== 0;
-        const connectorSvg = isOffset ? `
-          <svg style="
-            position: absolute;
-            left: 50%;
-            bottom: 4px;
-            width: 1px;
-            height: 1px;
-            overflow: visible;
-            pointer-events: none;
-            z-index: 10;
-          ">
-            <line 
-              x1="0" 
-              y1="0" 
-              x2="${offsetX}" 
-              y2="${offsetY}" 
-              stroke="${statusColor}" 
-              stroke-width="1.5" 
-              stroke-dasharray="2 2"
-              opacity="0.85"
-            />
-          </svg>
-        ` : '';
-
         el.innerHTML = `
           <div style="
             display: flex;
@@ -560,9 +539,8 @@ export const FuturisticMap: React.FC = () => {
           ">
             ${heatHtml}
             ${beamHtml}
-            ${connectorSvg}
             
-            <!-- 1. Floating Price Badge Pill (Spider Displaced when multiple close items) -->
+            <!-- 1. Price Badge Pill firmly anchored -->
             <div style="
               position: relative;
               z-index: 25;
@@ -578,7 +556,7 @@ export const FuturisticMap: React.FC = () => {
                 ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
                 : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
               transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-              transform: translate(${offsetX}px, ${offsetY}px) ${isSelected ? 'scale(1.12)' : 'scale(1)'};
+              transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
               white-space: nowrap;
             " class="hover:scale-110">
               <span style="
@@ -607,28 +585,26 @@ export const FuturisticMap: React.FC = () => {
               ` : ''}
             </div>
 
-            ${!isOffset ? `
-              <!-- 2. Downward Pin Arrow for centered marker -->
-              <div style="
-                width: 0;
-                height: 0;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-                margin-top: -1px;
-                z-index: 24;
-              "></div>
-            ` : ''}
+            <!-- 2. Downward Pin Arrow -->
+            <div style="
+              width: 0;
+              height: 0;
+              border-left: 5px solid transparent;
+              border-right: 5px solid transparent;
+              border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+              margin-top: -1px;
+              z-index: 24;
+            "></div>
 
             <!-- 3. Ground Anchor Dot touching the exact street coordinate -->
             <div style="
-              width: ${clusterSize > 1 ? '7px' : '5px'};
-              height: ${clusterSize > 1 ? '7px' : '5px'};
+              width: 5px;
+              height: 5px;
               border-radius: 50%;
               background: ${statusColor};
-              border: 1.5px solid #ffffff;
-              box-shadow: 0 0 8px ${statusColor};
-              margin-top: ${isOffset ? '0px' : '1px'};
+              border: 1px solid #ffffff;
+              box-shadow: 0 0 6px ${statusColor};
+              margin-top: 1px;
               z-index: 23;
             "></div>
           </div>
@@ -646,7 +622,7 @@ export const FuturisticMap: React.FC = () => {
           e.stopPropagation();
 
           map.flyTo({
-            center: [prop.longitude, prop.latitude],
+            center: [finalLng, finalLat],
             zoom: 16.5,
             duration: 1000,
             essential: true
@@ -659,14 +635,11 @@ export const FuturisticMap: React.FC = () => {
           }
         });
 
-        const latNum = Number(prop.latitude);
-        const lngNum = Number(prop.longitude);
-
         const marker = new maplibregl.Marker({ 
           element: el, 
           anchor: 'bottom'
         })
-          .setLngLat([lngNum, latNum])
+          .setLngLat([finalLng, finalLat])
           .addTo(map);
 
         markersRef.current.push(marker);
