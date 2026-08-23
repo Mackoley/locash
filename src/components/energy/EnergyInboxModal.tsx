@@ -185,54 +185,62 @@ export const EnergyInboxModal: React.FC = () => {
         {/* Modal Body */}
         <div className="overflow-y-auto space-y-4 no-scrollbar pr-1 flex-1">
           
-          {/* Progress Bar during Analysis */}
+          {/* Google Gemini Vision Multimodal Progress Card */}
           {isProcessing ? (
-            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-[#0a1428] to-[#060c18] border border-cyan-500/50 shadow-[0_0_40px_rgba(0,242,254,0.15)] space-y-4 animate-scale-up">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyber-cyan">
-                    <Cpu className="w-4 h-4 animate-pulse" />
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-[#0d152b] via-[#091022] to-[#050914] border border-cyan-500/50 shadow-[0_0_50px_rgba(0,242,254,0.2)] space-y-4 animate-scale-up relative overflow-hidden">
+              
+              {/* Background Ambient Glow */}
+              <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+
+              <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/30 via-purple-500/30 to-cyan-500/30 border border-cyan-400/50 flex items-center justify-center text-cyan-300 shadow-[0_0_15px_rgba(0,242,254,0.3)]">
+                    <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '4s' }} />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                      Processando Fatura com IA & OCR
-                    </h3>
-                    <p className="text-[11px] text-cyan-300 animate-pulse font-medium">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[9px] uppercase font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400">
+                        GOOGLE GEMINI 3.6 FLASH • VISÃO MULTIMODAL
+                      </span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] animate-ping" />
+                    </div>
+                    <p className="text-xs sm:text-sm font-bold text-white mt-0.5 animate-pulse">
                       {ocrStatus}
                     </p>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-lg sm:text-xl font-extrabold text-cyber-cyan">
+                  <span className="text-xl sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400 drop-shadow-[0_0_10px_rgba(0,242,254,0.5)]">
                     {ocrPercent}%
                   </span>
                 </div>
               </div>
 
-              {/* Glowing High-Tech Progress Bar */}
+              {/* Glowing High-Tech Multimodal Progress Bar */}
               <div className="w-full bg-slate-950/90 rounded-full h-3.5 border border-slate-800 p-0.5 overflow-hidden relative shadow-inner">
                 <div 
-                  className="h-full rounded-full bg-gradient-to-r from-amber-400 via-cyan-400 to-emerald-400 transition-all duration-300 shadow-[0_0_15px_#00f2fe] relative overflow-hidden"
-                  style={{ width: `${Math.max(5, ocrPercent)}%` }}
+                  className="h-full rounded-full bg-gradient-to-r from-blue-500 via-purple-500 via-cyan-400 to-emerald-400 transition-all duration-300 shadow-[0_0_20px_#00f2fe] relative overflow-hidden"
+                  style={{ width: `${Math.max(8, ocrPercent)}%` }}
                 >
-                  <div className="absolute inset-0 bg-white/25 animate-pulse" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-pulse" />
                 </div>
               </div>
 
-              {/* Progress Milestones */}
-              <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-400 pt-1">
-                <div className={`flex items-center gap-1.5 ${ocrPercent >= 25 ? 'text-cyber-cyan font-bold' : ''}`}>
-                  <span className={`w-2 h-2 rounded-full ${ocrPercent >= 25 ? 'bg-cyan-400 shadow-[0_0_8px_#00f2fe]' : 'bg-slate-700'}`} />
-                  <span>1. Pré-processamento</span>
+              {/* Multimodal AI Milestones */}
+              <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-400 pt-1 relative z-10">
+                <div className={`flex items-center gap-1.5 ${ocrPercent >= 20 ? 'text-cyan-300 font-bold' : ''}`}>
+                  <span className={`w-2 h-2 rounded-full ${ocrPercent >= 20 ? 'bg-cyan-400 shadow-[0_0_8px_#00f2fe]' : 'bg-slate-700'}`} />
+                  <span className="truncate">1. Hash & Otimização</span>
                 </div>
-                <div className={`flex items-center justify-center gap-1.5 ${ocrPercent >= 60 ? 'text-cyber-cyan font-bold' : ''}`}>
-                  <span className={`w-2 h-2 rounded-full ${ocrPercent >= 60 ? 'bg-cyan-400 shadow-[0_0_8px_#00f2fe]' : 'bg-slate-700'}`} />
-                  <span>2. Leitura Ótica OCR</span>
+                <div className={`flex items-center justify-center gap-1.5 ${ocrPercent >= 60 ? 'text-purple-300 font-bold' : ''}`}>
+                  <span className={`w-2 h-2 rounded-full ${ocrPercent >= 60 ? 'bg-purple-400 shadow-[0_0_8px_#c084fc]' : 'bg-slate-700'}`} />
+                  <span className="truncate">2. Gemini Vision</span>
                 </div>
-                <div className={`flex items-center justify-end gap-1.5 ${ocrPercent >= 90 ? 'text-emerald-400 font-bold' : ''}`}>
-                  <span className={`w-2 h-2 rounded-full ${ocrPercent >= 90 ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-700'}`} />
-                  <span>3. Interpretação de Campos</span>
+                <div className={`flex items-center justify-end gap-1.5 ${ocrPercent >= 95 ? 'text-emerald-400 font-bold' : ''}`}>
+                  <span className={`w-2 h-2 rounded-full ${ocrPercent >= 95 ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-700'}`} />
+                  <span className="truncate">3. Extração JSON</span>
                 </div>
               </div>
             </div>
