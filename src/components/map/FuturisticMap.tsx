@@ -217,9 +217,16 @@ export const FuturisticMap: React.FC = () => {
 
     // Attach Middle-Click Scroll Drag Rotation listeners
     container.addEventListener('mousedown', handleMouseDown);
-    container.addEventListener('auxclick', handleAuxClick);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
+    // 2.5km Visible Screen Radius Zoom Rule (Zoom >= 14.0)
+    const BEAM_ZOOM_THRESHOLD = 14.0;
+    const updateBeamZoomClass = () => {
+      const isCloseEnough = map.getZoom() >= BEAM_ZOOM_THRESHOLD;
+      container.classList.toggle('beams-zoom-active', isCloseEnough);
+    };
+
+    map.on('zoom', updateBeamZoomClass);
+    map.on('render', updateBeamZoomClass);
+    updateBeamZoomClass();
 
     mapInstanceRef.current = map;
 
@@ -237,6 +244,8 @@ export const FuturisticMap: React.FC = () => {
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('resize', handleWindowResize);
       window.removeEventListener('orientationchange', handleWindowResize);
+      map.off('zoom', updateBeamZoomClass);
+      map.off('render', updateBeamZoomClass);
       map.remove();
       mapInstanceRef.current = null;
     };

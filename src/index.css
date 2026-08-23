@@ -77,7 +77,7 @@
 }
 
 /* ==============================================================================
-   3D Holographic Cylinder Beam & Windows Spinner Ground Base (Compact Precision)
+   3D Holographic Cylinder Beam & Windows Spinner Ground Base (2.5km Zoom Rule)
    ============================================================================== */
 .hologram-3d-beacon {
   position: absolute;
@@ -90,6 +90,15 @@
   flex-direction: column;
   align-items: center;
   z-index: 5;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+/* Beams 3D illuminate only when zoomed in close (radius <= 2.5km, zoom >= 14) */
+.beams-zoom-active .hologram-3d-beacon {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* Base Ground Flat Plane Container (Tamanho Fixo e Compacto - 32px) */
