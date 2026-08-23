@@ -501,21 +501,57 @@ export const FuturisticMap: React.FC = () => {
           "></div>
         ` : '';
 
+        // BADGE_HEIGHT: approximate pixel height of the badge pill (≈28px) + arrow (6px) = 34px
+        // We use a 0×0 container with anchor:'center'. The center of this container maps exactly to
+        // the geographic coordinate. Children are absolutely positioned so they do NOT affect layout.
+        // Badge goes ABOVE (negative bottom), dot goes AT origin (0,0), beam goes below.
         el.innerHTML = `
           <div style="
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             position: relative;
+            width: 0;
+            height: 0;
+            overflow: visible;
             user-select: none;
             cursor: pointer;
           ">
             ${heatHtml}
             ${beamHtml}
-            
-            <!-- 1. Price Badge Pill firmly anchored -->
+
+            <!-- Ground Anchor Dot - centered exactly at geographic coordinate -->
             <div style="
-              position: relative;
+              position: absolute;
+              width: 7px;
+              height: 7px;
+              border-radius: 50%;
+              background: ${statusColor};
+              border: 1.5px solid #ffffff;
+              box-shadow: 0 0 8px ${statusColor}, 0 0 3px rgba(0,0,0,0.8);
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              z-index: 23;
+            "></div>
+
+            <!-- Downward Pin Arrow - just above the dot -->
+            <div style="
+              position: absolute;
+              width: 0;
+              height: 0;
+              border-left: 5px solid transparent;
+              border-right: 5px solid transparent;
+              border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+              bottom: 3px;
+              left: 50%;
+              transform: translateX(-50%);
+              z-index: 24;
+            "></div>
+
+            <!-- Price Badge Pill - anchored above the dot -->
+            <div style="
+              position: absolute;
+              bottom: 9px;
+              left: 50%;
+              transform: translateX(-50%) ${isSelected ? 'scale(1.12)' : 'scale(1)'};
               z-index: 25;
               display: flex;
               align-items: center;
@@ -529,7 +565,6 @@ export const FuturisticMap: React.FC = () => {
                 ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
                 : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
               transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-              transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
               white-space: nowrap;
             " class="hover:scale-110">
               <span style="
@@ -549,29 +584,6 @@ export const FuturisticMap: React.FC = () => {
                 letter-spacing: -0.02em;
               ">${formattedPrice}</span>
             </div>
-
-            <!-- 2. Downward Pin Arrow -->
-            <div style="
-              width: 0;
-              height: 0;
-              border-left: 5px solid transparent;
-              border-right: 5px solid transparent;
-              border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-              margin-top: -1px;
-              z-index: 24;
-            "></div>
-
-            <!-- 3. Ground Anchor Dot touching the exact street coordinate -->
-            <div style="
-              width: 5px;
-              height: 5px;
-              border-radius: 50%;
-              background: ${statusColor};
-              border: 1px solid #ffffff;
-              box-shadow: 0 0 6px ${statusColor};
-              margin-top: 1px;
-              z-index: 23;
-            "></div>
           </div>
         `;
 
@@ -602,7 +614,7 @@ export const FuturisticMap: React.FC = () => {
 
       const marker = new maplibregl.Marker({ 
         element: el, 
-        anchor: 'bottom'
+        anchor: 'center'
       })
         .setLngLat([lngNum, latNum])
         .addTo(map);
