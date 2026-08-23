@@ -76,18 +76,18 @@
   z-index: 1000 !important;
 }
 
-/* Zoom Responsive Property Markers */
-/* Zoom Próximo (Bairro e Rua - zoom >= 13.5): Balão completo de preço com setinha */
+/* Zoom Responsive Property Markers (Centered Zero-Displacement Math) */
+/* Zoom Próximo (Bairro e Rua - zoom >= 13.5): Balão completo de preço centralizado */
 .custom-price-marker .marker-full-badge {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 .custom-price-marker .marker-compact-dot {
   display: none;
 }
 
-/* Zoom Afastado (Cidade e Região - zoom < 13.5): Ponto compacto preciso de 12px */
+/* Zoom Afastado (Cidade e Região - zoom < 13.5): Ponto compacto preciso de 14px */
 .zoom-far .custom-price-marker .marker-full-badge {
   display: none;
 }
@@ -100,9 +100,9 @@
 .zoom-far .custom-price-marker:hover .marker-full-badge {
   display: flex;
   position: absolute;
-  bottom: 14px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 9999;
 }
 

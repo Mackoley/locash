@@ -512,15 +512,15 @@ export const FuturisticMap: React.FC = () => {
         ${heatHtml}
         ${beamHtml}
 
-        <!-- 1. Full Price Badge Pill with Arrow (Zoom Próximo >= 13.5) -->
+        <!-- 1. Full Price Badge Pill (Centered directly on property, Airbnb style) -->
         <div class="marker-full-badge">
           <div style="
             position: relative;
             z-index: 25;
             display: flex;
             align-items: center;
-            gap: 5px;
-            padding: 3.5px 10px;
+            gap: 5.5px;
+            padding: 4px 10.5px;
             background: ${isLight ? '#ffffff' : statusBg};
             border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
             border-radius: 9999px;
@@ -549,17 +549,6 @@ export const FuturisticMap: React.FC = () => {
               letter-spacing: -0.02em;
             ">${formattedPrice}</span>
           </div>
-
-          <!-- Downward Pin Arrow Tip touching the exact street coordinate -->
-          <div style="
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-            margin-top: -1px;
-            z-index: 24;
-          "></div>
         </div>
 
         <!-- 2. Compact Precision Micro-Dot (Zoom Afastado < 13.5) -->
@@ -571,6 +560,9 @@ export const FuturisticMap: React.FC = () => {
           border: 2px solid #ffffff;
           box-shadow: 0 0 10px ${statusColor}, 0 2px 6px rgba(0,0,0,0.7);
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
           transition: transform 0.15s ease;
         ">
           <span style="
@@ -610,7 +602,7 @@ export const FuturisticMap: React.FC = () => {
 
       const marker = new maplibregl.Marker({ 
         element: el, 
-        anchor: 'bottom'
+        anchor: 'center'
       })
         .setLngLat([lngNum, latNum])
         .addTo(map);
