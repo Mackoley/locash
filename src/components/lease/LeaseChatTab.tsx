@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 export const LeaseChatTab: React.FC = () => {
-  const { chatMessages, sendChatMessage, activeLease, userRole } = useApp();
+  const { chatMessages, sendChatMessage, activeLease, userRole, currentUser } = useApp();
   const [inputText, setInputText] = useState('');
   const [activeCategory, setActiveCategory] = useState<'TODOS' | 'CONVERSA' | 'FINANCEIRO' | 'CONTRATO' | 'MANUTENÇÃO'>('TODOS');
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -78,8 +78,8 @@ export const LeaseChatTab: React.FC = () => {
       {/* Messages Scroll Area */}
       <div className="flex-1 p-4 overflow-y-auto space-y-4 font-mono text-xs no-scrollbar">
         {filteredMessages.map((msg) => {
-          const isMe = (userRole === 'LANDLORD' && msg.senderRole === 'LANDLORD') ||
-                       (userRole === 'TENANT' && msg.senderRole === 'TENANT');
+          const isMe = (currentUser && msg.senderId === currentUser.id) ||
+                       (!currentUser && ((userRole === 'LANDLORD' && msg.senderRole === 'LANDLORD') || (userRole === 'TENANT' && msg.senderRole === 'TENANT')));
           const isSystem = msg.senderRole === 'ADMIN' || msg.senderId === 'system';
 
           if (isSystem) {
@@ -96,34 +96,65 @@ export const LeaseChatTab: React.FC = () => {
             );
           }
 
+          const senderDisplayName = msg.senderName || (msg.senderRole === 'LANDLORD' ? (activeLease.landlordName || 'Locador') : (activeLease.tenantName || 'Inquilino'));
+          const roleBadgeText = msg.senderRole === 'LANDLORD' ? 'Locador' : msg.senderRole === 'TENANT' ? 'Inquilino' : 'Admin';
+          const roleColor = msg.senderRole === 'LANDLORD' 
+            ? 'text-amber-300 border-amber-500/30 bg-amber-500/10' 
+            : 'text-cyan-300 border-cyan-500/30 bg-cyan-500/10';
+
           return (
             <div
               key={msg.id}
               className={`flex gap-3 ${isMe ? 'justify-end' : 'justify-start'}`}
             >
               {!isMe && (
-                <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-cyber-cyan shrink-0">
-                  <User className="w-4 h-4" />
+                <div 
+                  className={`w-8 h-8 rounded-xl border flex items-center justify-center font-bold text-xs shrink-0 shadow-md ${
+                    msg.senderRole === 'LANDLORD' 
+                      ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' 
+                      : 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
+                  }`}
+                  title={senderDisplayName}
+                >
+                  {senderDisplayName.charAt(0).toUpperCase()}
                 </div>
               )}
 
               <div
-                className={`max-w-md rounded-2xl p-3.5 space-y-1 ${
+                className={`max-w-md rounded-2xl p-3.5 space-y-1.5 ${
                   isMe
                     ? 'bg-gradient-to-r from-blue-600/30 to-cyber-cyan/25 border border-cyan-500/40 text-white shadow-neon-cyan'
-                    : 'bg-slate-900/90 border border-slate-800 text-slate-200'
+                    : 'bg-slate-900/95 border border-slate-800 text-slate-200'
                 }`}
               >
-                <div className="flex items-center justify-between gap-4 text-[10px] text-slate-400">
-                  <span className="font-bold text-cyber-cyan">{msg.senderName}</span>
-                  <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                {/* Nome do Usuário + Cargo + Horário */}
+                <div className="flex items-center justify-between gap-3 text-[11px] pb-1 border-b border-white/5">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`font-bold ${isMe ? 'text-white' : 'text-cyber-cyan'}`}>
+                      {senderDisplayName}
+                    </span>
+                    {isMe && (
+                      <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-white/10 text-slate-300 font-semibold">
+                        Você
+                      </span>
+                    )}
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-md border font-medium ${roleColor}`}>
+                      {roleBadgeText}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 shrink-0">
+                    {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
-                <p className="text-xs leading-relaxed">{msg.message}</p>
+                <p className="text-xs leading-relaxed break-words">{msg.message}</p>
               </div>
 
               {isMe && (
-                <div className="w-8 h-8 rounded-full bg-cyber-cyan/20 border border-cyber-cyan/40 flex items-center justify-center text-cyber-cyan shrink-0">
-                  <User className="w-4 h-4" />
+                <div 
+                  className="w-8 h-8 rounded-xl bg-cyber-cyan/20 border border-cyber-cyan/40 flex items-center justify-center font-bold text-xs text-cyber-cyan shrink-0 shadow-md"
+                  title={senderDisplayName}
+                >
+                  {senderDisplayName.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>

@@ -607,13 +607,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const sendChatMessage = (text: string, category: any = 'CONVERSA') => {
     if (!text.trim()) return;
     const isLandlord = userRole === 'LANDLORD';
+    const senderName = currentUser?.name?.trim() || (isLandlord ? (activeLease.landlordName || 'Locador') : (activeLease.tenantName || 'Inquilino'));
+    const senderId = currentUser?.id || (isLandlord ? activeLease.landlordId : activeLease.tenantId);
+    
     const newMsg: ChatMessage = {
       id: `msg-${Date.now()}`,
       leaseId: activeLease.id,
-      senderId: isLandlord ? activeLease.landlordId : activeLease.tenantId,
-      senderName: isLandlord ? activeLease.landlordName : activeLease.tenantName,
+      senderId,
+      senderName,
       senderRole: isLandlord ? 'LANDLORD' : 'TENANT',
-      message: text,
+      message: text.trim(),
       timestamp: new Date().toISOString(),
       tabCategory: category
     };
