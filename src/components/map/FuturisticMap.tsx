@@ -28,7 +28,7 @@ export const FuturisticMap: React.FC = () => {
   const userMarkerRef = useRef<maplibregl.Marker | null>(null);
   const searchMarkerRef = useRef<maplibregl.Marker | null>(null);
   const hasAutoCenteredRef = useRef<boolean>(false);
-  const [is3DView, setIs3DView] = useState(true);
+  const [is3DView, setIs3DView] = useState(false);
 
   // Generate Tile Specification for Cyber Dark, Cyber Light, or Hybrid Satellite with Ultra-Bright White Labels
   const getStyleSpec = (theme: MapTheme): maplibregl.StyleSpecification => {
@@ -408,19 +408,7 @@ export const FuturisticMap: React.FC = () => {
     searchMarkerRef.current = marker;
   }, [searchTarget, mapTheme]);
 
-  // Auto-pitch camera into 3D angle when activating BEAMS_3D mode
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
-
-    if (mapVisualMode === 'BEAMS_3D') {
-      map.easeTo({
-        pitch: 60,
-        duration: 1200,
-        essential: true
-      });
-    }
-  }, [mapVisualMode]);
+  // Auto-pitch removed to maintain 100% faithful 2D orthogonal top-down precision by default
 
   // Update Property Markers, Beams, and Anti-Collision Spider-Declutter
   useEffect(() => {

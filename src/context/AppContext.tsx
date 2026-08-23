@@ -163,7 +163,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [isRoleOnboardingOpen, setIsRoleOnboardingOpen] = useState<boolean>(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
-  const [mapVisualMode, setMapVisualMode] = useState<'NORMAL' | 'HEATMAP' | 'BEAMS_3D'>('BEAMS_3D');
+  const [mapVisualMode, setMapVisualMode] = useState<'NORMAL' | 'HEATMAP' | 'BEAMS_3D'>('NORMAL');
   const [mapTheme, setMapThemeState] = useState<MapTheme>(() => {
     const saved = localStorage.getItem('locash_map_theme');
     return (saved as MapTheme) || 'CYBER_DARK';
