@@ -358,7 +358,6 @@ export const PropertyWizardModal: React.FC = () => {
     };
 
     addProperty(createdProp);
-    setSearchTarget({ lat: finalLat, lng: finalLng, name: createdProp.publicAddress });
     setIsWizardModalOpen(false);
     setCurrentStep(1);
     setActiveView('MAPA');

@@ -326,10 +326,21 @@ export const FuturisticMap: React.FC = () => {
     radarColor: '#00f2fe'
   };
 
-  // Real-Time User GPS Location Beacon (Updates user marker without moving camera)
+  // Real-Time User GPS Location Beacon & Initial Auto-Center
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !userLocation) return;
+
+    // Auto-center once when user GPS is first acquired on open
+    if (!hasAutoCenteredRef.current) {
+      hasAutoCenteredRef.current = true;
+      map.flyTo({
+        center: [userLocation.lng, userLocation.lat],
+        zoom: 15.5,
+        duration: 1200,
+        essential: true
+      });
+    }
 
     if (userMarkerRef.current) {
       userMarkerRef.current.setLngLat([userLocation.lng, userLocation.lat]);
@@ -604,8 +615,8 @@ export const FuturisticMap: React.FC = () => {
       mapInstanceRef.current.flyTo({
         center: [userLocation.lng, userLocation.lat],
         zoom: 15.5,
-        pitch: 52,
-        bearing: -18,
+        pitch: is3DView ? 52 : 0,
+        bearing: is3DView ? -18 : 0,
         duration: 1600
       });
     } else {
