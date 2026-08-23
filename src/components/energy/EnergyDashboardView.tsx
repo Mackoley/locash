@@ -36,7 +36,8 @@ import {
   LineChart,
   Line
 } from 'recharts';
-import { EnergyAccount } from '../../types';
+import { EnergyAccount, EnergyConnection } from '../../types';
+import { EnergyConnectionDetailModal } from './EnergyConnectionDetailModal';
 
 export const EnergyDashboardView: React.FC = () => {
   const { 
@@ -55,6 +56,7 @@ export const EnergyDashboardView: React.FC = () => {
   const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<string>('TODOS');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState<boolean>(false);
+  const [selectedConnectionForDetail, setSelectedConnectionForDetail] = useState<EnergyConnection | null>(null);
 
   // Helper to extract a sortable number (YYYYMM) from any billingPeriod or dueDate
   const getPeriodSortKey = (periodStr?: string, dueDate?: string): number => {
@@ -377,10 +379,13 @@ export const EnergyDashboardView: React.FC = () => {
             energyConnections.map(conn => (
               <div
                 key={conn.id}
-                className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-amber-500/40 space-y-2 text-xs transition-colors"
+                onClick={() => setSelectedConnectionForDetail(conn)}
+                className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 hover:border-cyan-400/60 hover:shadow-[0_0_20px_rgba(0,242,254,0.15)] space-y-2 text-xs transition-all cursor-pointer group"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-white truncate">{conn.propertyTitle}</span>
+                  <span className="font-bold text-white truncate group-hover:text-cyber-cyan transition-colors">
+                    {conn.propertyTitle}
+                  </span>
                   <span className="px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[9px] font-bold border border-emerald-500/30 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                     {conn.status}
@@ -402,22 +407,38 @@ export const EnergyDashboardView: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Inbound Email Preview Tag */}
+                <div className="p-1.5 rounded-lg bg-black/40 border border-cyan-500/20 text-[10px] text-cyan-300 flex items-center justify-between">
+                  <div className="flex items-center gap-1 truncate max-w-[170px]">
+                    <Mail className="w-3 h-3 text-cyber-cyan shrink-0" />
+                    <span className="truncate">{conn.inboxEmailAddress || `energia+${conn.consumerUnit}@inbox.locash.app`}</span>
+                  </div>
+                  <span className="text-[9px] text-slate-400 group-hover:text-cyber-cyan font-bold transition-colors">
+                    Ver ➔
+                  </span>
+                </div>
+
                 <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-500">
                   <div className="flex items-center gap-2 text-slate-400">
                     {conn.emailEnabled && (
-                      <span title="E-mail Ativo">
-                        <Mail className="w-3 h-3 text-cyber-cyan" />
+                      <span title="E-mail Ativo" className="flex items-center gap-1 text-cyan-400 text-[10px]">
+                        <Mail className="w-3 h-3" /> E-mail
                       </span>
                     )}
                     {conn.whatsappEnabled && (
-                      <span title="WhatsApp Ativo">
-                        <Phone className="w-3 h-3 text-emerald-400" />
+                      <span title="WhatsApp Ativo" className="flex items-center gap-1 text-emerald-400 text-[10px]">
+                        <Phone className="w-3 h-3" /> WhatsApp
                       </span>
                     )}
                   </div>
                   <button
-                    onClick={() => deleteEnergyConnection(conn.id)}
-                    className="text-slate-500 hover:text-red-400 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`Deseja remover a UC ${conn.consumerUnit}?`)) {
+                        deleteEnergyConnection(conn.id);
+                      }
+                    }}
+                    className="text-slate-500 hover:text-red-400 transition-colors p-1"
                     title="Remover UC"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -514,8 +535,16 @@ export const EnergyDashboardView: React.FC = () => {
             </div>
           </div>
         </div>
-
       </div>
+
+      {/* UC Detail & Inbound Email Modal */}
+      <EnergyConnectionDetailModal
+        connection={selectedConnectionForDetail}
+        isOpen={!!selectedConnectionForDetail}
+        onClose={() => setSelectedConnectionForDetail(null)}
+        onDelete={deleteEnergyConnection}
+        onOpenInbox={() => setIsEnergyInboxModalOpen(true)}
+      />
     </div>
   );
 };
