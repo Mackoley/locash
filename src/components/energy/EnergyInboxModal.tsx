@@ -21,7 +21,9 @@ import {
   Trash2,
   Edit3,
   Eye,
-  CheckSquare
+  CheckSquare,
+  Cpu,
+  Layers
 } from 'lucide-react';
 import { EnergyAccount } from '../../types';
 
@@ -40,7 +42,8 @@ export const EnergyInboxModal: React.FC = () => {
 
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [ocrStatus, setOcrStatus] = useState<string>('Processando fatura com IA & OCR...');
+  const [ocrStatus, setOcrStatus] = useState<string>('Iniciando análise com IA & OCR...');
+  const [ocrPercent, setOcrPercent] = useState<number>(0);
   const [activeAccountPreview, setActiveAccountPreview] = useState<EnergyAccount | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -76,19 +79,32 @@ export const EnergyInboxModal: React.FC = () => {
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true);
     setDuplicateWarning(null);
-    setOcrStatus('Iniciando reconhecimento ótico de caracteres (OCR)...');
+    setOcrStatus('Carregando arquivo e calculando hash de segurança...');
+    setOcrPercent(10);
 
-    const res = await processEnergyBill(file, 'manual_upload');
-    setIsProcessing(false);
+    const res = await processEnergyBill(
+      file, 
+      'manual_upload',
+      (status, percent) => {
+        setOcrStatus(status);
+        setOcrPercent(percent);
+      }
+    );
 
-    if (res.isDuplicate) {
-      setDuplicateWarning(res.error || 'Fatura em duplicidade.');
-      if (res.account) populateEditFields(res.account, res.parsedResult?.rawTextSample);
-    } else if (res.success && res.account) {
-      populateEditFields(res.account, res.parsedResult?.rawTextSample);
-    } else if (!res.success) {
-      setDuplicateWarning(res.error || 'Não foi possível ler a fatura. Você pode preencher os campos manualmente.');
-    }
+    setOcrPercent(100);
+    setOcrStatus('Análise finalizada com sucesso!');
+    
+    setTimeout(() => {
+      setIsProcessing(false);
+      if (res.isDuplicate) {
+        setDuplicateWarning(res.error || 'Fatura em duplicidade.');
+        if (res.account) populateEditFields(res.account, res.parsedResult?.rawTextSample);
+      } else if (res.success && res.account) {
+        populateEditFields(res.account, res.parsedResult?.rawTextSample);
+      } else if (!res.success) {
+        setDuplicateWarning(res.error || 'Não foi possível ler a fatura. Você pode preencher os campos manualmente.');
+      }
+    }, 600);
   };
 
   const handleConfirmEdited = async () => {
@@ -161,62 +177,105 @@ export const EnergyInboxModal: React.FC = () => {
 
         {/* Modal Body */}
         <div className="overflow-y-auto space-y-4 no-scrollbar pr-1 flex-1">
-          {/* Dropzone Area */}
-          <div
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setIsDragging(false);
-              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                handleFileUpload(e.dataTransfer.files[0]);
-              }
-            }}
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2.5 ${
-              isDragging
-                ? 'border-cyan-400 bg-cyan-500/15 shadow-[0_0_30px_rgba(0,242,254,0.2)]'
-                : 'border-slate-800 bg-slate-900/50 hover:border-cyan-500/40 hover:bg-slate-900/80'
-            }`}
-          >
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  handleFileUpload(e.target.files[0]);
+          
+          {/* Progress Bar during Analysis */}
+          {isProcessing ? (
+            <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-b from-[#0a1428] to-[#060c18] border border-cyan-500/50 shadow-[0_0_40px_rgba(0,242,254,0.15)] space-y-4 animate-scale-up">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyber-cyan">
+                    <Cpu className="w-4 h-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                      Processando Fatura com IA & OCR
+                    </h3>
+                    <p className="text-[11px] text-cyan-300 animate-pulse font-medium">
+                      {ocrStatus}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span className="text-lg sm:text-xl font-extrabold text-cyber-cyan">
+                    {ocrPercent}%
+                  </span>
+                </div>
+              </div>
+
+              {/* Glowing High-Tech Progress Bar */}
+              <div className="w-full bg-slate-950/90 rounded-full h-3.5 border border-slate-800 p-0.5 overflow-hidden relative shadow-inner">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 via-cyan-400 to-emerald-400 transition-all duration-300 shadow-[0_0_15px_#00f2fe] relative overflow-hidden"
+                  style={{ width: `${Math.max(5, ocrPercent)}%` }}
+                >
+                  <div className="absolute inset-0 bg-white/25 animate-pulse" />
+                </div>
+              </div>
+
+              {/* Progress Milestones */}
+              <div className="grid grid-cols-3 gap-2 text-[10px] text-slate-400 pt-1">
+                <div className={`flex items-center gap-1.5 ${ocrPercent >= 25 ? 'text-cyber-cyan font-bold' : ''}`}>
+                  <span className={`w-2 h-2 rounded-full ${ocrPercent >= 25 ? 'bg-cyan-400 shadow-[0_0_8px_#00f2fe]' : 'bg-slate-700'}`} />
+                  <span>1. Pré-processamento</span>
+                </div>
+                <div className={`flex items-center justify-center gap-1.5 ${ocrPercent >= 60 ? 'text-cyber-cyan font-bold' : ''}`}>
+                  <span className={`w-2 h-2 rounded-full ${ocrPercent >= 60 ? 'bg-cyan-400 shadow-[0_0_8px_#00f2fe]' : 'bg-slate-700'}`} />
+                  <span>2. Leitura Ótica OCR</span>
+                </div>
+                <div className={`flex items-center justify-end gap-1.5 ${ocrPercent >= 90 ? 'text-emerald-400 font-bold' : ''}`}>
+                  <span className={`w-2 h-2 rounded-full ${ocrPercent >= 90 ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-700'}`} />
+                  <span>3. Ancoragem Coelba</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Dropzone Area */
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                  handleFileUpload(e.dataTransfer.files[0]);
                 }
               }}
-            />
+              onClick={() => fileInputRef.current?.click()}
+              className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2.5 ${
+                isDragging
+                  ? 'border-cyan-400 bg-cyan-500/15 shadow-[0_0_30px_rgba(0,242,254,0.2)]'
+                  : 'border-slate-800 bg-slate-900/50 hover:border-cyan-500/40 hover:bg-slate-900/80'
+              }`}
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileUpload(e.target.files[0]);
+                  }
+                }}
+              />
 
-            <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyber-cyan">
-              <Upload className="w-6 h-6 animate-pulse" />
-            </div>
-
-            <div>
-              <p className="text-xs font-bold text-white">
-                Enviar Foto Real ou PDF da Conta de Energia
-              </p>
-              <p className="text-[10px] text-slate-400 mt-0.5">
-                Formatos aceitos: JPG, PNG, PDF (Reconhecimento ótico via Tesseract.js & PDF.js)
-              </p>
-            </div>
-
-            <span className="text-[10px] px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
-              📁 Selecionar Arquivo do Computador / Celular
-            </span>
-          </div>
-
-          {/* Processing Animation */}
-          {isProcessing && (
-            <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/40 flex items-center gap-3 animate-pulse">
-              <div className="w-6 h-6 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin shrink-0" />
-              <div className="text-xs">
-                <p className="font-bold text-white">Processando com OCR & IA...</p>
-                <p className="text-[10px] text-slate-400">{ocrStatus}</p>
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyber-cyan">
+                <Upload className="w-6 h-6 animate-pulse" />
               </div>
+
+              <div>
+                <p className="text-xs font-bold text-white">
+                  Enviar Foto Real ou PDF da Conta de Energia
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  Formatos aceitos: JPG, PNG, PDF (Reconhecimento ótico via Tesseract.js & PDF.js)
+                </p>
+              </div>
+
+              <span className="text-[10px] px-3 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300">
+                📁 Selecionar Arquivo do Computador / Celular
+              </span>
             </div>
           )}
 
@@ -338,7 +397,7 @@ export const EnergyInboxModal: React.FC = () => {
                     />
                   ) : (
                     <span className="text-xs font-bold text-cyber-cyan block">
-                      {editPeriod || 'Agosto/2026'}
+                      {editPeriod || '07/2026'}
                     </span>
                   )}
                 </div>

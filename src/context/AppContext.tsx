@@ -103,7 +103,7 @@ interface AppContextType {
   addEnergyConnection: (connection: Omit<EnergyConnection, 'id' | 'createdAt' | 'updatedAt'>) => Promise<EnergyConnection>;
   updateEnergyConnection: (id: string, data: Partial<EnergyConnection>) => Promise<void>;
   deleteEnergyConnection: (id: string) => Promise<void>;
-  processEnergyBill: (file: File, source?: 'manual_upload' | 'email' | 'whatsapp') => Promise<{ success: boolean; account?: EnergyAccount; error?: string; isDuplicate?: boolean; parsedResult?: ParsedBillResult }>;
+  processEnergyBill: (file: File, source?: 'manual_upload' | 'email' | 'whatsapp', onProgress?: (status: string, percent: number) => void) => Promise<{ success: boolean; account?: EnergyAccount; error?: string; isDuplicate?: boolean; parsedResult?: ParsedBillResult }>;
   confirmEnergyAccount: (account: EnergyAccount) => Promise<void>;
   deleteEnergyAccount: (id: string) => Promise<void>;
   discardInboxDocument: (idOrHash: string) => Promise<void>;
@@ -900,7 +900,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const processEnergyBill = async (
     file: File,
-    source: 'manual_upload' | 'email' | 'whatsapp' = 'manual_upload'
+    source: 'manual_upload' | 'email' | 'whatsapp' = 'manual_upload',
+    onProgress?: (status: string, percent: number) => void
   ): Promise<{ success: boolean; account?: EnergyAccount; error?: string; isDuplicate?: boolean; parsedResult?: ParsedBillResult }> => {
     try {
       // A. Extract OCR & AI fields from Coelba invoice
@@ -910,7 +911,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         propertyTitle: c.propertyTitle
       }));
 
-      const parsed = await energyOcrService.processDocument(file, knownUcs);
+      const parsed = await energyOcrService.processDocument(file, knownUcs, onProgress);
 
       // B. Check for Duplicity via documentHash or (UC + billingPeriod) (PRD #20 & #21)
       const duplicate = energyAccounts.find(a => 
