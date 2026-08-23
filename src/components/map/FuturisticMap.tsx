@@ -289,41 +289,29 @@ export const FuturisticMap: React.FC = () => {
     radarColor: '#00f2fe'
   };
 
-  // Real-Time User GPS Location Beacon & Auto-Center on Startup
+  // Real-Time User GPS Location Beacon (Updates user marker without moving camera)
   useEffect(() => {
     const map = mapInstanceRef.current;
-    if (!map) return;
+    if (!map || !userLocation) return;
 
-    if (userLocation) {
-      if (!hasAutoCenteredRef.current) {
-        hasAutoCenteredRef.current = true;
-        map.flyTo({
-          center: [userLocation.lng, userLocation.lat],
-          zoom: 15.5,
-          duration: 1500,
-          essential: true
-        });
-      }
+    if (userMarkerRef.current) {
+      userMarkerRef.current.setLngLat([userLocation.lng, userLocation.lat]);
+    } else {
+      const userEl = document.createElement('div');
+      userEl.className = 'flex items-center justify-center';
+      userEl.innerHTML = `
+        <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; inset: 0; border-radius: 50%; background: ${currentAccent.radarColor}44; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+          <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: ${currentAccent.radarColor}66; border: 2px solid ${currentAccent.radarColor}; box-shadow: 0 0 15px ${currentAccent.radarColor};"></div>
+          <div style="position: relative; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 8px #ffffff;"></div>
+        </div>
+      `;
 
-      if (userMarkerRef.current) {
-        userMarkerRef.current.setLngLat([userLocation.lng, userLocation.lat]);
-      } else {
-        const userEl = document.createElement('div');
-        userEl.className = 'flex items-center justify-center';
-        userEl.innerHTML = `
-          <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-            <div style="position: absolute; inset: 0; border-radius: 50%; background: ${currentAccent.radarColor}44; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
-            <div style="position: absolute; width: 22px; height: 22px; border-radius: 50%; background: ${currentAccent.radarColor}66; border: 2px solid ${currentAccent.radarColor}; box-shadow: 0 0 15px ${currentAccent.radarColor};"></div>
-            <div style="position: relative; width: 10px; height: 10px; border-radius: 50%; background: #ffffff; box-shadow: 0 0 8px #ffffff;"></div>
-          </div>
-        `;
+      const userMarker = new maplibregl.Marker({ element: userEl, anchor: 'center' })
+        .setLngLat([userLocation.lng, userLocation.lat])
+        .addTo(map);
 
-        const userMarker = new maplibregl.Marker({ element: userEl, anchor: 'center' })
-          .setLngLat([userLocation.lng, userLocation.lat])
-          .addTo(map);
-
-        userMarkerRef.current = userMarker;
-      }
+      userMarkerRef.current = userMarker;
     }
   }, [userLocation, mapTheme]);
 

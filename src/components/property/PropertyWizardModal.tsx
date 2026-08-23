@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export const PropertyWizardModal: React.FC = () => {
-  const { isWizardModalOpen, setIsWizardModalOpen, addProperty, setActiveView, userLocation } = useApp();
+  const { isWizardModalOpen, setIsWizardModalOpen, addProperty, setActiveView, userLocation, setSearchTarget } = useApp();
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form State
@@ -358,6 +358,7 @@ export const PropertyWizardModal: React.FC = () => {
     };
 
     addProperty(createdProp);
+    setSearchTarget({ lat: finalLat, lng: finalLng, name: createdProp.publicAddress });
     setIsWizardModalOpen(false);
     setCurrentStep(1);
     setActiveView('MAPA');
