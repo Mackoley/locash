@@ -106,6 +106,7 @@ interface AppContextType {
   processEnergyBill: (file: File, source?: 'manual_upload' | 'email' | 'whatsapp') => Promise<{ success: boolean; account?: EnergyAccount; error?: string; isDuplicate?: boolean; parsedResult?: ParsedBillResult }>;
   confirmEnergyAccount: (account: EnergyAccount) => Promise<void>;
   deleteEnergyAccount: (id: string) => Promise<void>;
+  clearEnergyData: () => Promise<void>;
 }
 
 const DEFAULT_ACTIVE_LEASE: Lease = {
@@ -941,6 +942,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await energyService.saveAccounts(updated);
   };
 
+  const clearEnergyData = async () => {
+    setEnergyConnections([]);
+    setEnergyAccounts([]);
+    setInboxDocuments([]);
+    setPayments(prev => prev.filter(p => !p.id.startsWith('pay-energy-')));
+    await energyService.clearAllData();
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1011,7 +1020,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deleteEnergyConnection,
         processEnergyBill,
         confirmEnergyAccount,
-        deleteEnergyAccount
+        deleteEnergyAccount,
+        clearEnergyData
       }}
     >
       {children}

@@ -46,6 +46,7 @@ export const EnergyDashboardView: React.FC = () => {
     setIsEnergyInboxModalOpen,
     deleteEnergyAccount,
     deleteEnergyConnection,
+    clearEnergyData,
     properties,
     inboxDocuments
   } = useApp();
@@ -53,6 +54,7 @@ export const EnergyDashboardView: React.FC = () => {
   const [timeRange, setTimeRange] = useState<'6M' | '12M' | '24M'>('6M');
   const [selectedPropertyFilter, setSelectedPropertyFilter] = useState<string>('TODOS');
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [isClearing, setIsClearing] = useState<boolean>(false);
 
   // Filter accounts
   const filteredAccounts = energyAccounts.filter(acc => {
@@ -67,7 +69,7 @@ export const EnergyDashboardView: React.FC = () => {
   const avgKwh = filteredAccounts.length > 0 ? Math.round(totalKwh / filteredAccounts.length) : 0;
   const currentKwh = latestAccount ? latestAccount.consumptionKwh : 0;
   const currentAmount = latestAccount ? latestAccount.amountTotal : 0;
-  const variation = latestAccount?.historyComparison?.variationPercentage ?? 12.8;
+  const variation = latestAccount?.historyComparison?.variationPercentage ?? 0;
 
   // Chart data formatting
   const chartData = [...filteredAccounts].reverse().map(acc => ({
@@ -81,6 +83,14 @@ export const EnergyDashboardView: React.FC = () => {
     navigator.clipboard.writeText(text);
     setCopiedCode(id);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleClearAll = async () => {
+    if (window.confirm('Deseja limpar todos os dados de faturas e UCs de energia para iniciar um teste limpo?')) {
+      setIsClearing(true);
+      await clearEnergyData();
+      setIsClearing(false);
+    }
   };
 
   return (
@@ -112,6 +122,18 @@ export const EnergyDashboardView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2.5 flex-wrap">
+          {(energyAccounts.length > 0 || energyConnections.length > 0) && (
+            <button
+              onClick={handleClearAll}
+              disabled={isClearing}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900/80 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-800 hover:border-red-500/40 text-xs font-bold transition-all"
+              title="Limpar todos os dados de energia"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Limpar Dados</span>
+            </button>
+          )}
+
           <button
             onClick={() => setIsEnergyInboxModalOpen(true)}
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyber-cyan border border-cyber-cyan/30 text-xs font-bold transition-all relative"
@@ -227,26 +249,43 @@ export const EnergyDashboardView: React.FC = () => {
           </div>
         </div>
 
-        <div className="h-64 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <XAxis dataKey="mes" stroke="#64748b" fontSize={11} />
-              <YAxis stroke="#64748b" fontSize={11} />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#070d1d', 
-                  borderColor: '#00f2fe',
-                  borderRadius: '12px',
-                  fontFamily: 'monospace',
-                  fontSize: '11px'
-                }} 
-              />
-              <Legend wrapperStyle={{ fontSize: '11px' }} />
-              <Bar dataKey="kwh" name="Consumo (kWh)" fill="#f59e0b" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="valor" name="Valor (R$)" fill="#00f2fe" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {chartData.length === 0 ? (
+          <div className="h-56 flex flex-col items-center justify-center text-center p-6 space-y-2.5 rounded-2xl bg-slate-900/40 border border-slate-800/80">
+            <Zap className="w-8 h-8 text-slate-600" />
+            <p className="text-xs font-bold text-slate-300">Nenhuma fatura processada ainda</p>
+            <p className="text-[11px] text-slate-500 max-w-sm">
+              Faça upload do PDF ou foto da sua conta de energia na Caixa de Entrada para gerar os gráficos de consumo e telemetria.
+            </p>
+            <button
+              onClick={() => setIsEnergyInboxModalOpen(true)}
+              className="mt-1 px-3.5 py-1.5 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-xs font-bold hover:bg-cyan-500/30 transition-all flex items-center gap-1.5"
+            >
+              <UploadCloud className="w-3.5 h-3.5" />
+              <span>Enviar Conta Real (PDF/Foto)</span>
+            </button>
+          </div>
+        ) : (
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <XAxis dataKey="mes" stroke="#64748b" fontSize={11} />
+                <YAxis stroke="#64748b" fontSize={11} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#070d1d', 
+                    borderColor: '#00f2fe',
+                    borderRadius: '12px',
+                    fontFamily: 'monospace',
+                    fontSize: '11px'
+                  }} 
+                />
+                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                <Bar dataKey="kwh" name="Consumo (kWh)" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="valor" name="Valor (R$)" fill="#00f2fe" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </GlassCard>
 
       {/* Grid: 2 Sections (Active Connections & Invoices Table) */}
