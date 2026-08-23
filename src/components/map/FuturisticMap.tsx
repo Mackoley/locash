@@ -397,7 +397,7 @@ export const FuturisticMap: React.FC = () => {
     }
   }, [mapVisualMode]);
 
-  // Update Property Markers and Beams
+  // Update Property Markers, Beams, and Anti-Collision Spider-Declutter
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -405,179 +405,272 @@ export const FuturisticMap: React.FC = () => {
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
+    // 1. Group properties into proximity clusters (detect collision within ~70 meters)
+    const clusterThresholdDeg = 0.00065;
+    const clusters: Property[][] = [];
+
     filteredProperties.forEach((prop: Property) => {
-      const isSelected = selectedProperty?.id === prop.id;
-      const isFeatured = prop.featured;
+      const lat = Number(prop.latitude);
+      const lng = Number(prop.longitude);
+      if (isNaN(lat) || isNaN(lng)) return;
 
-      let statusColor = currentAccent.available;
-      let statusBorder = `${currentAccent.available}88`;
-      let statusBg = currentAccent.availableBg;
-      let textColor = currentAccent.textColor;
-
-      if (prop.status === 'RESERVADO') {
-        statusColor = '#f59e0b';
-        statusBorder = 'rgba(245, 158, 11, 0.7)';
-      } else if (prop.status === 'EM NEGOCIAÇÃO') {
-        statusColor = isLight ? '#7c3aed' : '#a855f7';
-        statusBorder = isLight ? 'rgba(124, 58, 237, 0.7)' : 'rgba(168, 85, 247, 0.7)';
-      } else if (prop.status === 'ALUGADO') {
-        statusColor = '#ef4444';
-        statusBorder = 'rgba(239, 68, 68, 0.7)';
+      let foundCluster = false;
+      for (const cluster of clusters) {
+        const center = cluster[0];
+        const dLat = Math.abs(Number(center.latitude) - lat);
+        const dLng = Math.abs(Number(center.longitude) - lng);
+        if (dLat < clusterThresholdDeg && dLng < clusterThresholdDeg) {
+          cluster.push(prop);
+          foundCluster = true;
+          break;
+        }
       }
+      if (!foundCluster) {
+        clusters.push([prop]);
+      }
+    });
 
-      const formattedPrice = `R$ ${prop.rentPrice.toLocaleString('pt-BR')}`;
+    // 2. Render each cluster with dynamic spider offsets to prevent overlapping
+    clusters.forEach(cluster => {
+      const clusterSize = cluster.length;
 
-      const el = document.createElement('div');
-      el.className = 'custom-price-marker group';
+      cluster.forEach((prop: Property, idx: number) => {
+        const isSelected = selectedProperty?.id === prop.id;
+        const isFeatured = prop.featured;
 
-      const showBeam = mapVisualMode === 'BEAMS_3D';
+        // Calculate Spider-Fan Offsets (dx, dy in pixels)
+        let offsetX = 0;
+        let offsetY = 0;
 
-      const beamHtml = showBeam ? `
-        <div class="hologram-3d-beacon" style="
-          --beam-color: ${statusColor};
-          --beam-color-trans: ${statusColor}cc;
-          --beam-color-fade: ${statusColor}33;
-          position: absolute;
-          bottom: 0px;
-          left: 50%;
-          transform: translateX(-50%);
-          pointer-events: none;
-        ">
-          <!-- 1. Pilar Cilíndrico Volumétrico Subindo ao Céu -->
-          <div class="beam-cylinder-body">
-            <div class="beam-laser-core"></div>
-          </div>
+        if (clusterSize === 2) {
+          offsetX = idx === 0 ? -48 : 48;
+          offsetY = -6;
+        } else if (clusterSize === 3) {
+          if (idx === 0) { offsetX = -54; offsetY = 0; }
+          else if (idx === 1) { offsetX = 0; offsetY = -34; }
+          else { offsetX = 54; offsetY = 0; }
+        } else if (clusterSize === 4) {
+          if (idx === 0) { offsetX = -50; offsetY = -24; }
+          else if (idx === 1) { offsetX = 50; offsetY = -24; }
+          else if (idx === 2) { offsetX = -50; offsetY = 16; }
+          else { offsetX = 50; offsetY = 16; }
+        } else if (clusterSize > 4) {
+          const angle = (2 * Math.PI * idx) / clusterSize - Math.PI / 2;
+          const radius = 54 + (clusterSize > 6 ? 18 : 0);
+          offsetX = Math.round(Math.cos(angle) * radius * 1.25);
+          offsetY = Math.round(Math.sin(angle) * radius * 0.85);
+        }
 
-          <!-- 2. Base Circular 3D no Solo (Efeito Spinner Windows Grande e Nítido) -->
-          <div class="beam-ground-base">
-            <div class="beam-ground-glow-disk"></div>
-            <div class="beam-windows-spinner"></div>
-            <div class="beam-ground-dot"></div>
-          </div>
-        </div>
-      ` : '';
+        let statusColor = currentAccent.available;
+        let statusBorder = `${currentAccent.available}88`;
+        let statusBg = currentAccent.availableBg;
+        let textColor = currentAccent.textColor;
 
-      const heatHtml = mapVisualMode === 'HEATMAP' ? `
-        <div style="
-          position: absolute;
-          width: ${Math.max(120, prop.demandScore * 2)}px;
-          height: ${Math.max(120, prop.demandScore * 2)}px;
-          border-radius: 50%;
-          background: radial-gradient(circle, ${prop.demandScore > 90 ? 'rgba(239,68,68,0.55)' : prop.demandScore > 80 ? 'rgba(245,158,11,0.5)' : `${currentAccent.primary}66`} 0%, transparent 70%);
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          pointer-events: none;
-          filter: blur(8px);
-        "></div>
-      ` : '';
+        if (prop.status === 'RESERVADO') {
+          statusColor = '#f59e0b';
+          statusBorder = 'rgba(245, 158, 11, 0.7)';
+        } else if (prop.status === 'EM NEGOCIAÇÃO') {
+          statusColor = isLight ? '#7c3aed' : '#a855f7';
+          statusBorder = isLight ? 'rgba(124, 58, 237, 0.7)' : 'rgba(168, 85, 247, 0.7)';
+        } else if (prop.status === 'ALUGADO') {
+          statusColor = '#ef4444';
+          statusBorder = 'rgba(239, 68, 68, 0.7)';
+        }
 
-      el.innerHTML = `
-        <div style="
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          position: relative;
-          user-select: none;
-          cursor: pointer;
-        ">
-          ${heatHtml}
-          ${beamHtml}
-          
-          <!-- 1. Price Badge Pill -->
-          <div style="
-            position: relative;
-            z-index: 25;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            padding: 3.5px 10px;
-            background: ${isLight ? '#ffffff' : statusBg};
-            border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-            border-radius: 9999px;
-            backdrop-filter: blur(12px);
-            box-shadow: ${isSelected 
-              ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
-              : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
-            transition: transform 0.2s ease;
-            transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
-            white-space: nowrap;
+        const formattedPrice = `R$ ${prop.rentPrice.toLocaleString('pt-BR')}`;
+
+        const el = document.createElement('div');
+        el.className = 'custom-price-marker group';
+        el.style.position = 'relative';
+        el.style.zIndex = isSelected ? '100' : `${30 + idx}`;
+
+        const showBeam = mapVisualMode === 'BEAMS_3D';
+
+        const beamHtml = showBeam ? `
+          <div class="hologram-3d-beacon" style="
+            --beam-color: ${statusColor};
+            --beam-color-trans: ${statusColor}cc;
+            --beam-color-fade: ${statusColor}33;
+            position: absolute;
+            bottom: 0px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: none;
           ">
-            <span style="
-              width: 6px;
-              height: 6px;
+            <div class="beam-cylinder-body">
+              <div class="beam-laser-core"></div>
+            </div>
+            <div class="beam-ground-base">
+              <div class="beam-ground-glow-disk"></div>
+              <div class="beam-windows-spinner"></div>
+              <div class="beam-ground-dot"></div>
+            </div>
+          </div>
+        ` : '';
+
+        const heatHtml = mapVisualMode === 'HEATMAP' ? `
+          <div style="
+            position: absolute;
+            width: ${Math.max(120, prop.demandScore * 2)}px;
+            height: ${Math.max(120, prop.demandScore * 2)}px;
+            border-radius: 50%;
+            background: radial-gradient(circle, ${prop.demandScore > 90 ? 'rgba(239,68,68,0.55)' : prop.demandScore > 80 ? 'rgba(245,158,11,0.5)' : `${currentAccent.primary}66`} 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            filter: blur(8px);
+          "></div>
+        ` : '';
+
+        // Spider Connector Line if displaced from anchor
+        const isOffset = offsetX !== 0 || offsetY !== 0;
+        const connectorSvg = isOffset ? `
+          <svg style="
+            position: absolute;
+            left: 50%;
+            bottom: 4px;
+            width: 1px;
+            height: 1px;
+            overflow: visible;
+            pointer-events: none;
+            z-index: 10;
+          ">
+            <line 
+              x1="0" 
+              y1="0" 
+              x2="${offsetX}" 
+              y2="${offsetY}" 
+              stroke="${statusColor}" 
+              stroke-width="1.5" 
+              stroke-dasharray="2 2"
+              opacity="0.85"
+            />
+          </svg>
+        ` : '';
+
+        el.innerHTML = `
+          <div style="
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            user-select: none;
+            cursor: pointer;
+          ">
+            ${heatHtml}
+            ${beamHtml}
+            ${connectorSvg}
+            
+            <!-- 1. Floating Price Badge Pill (Spider Displaced when multiple close items) -->
+            <div style="
+              position: relative;
+              z-index: 25;
+              display: flex;
+              align-items: center;
+              gap: 5px;
+              padding: 3.5px 10px;
+              background: ${isLight ? '#ffffff' : statusBg};
+              border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+              border-radius: 9999px;
+              backdrop-filter: blur(12px);
+              box-shadow: ${isSelected 
+                ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
+                : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
+              transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+              transform: translate(${offsetX}px, ${offsetY}px) ${isSelected ? 'scale(1.12)' : 'scale(1)'};
+              white-space: nowrap;
+            " class="hover:scale-110">
+              <span style="
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: ${statusColor};
+                box-shadow: 0 0 6px ${statusColor};
+                display: inline-block;
+                flex-shrink: 0;
+              "></span>
+              <span style="
+                font-family: 'JetBrains Mono', monospace;
+                font-weight: 800;
+                font-size: 11px;
+                color: ${textColor};
+                letter-spacing: -0.02em;
+              ">${formattedPrice}</span>
+              ${clusterSize > 1 ? `
+                <span style="
+                  font-size: 9px;
+                  opacity: 0.65;
+                  font-weight: 700;
+                  margin-left: 1px;
+                ">#${idx + 1}</span>
+              ` : ''}
+            </div>
+
+            ${!isOffset ? `
+              <!-- 2. Downward Pin Arrow for centered marker -->
+              <div style="
+                width: 0;
+                height: 0;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+                margin-top: -1px;
+                z-index: 24;
+              "></div>
+            ` : ''}
+
+            <!-- 3. Ground Anchor Dot touching the exact street coordinate -->
+            <div style="
+              width: ${clusterSize > 1 ? '7px' : '5px'};
+              height: ${clusterSize > 1 ? '7px' : '5px'};
               border-radius: 50%;
               background: ${statusColor};
-              box-shadow: 0 0 6px ${statusColor};
-              display: inline-block;
-              flex-shrink: 0;
-            "></span>
-            <span style="
-              font-family: 'JetBrains Mono', monospace;
-              font-weight: 800;
-              font-size: 11px;
-              color: ${textColor};
-              letter-spacing: -0.02em;
-            ">${formattedPrice}</span>
+              border: 1.5px solid #ffffff;
+              box-shadow: 0 0 8px ${statusColor};
+              margin-top: ${isOffset ? '0px' : '1px'};
+              z-index: 23;
+            "></div>
           </div>
+        `;
 
-          <!-- 2. Downward Pin Arrow -->
-          <div style="
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-            margin-top: -1px;
-            z-index: 24;
-          "></div>
-
-          <!-- 3. Ground Anchor Dot touching the exact street coordinate -->
-          <div style="
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: ${statusColor};
-            border: 1px solid #ffffff;
-            box-shadow: 0 0 6px ${statusColor};
-            margin-top: 1px;
-            z-index: 23;
-          "></div>
-        </div>
-      `;
-
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-
-        map.flyTo({
-          center: [prop.longitude, prop.latitude],
-          zoom: 16.5,
-          duration: 1000,
-          essential: true
+        // Elevate z-index on mouse hover
+        el.addEventListener('mouseenter', () => {
+          el.style.zIndex = '9999';
+        });
+        el.addEventListener('mouseleave', () => {
+          el.style.zIndex = isSelected ? '100' : `${30 + idx}`;
         });
 
-        if (!currentUser) {
-          // Guest User: Prompt login modal to unlock full details
-          setIsAuthModalOpen(true);
-        } else {
-          // Authenticated User: Open full property detail modal
-          setSelectedProperty(prop);
-        }
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+
+          map.flyTo({
+            center: [prop.longitude, prop.latitude],
+            zoom: 16.5,
+            duration: 1000,
+            essential: true
+          });
+
+          if (!currentUser) {
+            setIsAuthModalOpen(true);
+          } else {
+            setSelectedProperty(prop);
+          }
+        });
+
+        const latNum = Number(prop.latitude);
+        const lngNum = Number(prop.longitude);
+
+        const marker = new maplibregl.Marker({ 
+          element: el, 
+          anchor: 'bottom'
+        })
+          .setLngLat([lngNum, latNum])
+          .addTo(map);
+
+        markersRef.current.push(marker);
       });
-
-      const latNum = Number(prop.latitude);
-      const lngNum = Number(prop.longitude);
-
-      if (isNaN(latNum) || isNaN(lngNum)) return;
-
-      const marker = new maplibregl.Marker({ 
-        element: el, 
-        anchor: 'bottom'
-      })
-        .setLngLat([lngNum, latNum])
-        .addTo(map);
-
-      markersRef.current.push(marker);
     });
   }, [filteredProperties, selectedProperty, mapVisualMode, mapTheme, setSelectedProperty, currentUser, setIsAuthModalOpen]);
 
