@@ -577,8 +577,18 @@ export const FuturisticMap: React.FC = () => {
         }
       });
 
-      const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-        .setLngLat([prop.longitude, prop.latitude])
+      const latNum = Number(prop.latitude);
+      const lngNum = Number(prop.longitude);
+
+      if (isNaN(latNum) || isNaN(lngNum)) return;
+
+      const marker = new maplibregl.Marker({ 
+        element: el, 
+        anchor: 'bottom',
+        pitchAlignment: 'viewport',
+        rotationAlignment: 'viewport'
+      })
+        .setLngLat([lngNum, latNum])
         .addTo(map);
 
       markersRef.current.push(marker);
