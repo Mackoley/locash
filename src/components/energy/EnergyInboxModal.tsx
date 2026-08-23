@@ -44,7 +44,7 @@ export const EnergyInboxModal: React.FC = () => {
 
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [ocrStatus, setOcrStatus] = useState<string>('Iniciando análise com IA & OCR...');
+  const [ocrStatus, setOcrStatus] = useState<string>('Iniciando análise com IA Gemini Vision...');
   const [ocrPercent, setOcrPercent] = useState<number>(0);
   const [activeAccountPreview, setActiveAccountPreview] = useState<EnergyAccount | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
@@ -162,14 +162,14 @@ export const EnergyInboxModal: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] uppercase font-bold text-cyber-cyan tracking-wider">
-                  CAIXA DE ENTRADA & OCR REAL
+                  CAIXA DE ENTRADA INTELIGENTE • IA GEMINI VISION
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 text-[9px] font-bold border border-amber-500/40">
                   {inboxDocuments.length} Pendentes
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-bold text-white">
-                Reconhecimento de Faturas Coelba
+                Reconhecimento de Faturas com IA Multimodal
               </h2>
             </div>
           </div>
@@ -284,7 +284,7 @@ export const EnergyInboxModal: React.FC = () => {
                   Enviar Foto Real ou PDF da Conta de Energia
                 </p>
                 <p className="text-[10px] text-slate-400 mt-0.5">
-                  Formatos aceitos: JPG, PNG, PDF (Reconhecimento ótico via Tesseract.js & PDF.js)
+                  Formatos aceitos: JPG, PNG, PDF (Leitura multimodal instantânea via Google Gemini 3.6 Flash)
                 </p>
               </div>
 
@@ -325,7 +325,7 @@ export const EnergyInboxModal: React.FC = () => {
                   </button>
                   <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/30">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Confiança: {activeAccountPreview.ocrConfidence || 90}%</span>
+                    <span>Precisão IA: {activeAccountPreview.ocrConfidence || 99}%</span>
                   </div>
                 </div>
               </div>
@@ -500,7 +500,7 @@ export const EnergyInboxModal: React.FC = () => {
                 </div>
               </div>
 
-              {/* Raw OCR Text Toggle */}
+              {/* Raw AI Text Toggle */}
               {rawTextContent && (
                 <div className="pt-1">
                   <button
@@ -509,7 +509,7 @@ export const EnergyInboxModal: React.FC = () => {
                     className="text-[10px] text-slate-400 hover:text-cyber-cyan flex items-center gap-1 transition-colors"
                   >
                     <Eye className="w-3 h-3" />
-                    <span>{showRawText ? 'Ocultar Texto Lido pelo OCR' : 'Ver Texto Bruto Reconhecido pelo OCR'}</span>
+                    <span>{showRawText ? 'Ocultar JSON da IA' : 'Ver Dados Brutos Estruturados da IA'}</span>
                   </button>
                   {showRawText && (
                     <pre className="mt-2 p-3 rounded-xl bg-black/80 border border-slate-800 text-[10px] text-slate-400 max-h-36 overflow-y-auto whitespace-pre-wrap">

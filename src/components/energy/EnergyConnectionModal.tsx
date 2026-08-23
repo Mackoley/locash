@@ -106,7 +106,7 @@ export const EnergyConnectionModal: React.FC = () => {
                   LOCASH AUTOBILLS v1.0
                 </span>
                 <span className="px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 text-[9px] font-bold border border-cyan-500/40">
-                  IA OCR
+                  IA MULTIMODAL
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-bold text-white font-mono">
@@ -253,7 +253,7 @@ export const EnergyConnectionModal: React.FC = () => {
                   Lançamento Financeiro Automático
                 </span>
                 <p className="text-[10px] text-slate-400 leading-tight">
-                  Criar despesa automaticamente quando a confiança do OCR da Coelba for $\ge$ 95%.
+                  Criar despesa automaticamente quando a precisão da IA Gemini for $\ge$ 95%.
                 </p>
               </div>
               <input
