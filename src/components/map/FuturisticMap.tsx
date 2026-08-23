@@ -161,8 +161,8 @@ export const FuturisticMap: React.FC = () => {
       zoom: userLocation ? 15.5 : 13.8,
       minZoom: 2,
       maxZoom: 18.2,
-      pitch: 52, // 3D Camera Perspective
-      bearing: -18,
+      pitch: 0, // Flat 2D Top-Down View by default for 100% precision
+      bearing: 0,
       dragRotate: true,
       touchPitch: true,
       attributionControl: false
@@ -291,9 +291,7 @@ export const FuturisticMap: React.FC = () => {
         map.flyTo({
           center: [userLocation.lng, userLocation.lat],
           zoom: 15.5,
-          pitch: 52,
-          bearing: -15,
-          duration: 1800,
+          duration: 1500,
           essential: true
         });
       }
@@ -302,7 +300,7 @@ export const FuturisticMap: React.FC = () => {
         userMarkerRef.current.setLngLat([userLocation.lng, userLocation.lat]);
       } else {
         const userEl = document.createElement('div');
-        userEl.className = 'relative flex items-center justify-center';
+        userEl.className = 'flex items-center justify-center';
         userEl.innerHTML = `
           <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
             <div style="position: absolute; inset: 0; border-radius: 50%; background: ${currentAccent.radarColor}44; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
@@ -311,7 +309,7 @@ export const FuturisticMap: React.FC = () => {
           </div>
         `;
 
-        const userMarker = new maplibregl.Marker({ element: userEl })
+        const userMarker = new maplibregl.Marker({ element: userEl, anchor: 'center' })
           .setLngLat([userLocation.lng, userLocation.lat])
           .addTo(map);
 
@@ -327,10 +325,8 @@ export const FuturisticMap: React.FC = () => {
 
     map.flyTo({
       center: [searchTarget.lng, searchTarget.lat],
-      zoom: 15.5,
-      pitch: 52,
-      bearing: -15,
-      duration: 1800,
+      zoom: 16,
+      duration: 1500,
       essential: true
     });
 
@@ -339,7 +335,7 @@ export const FuturisticMap: React.FC = () => {
     }
 
     const searchEl = document.createElement('div');
-    searchEl.className = 'relative flex flex-col items-center';
+    searchEl.className = 'flex flex-col items-center';
     searchEl.innerHTML = `
       <div style="
         background: ${isLight ? 'rgba(255, 255, 255, 0.96)' : 'rgba(13, 21, 39, 0.95)'};
@@ -424,7 +420,6 @@ export const FuturisticMap: React.FC = () => {
 
       const el = document.createElement('div');
       el.className = 'custom-price-marker group';
-      el.style.position = 'relative';
 
       const showBeam = mapVisualMode === 'BEAMS_3D';
 
@@ -547,10 +542,8 @@ export const FuturisticMap: React.FC = () => {
 
         map.flyTo({
           center: [prop.longitude, prop.latitude],
-          zoom: 15.5,
-          pitch: 55,
-          bearing: -15,
-          duration: 1200,
+          zoom: 16.5,
+          duration: 1000,
           essential: true
         });
 
@@ -570,9 +563,7 @@ export const FuturisticMap: React.FC = () => {
 
       const marker = new maplibregl.Marker({ 
         element: el, 
-        anchor: 'bottom',
-        pitchAlignment: 'viewport',
-        rotationAlignment: 'viewport'
+        anchor: 'bottom'
       })
         .setLngLat([lngNum, latNum])
         .addTo(map);
@@ -586,9 +577,8 @@ export const FuturisticMap: React.FC = () => {
     if (selectedProperty && mapInstanceRef.current) {
       mapInstanceRef.current.flyTo({
         center: [selectedProperty.longitude, selectedProperty.latitude],
-        zoom: 15.5,
-        pitch: 55,
-        duration: 1600,
+        zoom: 16.5,
+        duration: 1200,
         essential: true
       });
     }
