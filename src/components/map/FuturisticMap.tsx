@@ -459,133 +459,106 @@ export const FuturisticMap: React.FC = () => {
 
       const el = document.createElement('div');
       el.className = 'custom-price-marker group';
+      el.style.display = 'inline-flex';
+      el.style.flexDirection = 'column';
+      el.style.alignItems = 'center';
+      el.style.width = 'max-content';
       el.style.position = 'relative';
+      el.style.cursor = 'pointer';
+      el.style.userSelect = 'none';
       el.style.zIndex = isSelected ? '100' : `${30 + idx}`;
 
-        const showBeam = mapVisualMode === 'BEAMS_3D';
+      const showBeam = mapVisualMode === 'BEAMS_3D';
 
-        const beamHtml = showBeam ? `
-          <div class="hologram-3d-beacon" style="
-            --beam-color: ${statusColor};
-            --beam-color-trans: ${statusColor}cc;
-            --beam-color-fade: ${statusColor}33;
-            position: absolute;
-            bottom: 0px;
-            left: 50%;
-            transform: translateX(-50%);
-            pointer-events: none;
-          ">
-            <div class="beam-cylinder-body">
-              <div class="beam-laser-core"></div>
-            </div>
-            <div class="beam-ground-base">
-              <div class="beam-ground-glow-disk"></div>
-              <div class="beam-windows-spinner"></div>
-              <div class="beam-ground-dot"></div>
-            </div>
+      const beamHtml = showBeam ? `
+        <div class="hologram-3d-beacon" style="
+          --beam-color: ${statusColor};
+          --beam-color-trans: ${statusColor}cc;
+          --beam-color-fade: ${statusColor}33;
+          position: absolute;
+          bottom: 0px;
+          left: 50%;
+          transform: translateX(-50%);
+          pointer-events: none;
+        ">
+          <div class="beam-cylinder-body">
+            <div class="beam-laser-core"></div>
           </div>
-        ` : '';
+          <div class="beam-ground-base">
+            <div class="beam-ground-glow-disk"></div>
+            <div class="beam-windows-spinner"></div>
+            <div class="beam-ground-dot"></div>
+          </div>
+        </div>
+      ` : '';
 
-        const heatHtml = mapVisualMode === 'HEATMAP' ? `
-          <div style="
-            position: absolute;
-            width: ${Math.max(120, prop.demandScore * 2)}px;
-            height: ${Math.max(120, prop.demandScore * 2)}px;
+      const heatHtml = mapVisualMode === 'HEATMAP' ? `
+        <div style="
+          position: absolute;
+          width: ${Math.max(120, prop.demandScore * 2)}px;
+          height: ${Math.max(120, prop.demandScore * 2)}px;
+          border-radius: 50%;
+          background: radial-gradient(circle, ${prop.demandScore > 90 ? 'rgba(239,68,68,0.55)' : prop.demandScore > 80 ? 'rgba(245,158,11,0.5)' : `${currentAccent.primary}66`} 0%, transparent 70%);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+          filter: blur(8px);
+        "></div>
+      ` : '';
+
+      el.innerHTML = `
+        ${heatHtml}
+        ${beamHtml}
+
+        <!-- 1. Price Badge Pill firmly anchored -->
+        <div style="
+          position: relative;
+          z-index: 25;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3.5px 10px;
+          background: ${isLight ? '#ffffff' : statusBg};
+          border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+          border-radius: 9999px;
+          backdrop-filter: blur(12px);
+          box-shadow: ${isSelected 
+            ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
+            : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
+          transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+          transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
+          white-space: nowrap;
+        " class="hover:scale-110">
+          <span style="
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background: radial-gradient(circle, ${prop.demandScore > 90 ? 'rgba(239,68,68,0.55)' : prop.demandScore > 80 ? 'rgba(245,158,11,0.5)' : `${currentAccent.primary}66`} 0%, transparent 70%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            filter: blur(8px);
-          "></div>
-        ` : '';
+            background: ${statusColor};
+            box-shadow: 0 0 6px ${statusColor};
+            display: inline-block;
+            flex-shrink: 0;
+          "></span>
+          <span style="
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            font-size: 11px;
+            color: ${textColor};
+            letter-spacing: -0.02em;
+          ">${formattedPrice}</span>
+        </div>
 
-        // BADGE_HEIGHT: approximate pixel height of the badge pill (≈28px) + arrow (6px) = 34px
-        // We use a 0×0 container with anchor:'center'. The center of this container maps exactly to
-        // the geographic coordinate. Children are absolutely positioned so they do NOT affect layout.
-        // Badge goes ABOVE (negative bottom), dot goes AT origin (0,0), beam goes below.
-        el.innerHTML = `
-          <div style="
-            position: relative;
-            width: 0;
-            height: 0;
-            overflow: visible;
-            user-select: none;
-            cursor: pointer;
-          ">
-            ${heatHtml}
-            ${beamHtml}
-
-            <!-- Ground Anchor Dot - centered exactly at geographic coordinate -->
-            <div style="
-              position: absolute;
-              width: 7px;
-              height: 7px;
-              border-radius: 50%;
-              background: ${statusColor};
-              border: 1.5px solid #ffffff;
-              box-shadow: 0 0 8px ${statusColor}, 0 0 3px rgba(0,0,0,0.8);
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              z-index: 23;
-            "></div>
-
-            <!-- Downward Pin Arrow - just above the dot -->
-            <div style="
-              position: absolute;
-              width: 0;
-              height: 0;
-              border-left: 5px solid transparent;
-              border-right: 5px solid transparent;
-              border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-              bottom: 3px;
-              left: 50%;
-              transform: translateX(-50%);
-              z-index: 24;
-            "></div>
-
-            <!-- Price Badge Pill - anchored above the dot -->
-            <div style="
-              position: absolute;
-              bottom: 9px;
-              left: 50%;
-              transform: translateX(-50%) ${isSelected ? 'scale(1.12)' : 'scale(1)'};
-              z-index: 25;
-              display: flex;
-              align-items: center;
-              gap: 5px;
-              padding: 3.5px 10px;
-              background: ${isLight ? '#ffffff' : statusBg};
-              border: 1.5px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
-              border-radius: 9999px;
-              backdrop-filter: blur(12px);
-              box-shadow: ${isSelected 
-                ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
-                : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
-              transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-              white-space: nowrap;
-            " class="hover:scale-110">
-              <span style="
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: ${statusColor};
-                box-shadow: 0 0 6px ${statusColor};
-                display: inline-block;
-                flex-shrink: 0;
-              "></span>
-              <span style="
-                font-family: 'JetBrains Mono', monospace;
-                font-weight: 800;
-                font-size: 11px;
-                color: ${textColor};
-                letter-spacing: -0.02em;
-              ">${formattedPrice}</span>
-            </div>
-          </div>
-        `;
+        <!-- 2. Downward Pin Arrow Tip touching the exact street coordinate -->
+        <div style="
+          width: 0;
+          height: 0;
+          border-left: 5px solid transparent;
+          border-right: 5px solid transparent;
+          border-top: 6px solid ${isSelected ? currentAccent.primary : isLight ? '#cbd5e1' : statusBorder};
+          margin-top: -1px;
+          z-index: 24;
+        "></div>
+      `;
 
       // Elevate z-index on mouse hover
       el.addEventListener('mouseenter', () => {
@@ -614,7 +587,7 @@ export const FuturisticMap: React.FC = () => {
 
       const marker = new maplibregl.Marker({ 
         element: el, 
-        anchor: 'center'
+        anchor: 'bottom'
       })
         .setLngLat([lngNum, latNum])
         .addTo(map);
