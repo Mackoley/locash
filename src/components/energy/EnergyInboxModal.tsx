@@ -32,6 +32,8 @@ export const EnergyInboxModal: React.FC = () => {
     inboxDocuments, 
     processEnergyBill, 
     confirmEnergyAccount, 
+    deleteEnergyAccount,
+    discardInboxDocument,
     energyConnections,
     properties 
   } = useApp();
@@ -413,10 +415,20 @@ export const EnergyInboxModal: React.FC = () => {
               <div className="pt-2 flex gap-2">
                 <button
                   type="button"
-                  onClick={() => setActiveAccountPreview(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition-colors"
+                  onClick={async () => {
+                    if (activeAccountPreview) {
+                      await discardInboxDocument(activeAccountPreview.documentHash);
+                      if (activeAccountPreview.id) {
+                        await deleteEnergyAccount(activeAccountPreview.id);
+                      }
+                    }
+                    setActiveAccountPreview(null);
+                    setDuplicateWarning(null);
+                  }}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-800 hover:bg-red-500/20 text-slate-300 hover:text-red-400 border border-slate-700 hover:border-red-500/40 text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
                 >
-                  Descartar
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Descartar Fatura</span>
                 </button>
                 <button
                   type="button"
@@ -463,6 +475,13 @@ export const EnergyInboxModal: React.FC = () => {
                         Revisar
                       </button>
                     )}
+                    <button
+                      onClick={() => discardInboxDocument(doc.id)}
+                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-700 hover:border-red-500/30 transition-colors"
+                      title="Descartar fatura"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               ))}

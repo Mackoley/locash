@@ -106,6 +106,7 @@ interface AppContextType {
   processEnergyBill: (file: File, source?: 'manual_upload' | 'email' | 'whatsapp') => Promise<{ success: boolean; account?: EnergyAccount; error?: string; isDuplicate?: boolean; parsedResult?: ParsedBillResult }>;
   confirmEnergyAccount: (account: EnergyAccount) => Promise<void>;
   deleteEnergyAccount: (id: string) => Promise<void>;
+  discardInboxDocument: (idOrHash: string) => Promise<void>;
   clearEnergyData: () => Promise<void>;
 }
 
@@ -1024,6 +1025,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await energyService.saveAccounts(updated);
   };
 
+  const discardInboxDocument = async (idOrHash: string) => {
+    const updated = inboxDocuments.filter(d => d.id !== idOrHash && d.documentHash !== idOrHash);
+    setInboxDocuments(updated);
+    await energyService.saveInboxDocuments(updated);
+  };
+
   const clearEnergyData = async () => {
     setEnergyConnections([]);
     setEnergyAccounts([]);
@@ -1103,6 +1110,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         processEnergyBill,
         confirmEnergyAccount,
         deleteEnergyAccount,
+        discardInboxDocument,
         clearEnergyData
       }}
     >
