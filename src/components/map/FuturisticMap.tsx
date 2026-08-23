@@ -524,10 +524,8 @@ export const FuturisticMap: React.FC = () => {
             box-shadow: ${isSelected 
               ? `0 0 20px ${currentAccent.primary}ee, 0 4px 14px rgba(0,0,0,0.6)` 
               : isLight ? '0 4px 14px rgba(15,23,42,0.18), 0 1px 2px rgba(15,23,42,0.08)' : '0 4px 12px rgba(0,0,0,0.8)'};
-            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-            transform: ${isSelected ? 'scale(1.12)' : 'scale(1)'};
             white-space: nowrap;
-          " class="hover:scale-110">
+          ">
             <span style="
               width: 6px;
               height: 6px;
@@ -556,7 +554,6 @@ export const FuturisticMap: React.FC = () => {
           border: 2px solid #ffffff;
           box-shadow: 0 0 10px ${statusColor}, 0 2px 6px rgba(0,0,0,0.7);
           cursor: pointer;
-          transition: transform 0.15s ease;
         ">
           <span style="
             width: 4px;
@@ -656,7 +653,7 @@ export const FuturisticMap: React.FC = () => {
   const themeBgClass = isLight ? 'bg-[#f1f5f9]' : 'bg-[#080d1a]';
 
   return (
-    <div className={`relative w-full h-full flex-1 overflow-hidden transition-all duration-700 ${themeBgClass}`}>
+    <div className={`relative w-full h-full flex-1 overflow-hidden ${themeBgClass}`}>
       {/* Map Container */}
       <div ref={mapContainerRef} className="w-full h-full z-0" />
 

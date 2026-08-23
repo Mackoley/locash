@@ -67,9 +67,12 @@
 }
 
 /* Custom Marker Styling for MapLibre */
-.custom-price-marker {
+.custom-price-marker,
+.custom-price-marker * {
   cursor: pointer;
   user-select: none;
+  transition: none !important;
+  animation: none !important;
 }
 
 .custom-price-marker:hover {
