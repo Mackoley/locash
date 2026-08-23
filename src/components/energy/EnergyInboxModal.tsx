@@ -67,16 +67,15 @@ export const EnergyInboxModal: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isEnergyInboxModalOpen) return null;
-
   const populateEditFields = (acc: EnergyAccount, rawSample?: string) => {
     setActiveAccountPreview(acc);
-    setEditAmount(acc.amountTotal ? acc.amountTotal.toString() : '105.99');
-    setEditKwh(acc.consumptionKwh ? acc.consumptionKwh.toString() : '178');
-    setEditUc(acc.consumerUnit || '7068254234');
-    setEditInstallation(acc.installationCode || '0011180635');
-    setEditHolderName(acc.holderName || 'CAUANE SANTOS DE JESUS');
-    setEditDueDate(acc.dueDate || '2026-08-04');
-    setEditPeriod(acc.billingPeriod || '07/2026');
+    setEditAmount(acc.amountTotal ? acc.amountTotal.toString() : '');
+    setEditKwh(acc.consumptionKwh ? acc.consumptionKwh.toString() : '');
+    setEditUc(acc.consumerUnit || '');
+    setEditInstallation(acc.installationCode || '');
+    setEditHolderName(acc.holderName || '');
+    setEditDueDate(acc.dueDate || '');
+    setEditPeriod(acc.billingPeriod || '');
     setEditPropertyId(acc.propertyId || (properties[0]?.id || ''));
     setEditBarcode(acc.barcode || '');
     if (rawSample) setRawTextContent(rawSample);
@@ -117,23 +116,23 @@ export const EnergyInboxModal: React.FC = () => {
     if (!activeAccountPreview) return;
 
     const selectedProp = properties.find(p => p.id === editPropertyId) || properties[0];
-    const parsedAmount = parseFloat(editAmount.replace(',', '.')) || activeAccountPreview.amountTotal || 105.99;
-    const parsedKwh = parseInt(editKwh, 10) || activeAccountPreview.consumptionKwh || 178;
+    const parsedAmount = parseFloat(editAmount.replace(',', '.')) || activeAccountPreview.amountTotal || 0;
+    const parsedKwh = parseInt(editKwh, 10) || activeAccountPreview.consumptionKwh || 0;
 
     const finalAccount: EnergyAccount = {
       ...activeAccountPreview,
       propertyId: selectedProp ? selectedProp.id : activeAccountPreview.propertyId,
       propertyTitle: selectedProp ? selectedProp.title : activeAccountPreview.propertyTitle,
-      consumerUnit: editUc.trim() || '7068254234',
-      installationCode: editInstallation.trim() || '0011180635',
-      holderName: editHolderName.trim() || 'CAUANE SANTOS DE JESUS',
+      consumerUnit: editUc.trim() || activeAccountPreview.consumerUnit,
+      installationCode: editInstallation.trim() || activeAccountPreview.installationCode,
+      holderName: editHolderName.trim() || activeAccountPreview.holderName,
       amountTotal: parsedAmount,
       consumptionKwh: parsedKwh,
-      dueDate: editDueDate || '2026-08-04',
-      billingPeriod: editPeriod.trim() || '07/2026',
+      dueDate: editDueDate || activeAccountPreview.dueDate,
+      billingPeriod: editPeriod.trim() || activeAccountPreview.billingPeriod,
       barcode: editBarcode.trim() || activeAccountPreview.barcode,
       editedManually: editMode,
-      ocrConfidence: 100
+      ocrConfidence: editMode ? 100 : activeAccountPreview.ocrConfidence
     };
 
     await confirmEnergyAccount(finalAccount);
@@ -233,7 +232,7 @@ export const EnergyInboxModal: React.FC = () => {
                 </div>
                 <div className={`flex items-center justify-end gap-1.5 ${ocrPercent >= 90 ? 'text-emerald-400 font-bold' : ''}`}>
                   <span className={`w-2 h-2 rounded-full ${ocrPercent >= 90 ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-slate-700'}`} />
-                  <span>3. Ancoragem Coelba</span>
+                  <span>3. Interpretação de Campos</span>
                 </div>
               </div>
             </div>
@@ -316,9 +315,9 @@ export const EnergyInboxModal: React.FC = () => {
                     <Edit3 className="w-3 h-3" />
                     <span>{editMode ? 'Concluir Edição' : 'Editar / Ajustar'}</span>
                   </button>
-                  <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
+                  <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/30">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>100% Reconhecido</span>
+                    <span>Confiança: {activeAccountPreview.ocrConfidence || 90}%</span>
                   </div>
                 </div>
               </div>
@@ -337,11 +336,12 @@ export const EnergyInboxModal: React.FC = () => {
                       type="text"
                       value={editUc}
                       onChange={(e) => setEditUc(e.target.value)}
+                      placeholder="Ex: 7068254234"
                       className="w-full bg-slate-900 border border-amber-500/50 rounded-lg px-2.5 py-1 text-sm font-bold text-amber-300 focus:outline-none"
                     />
                   ) : (
                     <span className="text-sm font-extrabold text-amber-300 block">
-                      {editUc || '7068254234'}
+                      {editUc || 'Não identificada'}
                     </span>
                   )}
                 </div>
@@ -357,11 +357,12 @@ export const EnergyInboxModal: React.FC = () => {
                       type="text"
                       value={editInstallation}
                       onChange={(e) => setEditInstallation(e.target.value)}
+                      placeholder="Ex: 0011180635"
                       className="w-full bg-slate-900 border border-cyan-500/50 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
                     />
                   ) : (
                     <span className="text-xs font-bold text-white block">
-                      {editInstallation || '0011180635'}
+                      {editInstallation || 'Não identificada'}
                     </span>
                   )}
                 </div>
@@ -377,11 +378,12 @@ export const EnergyInboxModal: React.FC = () => {
                       type="text"
                       value={editHolderName}
                       onChange={(e) => setEditHolderName(e.target.value)}
+                      placeholder="Nome do Cliente / Titular"
                       className="w-full bg-slate-900 border border-purple-500/50 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
                     />
                   ) : (
                     <span className="text-xs font-bold text-purple-200 block">
-                      {editHolderName || 'CAUANE SANTOS DE JESUS'}
+                      {editHolderName || 'Não identificado'}
                     </span>
                   )}
                 </div>
@@ -397,12 +399,12 @@ export const EnergyInboxModal: React.FC = () => {
                       type="text"
                       value={editPeriod}
                       onChange={(e) => setEditPeriod(e.target.value)}
-                      placeholder="Ex: 07/2026"
+                      placeholder="Ex: 08/2026"
                       className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white focus:outline-none"
                     />
                   ) : (
                     <span className="text-sm font-bold text-cyber-cyan block">
-                      {editPeriod || '07/2026'}
+                      {editPeriod || 'Não identificado'}
                     </span>
                   )}
                 </div>
@@ -422,7 +424,7 @@ export const EnergyInboxModal: React.FC = () => {
                     />
                   ) : (
                     <span className="text-sm font-bold text-white block">
-                      {editDueDate ? new Date(editDueDate + 'T12:00:00Z').toLocaleDateString('pt-BR') : '04/08/2026'}
+                      {editDueDate ? new Date(editDueDate + 'T12:00:00Z').toLocaleDateString('pt-BR') : 'Não identificada'}
                     </span>
                   )}
                 </div>
@@ -439,11 +441,12 @@ export const EnergyInboxModal: React.FC = () => {
                       step="0.01"
                       value={editAmount}
                       onChange={(e) => setEditAmount(e.target.value)}
+                      placeholder="0.00"
                       className="w-full bg-slate-900 border border-emerald-500/50 rounded-lg px-2.5 py-1 text-sm font-bold text-emerald-400 focus:outline-none"
                     />
                   ) : (
                     <span className="text-base font-extrabold text-emerald-400 block">
-                      R$ {parseFloat(editAmount || '105.99').toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      R$ {parseFloat(editAmount || '0').toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
                   )}
                 </div>
@@ -459,11 +462,12 @@ export const EnergyInboxModal: React.FC = () => {
                       type="number"
                       value={editKwh}
                       onChange={(e) => setEditKwh(e.target.value)}
+                      placeholder="0"
                       className="w-full bg-slate-900 border border-amber-500/50 rounded-lg px-2.5 py-1 text-sm font-bold text-amber-300 focus:outline-none"
                     />
                   ) : (
                     <span className="text-base font-extrabold text-amber-300 block">
-                      {editKwh || 178} kWh
+                      {editKwh ? `${editKwh} kWh` : '0 kWh'}
                     </span>
                   )}
                 </div>
