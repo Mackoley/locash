@@ -79,26 +79,26 @@
 /* Zoom Responsive Property Markers (Centered Zero-Displacement Math) */
 /* Zoom Próximo (Bairro e Rua - zoom >= 13.5): Balão completo de preço centralizado */
 .custom-price-marker .marker-full-badge {
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
 }
 .custom-price-marker .marker-compact-dot {
-  display: none;
+  display: none !important;
 }
 
 /* Zoom Afastado (Cidade e Região - zoom < 13.5): Ponto compacto preciso de 14px */
 .zoom-far .custom-price-marker .marker-full-badge {
-  display: none;
+  display: none !important;
 }
 .zoom-far .custom-price-marker .marker-compact-dot {
-  display: flex;
+  display: flex !important;
   align-items: center;
   justify-content: center;
 }
 /* Hover em zoom afastado: abre o balão de preço temporariamente */
 .zoom-far .custom-price-marker:hover .marker-full-badge {
-  display: flex;
+  display: flex !important;
   position: absolute;
   top: 50%;
   left: 50%;

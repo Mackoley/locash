@@ -264,6 +264,7 @@ export const FuturisticMap: React.FC = () => {
     updateZoomClasses();
 
     mapInstanceRef.current = map;
+    (window as any).locashMap = map;
 
     const handleWindowResize = () => {
       map.resize();
@@ -555,9 +556,6 @@ export const FuturisticMap: React.FC = () => {
           border: 2px solid #ffffff;
           box-shadow: 0 0 10px ${statusColor}, 0 2px 6px rgba(0,0,0,0.7);
           cursor: pointer;
-          display: flex;
-          align-items: center;
-          justify-content: center;
           transition: transform 0.15s ease;
         ">
           <span style="

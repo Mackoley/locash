@@ -153,8 +153,15 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [userRole, setUserRole] = useState<UserRole>('TENANT');
   const [activeView, setActiveView] = useState<string>('MAPA');
-  // Pure Cloud State (Loaded directly from Supabase Cloud)
-  const [properties, setProperties] = useState<Property[]>([]);
+  // Pure Cloud State (Loaded directly from Supabase Cloud + LocalStorage Fallback)
+  const [properties, setProperties] = useState<Property[]>(() => {
+    try {
+      const saved = localStorage.getItem('locash_properties');
+      return saved ? JSON.parse(saved) : [];
+    } catch (_) {
+      return [];
+    }
+  });
   const [favorites, setFavorites] = useState<string[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [filterState, setFilterState] = useState<PropertyFilterState>(DEFAULT_FILTERS);
