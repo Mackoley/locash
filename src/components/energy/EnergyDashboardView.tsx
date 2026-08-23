@@ -56,28 +56,84 @@ export const EnergyDashboardView: React.FC = () => {
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState<boolean>(false);
 
-  // Filter accounts
+  // Helper to extract a sortable number (YYYYMM) from any billingPeriod or dueDate
+  const getPeriodSortKey = (periodStr?: string, dueDate?: string): number => {
+    if (!periodStr && !dueDate) return 0;
+    const p = (periodStr || '').toUpperCase().trim();
+    
+    // Format MM/YYYY or MM-YYYY
+    const mmYyyy = p.match(/\b(0?[1-9]|1[0-2])[\/\-.](202[0-9]|203[0-9])\b/);
+    if (mmYyyy) {
+      const month = parseInt(mmYyyy[1], 10);
+      const year = parseInt(mmYyyy[2], 10);
+      return year * 100 + month;
+    }
+
+    // Format YYYY-MM
+    const yyyyMm = p.match(/\b(202[0-9]|203[0-9])[\/\-.](0?[1-9]|1[0-2])\b/);
+    if (yyyyMm) {
+      const year = parseInt(yyyyMm[1], 10);
+      const month = parseInt(yyyyMm[2], 10);
+      return year * 100 + month;
+    }
+
+    // Month names in Portuguese (JAN, FEV, MAR, etc.)
+    const monthsMap: Record<string, number> = {
+      'JAN': 1, 'FEV': 2, 'MAR': 3, 'ABR': 4, 'MAI': 5, 'JUN': 6,
+      'JUL': 7, 'AGO': 8, 'SET': 9, 'OUT': 10, 'NOV': 11, 'DEZ': 12
+    };
+    for (const [mName, mNum] of Object.entries(monthsMap)) {
+      if (p.includes(mName)) {
+        const yearMatch = p.match(/\b(202[0-9]|203[0-9]|[2-3][0-9])\b/);
+        const year = yearMatch ? (yearMatch[1].length === 2 ? 2000 + parseInt(yearMatch[1], 10) : parseInt(yearMatch[1], 10)) : 2026;
+        return year * 100 + mNum;
+      }
+    }
+
+    if (dueDate) {
+      const d = new Date(dueDate);
+      if (!isNaN(d.getTime())) {
+        return d.getFullYear() * 100 + (d.getMonth() + 1);
+      }
+    }
+
+    return 202600;
+  };
+
+  // Filter accounts by property
   const filteredAccounts = energyAccounts.filter(acc => {
     if (selectedPropertyFilter === 'TODOS') return true;
     return acc.propertyId === selectedPropertyFilter;
   });
 
+  // Strict Chronological Sorting by Reference Month (Newest month first in table, oldest to newest in charts)
+  const sortedAccounts = [...filteredAccounts].sort((a, b) => 
+    getPeriodSortKey(b.billingPeriod, b.dueDate) - getPeriodSortKey(a.billingPeriod, a.dueDate)
+  );
+
   // Calculate Aggregated Metrics (PRD #25 & #28)
-  const latestAccount = filteredAccounts[0];
-  const totalYearlyAmount = filteredAccounts.reduce((acc, c) => acc + c.amountTotal, 0);
-  const totalKwh = filteredAccounts.reduce((acc, c) => acc + c.consumptionKwh, 0);
-  const avgKwh = filteredAccounts.length > 0 ? Math.round(totalKwh / filteredAccounts.length) : 0;
+  const latestAccount = sortedAccounts[0];
+  const totalYearlyAmount = sortedAccounts.reduce((acc, c) => acc + c.amountTotal, 0);
+  const totalKwh = sortedAccounts.reduce((acc, c) => acc + c.consumptionKwh, 0);
+  const avgKwh = sortedAccounts.length > 0 ? Math.round(totalKwh / sortedAccounts.length) : 0;
   const currentKwh = latestAccount ? latestAccount.consumptionKwh : 0;
   const currentAmount = latestAccount ? latestAccount.amountTotal : 0;
   const variation = latestAccount?.historyComparison?.variationPercentage ?? 0;
 
-  // Chart data formatting
-  const chartData = [...filteredAccounts].reverse().map(acc => ({
-    mes: acc.billingPeriod.substring(0, 3),
-    kwh: acc.consumptionKwh,
-    valor: acc.amountTotal,
-    media: avgKwh
-  }));
+  // Chart data in ascending chronological order (Jan -> Dez)
+  const chartData = [...sortedAccounts].reverse().map(acc => {
+    const key = getPeriodSortKey(acc.billingPeriod, acc.dueDate);
+    const monthNum = key % 100;
+    const monthNames = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const shortLabel = monthNum >= 1 && monthNum <= 12 ? `${monthNames[monthNum]}/${String(Math.floor(key / 100)).slice(-2)}` : acc.billingPeriod;
+
+    return {
+      mes: shortLabel,
+      kwh: acc.consumptionKwh,
+      valor: acc.amountTotal,
+      media: avgKwh
+    };
+  });
 
   const copyText = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -401,17 +457,21 @@ export const EnergyDashboardView: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/80 font-mono text-[11px]">
-                  {filteredAccounts.length === 0 ? (
+                  {sortedAccounts.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="p-6 text-center text-slate-500">
                         Nenhuma fatura registrada nesta seleção.
                       </td>
                     </tr>
                   ) : (
-                    filteredAccounts.map(acc => (
+                    sortedAccounts.map(acc => (
                       <tr key={acc.id} className="hover:bg-slate-900/60 transition-colors">
-                        <td className="p-3 font-bold text-white">
-                          {acc.billingPeriod}
+                        <td className="p-3">
+                          <div className="flex items-center gap-1.5">
+                            <span className="px-2 py-0.5 rounded-md bg-cyan-500/10 border border-cyan-500/30 text-cyber-cyan font-bold text-xs">
+                              {acc.billingPeriod || 'N/D'}
+                            </span>
+                          </div>
                         </td>
                         <td className="p-3">
                           <div className="text-white font-bold truncate max-w-[120px]">{acc.propertyTitle}</div>
