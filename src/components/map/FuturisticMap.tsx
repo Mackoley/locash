@@ -426,7 +426,7 @@ export const FuturisticMap: React.FC = () => {
       el.className = 'custom-price-marker group';
       el.style.position = 'relative';
 
-      const showBeam = (mapVisualMode === 'BEAMS_3D' || isSelected) && isFeatured;
+      const showBeam = mapVisualMode === 'BEAMS_3D';
 
       const beamHtml = showBeam ? `
         <div class="hologram-3d-beacon" style="

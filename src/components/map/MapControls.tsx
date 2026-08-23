@@ -10,11 +10,12 @@ import {
   Box, 
   RotateCw, 
   Loader2, 
-  Sun,
-  Moon,
-  Globe,
-  ChevronRight,
-  ChevronLeft
+  Sun, 
+  Moon, 
+  Globe, 
+  ChevronRight, 
+  ChevronLeft,
+  X
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { MapTheme } from '../../types';
@@ -50,7 +51,7 @@ export const MapControls: React.FC<MapControlsProps> = ({
   mapTheme,
   setMapTheme
 }) => {
-  const { setIsFilterModalOpen, filteredProperties, setSelectedProperty } = useApp();
+  const { setIsFilterModalOpen, filteredProperties, setSelectedProperty, selectedProperty } = useApp();
   const [isExtraControlsOpen, setIsExtraControlsOpen] = useState<boolean>(false);
   const extraControlsRef = useRef<HTMLDivElement>(null);
 
@@ -264,31 +265,42 @@ export const MapControls: React.FC<MapControlsProps> = ({
         </div>
       </div>
 
-      {/* Bottom Floating Quick Carousel of Properties */}
-      <div className="absolute bottom-20 md:bottom-4 left-3 md:left-4 right-3 md:right-4 z-20 overflow-x-auto pb-1 flex gap-3 pointer-events-auto no-scrollbar max-w-4xl mx-auto">
-        {filteredProperties.slice(0, 5).map(prop => (
+      {/* Bottom Selected Property Card (Apenas quando um imóvel for clicado/selecionado) */}
+      {selectedProperty && (
+        <div className="absolute bottom-20 md:bottom-4 left-3 md:left-4 right-3 md:right-4 z-20 flex justify-center pointer-events-auto max-w-md mx-auto animate-fade-in">
           <div
-            key={prop.id}
-            onClick={() => setSelectedProperty(prop)}
-            className="shrink-0 w-60 sm:w-64 glass-panel p-2.5 rounded-xl border border-slate-800 hover:border-cyan-500/50 bg-slate-950/95 text-white transition-all hover:scale-[1.02] flex items-center gap-3 group cursor-pointer shadow-2xl backdrop-blur-xl"
+            onClick={() => {
+              // Clicking opens full details if desired
+            }}
+            className="w-full glass-panel p-2.5 rounded-2xl border border-cyan-500/50 bg-slate-950/98 text-white shadow-2xl backdrop-blur-xl flex items-center gap-3 relative group cursor-pointer"
           >
             <img
-              src={prop.images[0]}
-              alt={prop.title}
-              className="w-14 h-14 rounded-lg object-cover border border-slate-700 group-hover:border-cyan-500/50 transition-colors"
+              src={selectedProperty.images[0]}
+              alt={selectedProperty.title}
+              className="w-14 h-14 rounded-xl object-cover border border-cyan-500/40 shrink-0"
             />
             <div className="flex-1 min-w-0">
               <span className="text-[10px] font-mono uppercase font-bold text-cyber-cyan">
-                {prop.neighborhood}
+                {selectedProperty.neighborhood} • {selectedProperty.city}
               </span>
-              <h4 className="text-xs font-semibold text-white truncate">{prop.title}</h4>
+              <h4 className="text-xs font-semibold text-white truncate">{selectedProperty.title}</h4>
               <p className="text-xs font-bold font-mono text-cyber-emerald mt-0.5">
-                R$ {prop.rentPrice.toLocaleString('pt-BR')}<span className="text-[10px] text-slate-400 font-normal">/mês</span>
+                R$ {selectedProperty.rentPrice.toLocaleString('pt-BR')}<span className="text-[10px] text-slate-400 font-normal">/mês</span>
               </p>
             </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedProperty(null);
+              }}
+              className="p-1.5 rounded-xl bg-slate-900/80 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-800 transition-all shrink-0 cursor-pointer"
+              title="Fechar card"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
     </>
   );
 };
