@@ -54,8 +54,9 @@ export const energyService = {
           const saved = localStorage.getItem('locash_inbox_documents');
           const localDocs: InboxDocument[] = saved ? JSON.parse(saved) : [];
           const map = new Map<string, InboxDocument>();
-          localDocs.forEach(d => map.set(d.id, d));
-          data.documents.forEach((d: InboxDocument) => map.set(d.id, d));
+          const getKey = (d: InboxDocument) => `${d.extractedData?.consumerUnit || ''}_${d.extractedData?.billingPeriod || ''}_${d.fileName}`;
+          localDocs.forEach(d => map.set(getKey(d), d));
+          data.documents.forEach((d: InboxDocument) => map.set(getKey(d), d));
           const merged = Array.from(map.values());
           localStorage.setItem('locash_inbox_documents', JSON.stringify(merged));
           return merged;

@@ -218,10 +218,20 @@ Responda ESTRITAMENTE o JSON puro sem formatação markdown.`;
       createdAt: new Date().toISOString()
     };
 
-    // Save to global storage
-    globalInboxStore.unshift(inboxItem);
+    // Anti-duplication check: Avoid inserting duplicates if same UC + billingPeriod or same fileName exists
+    const existingIndex = globalInboxStore.findIndex(
+      d => (d.extractedData?.consumerUnit === createdAccount.consumerUnit &&
+            d.extractedData?.billingPeriod === createdAccount.billingPeriod &&
+            createdAccount.consumerUnit !== '') ||
+           (d.fileName === filename && d.extractedData?.billingPeriod === createdAccount.billingPeriod)
+    );
 
-    // Keep max 50 recent items in memory
+    if (existingIndex !== -1) {
+      globalInboxStore[existingIndex] = inboxItem;
+    } else {
+      globalInboxStore.unshift(inboxItem);
+    }
+
     if (globalInboxStore.length > 50) globalInboxStore.pop();
 
     const responsePayload = {
