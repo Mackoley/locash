@@ -46,6 +46,25 @@ export const energyService = {
 
   // Inbox
   async getInboxDocuments(): Promise<InboxDocument[]> {
+    try {
+      const res = await fetch('/api/energy-inbox?action=list');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.documents && Array.isArray(data.documents) && data.documents.length > 0) {
+          const saved = localStorage.getItem('locash_inbox_documents');
+          const localDocs: InboxDocument[] = saved ? JSON.parse(saved) : [];
+          const map = new Map<string, InboxDocument>();
+          localDocs.forEach(d => map.set(d.id, d));
+          data.documents.forEach((d: InboxDocument) => map.set(d.id, d));
+          const merged = Array.from(map.values());
+          localStorage.setItem('locash_inbox_documents', JSON.stringify(merged));
+          return merged;
+        }
+      }
+    } catch (e) {
+      console.warn('Erro ao sincronizar com webhook /api/energy-inbox:', e);
+    }
+
     const saved = localStorage.getItem('locash_inbox_documents');
     if (saved) {
       try {

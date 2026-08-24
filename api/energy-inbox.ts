@@ -11,24 +11,48 @@ const getApiKey = (): string => {
 
 const WEBHOOK_SECRET = process.env.LOCASH_INBOX_SECRET || 'locash_energy_2026';
 
+// Persistent in-memory cache for serverless environment
+const globalInboxStore: any[] = [];
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS Headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Locash-Secret');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
+  // GET: List documents or check status
   if (req.method === 'GET') {
+    const action = req.query?.action;
+    if (action === 'list' || action === 'documents') {
+      return res.status(200).json({
+        status: 'ONLINE',
+        count: globalInboxStore.length,
+        documents: globalInboxStore
+      });
+    }
+
     return res.status(200).json({
       status: 'ONLINE',
       endpoint: 'LOCASH Energy Inbox Webhook',
       version: '2.0.0',
       description: 'Envie faturas em PDF via POST com fileBase64 e secret.',
+      inboxCount: globalInboxStore.length,
       supportedProviders: ['Neoenergia Coelba', 'Enel', 'CPFL', 'Cemig', 'Light']
     });
+  }
+
+  // DELETE / Confirm document
+  if (req.method === 'DELETE' || req.query?.action === 'delete') {
+    const docId = req.query?.id || req.body?.id;
+    if (docId) {
+      const idx = globalInboxStore.findIndex(d => d.id === docId);
+      if (idx !== -1) globalInboxStore.splice(idx, 1);
+    }
+    return res.status(200).json({ success: true, count: globalInboxStore.length });
   }
 
   if (req.method !== 'POST') {
@@ -151,6 +175,55 @@ Responda ESTRITAMENTE o JSON puro sem formatação markdown.`;
       };
     }
 
+    const docId = `doc-${Date.now()}`;
+    const accId = `acc-${Date.now()}`;
+
+    const createdAccount = {
+      id: accId,
+      userId: 'landlord-1',
+      propertyId: '',
+      propertyTitle: 'Pendente de Vinculação',
+      providerId: 'prov-coelba',
+      providerName: parsedBill.providerName || 'Neoenergia Coelba',
+      providerCode: 'COELBA',
+      consumerUnit: String(parsedBill.consumerUnit || '').replace(/\D/g, ''),
+      installationCode: parsedBill.installationCode || '',
+      holderName: parsedBill.holderName || '',
+      billingPeriod: parsedBill.billingPeriod || '',
+      dueDate: parsedBill.dueDate || '',
+      consumptionKwh: Number(parsedBill.consumptionKwh) || 0,
+      amountTotal: Number(parsedBill.amountTotal) || 0,
+      barcode: parsedBill.barcode || '',
+      pixCode: parsedBill.pixCode || '',
+      ocrConfidence: parsedBill.ocrConfidence || 98,
+      source: 'email' as const,
+      processingStatus: 'pending_confirmation' as const,
+      documentHash: `hash-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    const inboxItem = {
+      id: docId,
+      userId: 'landlord-1',
+      channel: 'email' as const,
+      sender: sender || 'cliente@neoenergiacoelba.com.br',
+      fileName: filename || 'fatura.pdf',
+      mimeType: 'application/pdf',
+      fileSize: Math.round((fileBase64.length * 3) / 4),
+      storagePath: '',
+      documentHash: `hash-${Date.now()}`,
+      status: 'pending_confirmation' as const,
+      extractedData: createdAccount,
+      createdAt: new Date().toISOString()
+    };
+
+    // Save to global storage
+    globalInboxStore.unshift(inboxItem);
+
+    // Keep max 50 recent items in memory
+    if (globalInboxStore.length > 50) globalInboxStore.pop();
+
     const responsePayload = {
       success: true,
       message: 'Fatura de energia recebida e processada com sucesso!',
@@ -160,22 +233,8 @@ Responda ESTRITAMENTE o JSON puro sem formatação markdown.`;
         subject: subject || 'Fatura Digital',
         filename: filename || 'fatura.pdf'
       },
-      account: {
-        id: `acc-${Date.now()}`,
-        providerName: parsedBill.providerName || 'Neoenergia Coelba',
-        providerCode: 'COELBA',
-        consumerUnit: String(parsedBill.consumerUnit || '').replace(/\D/g, ''),
-        installationCode: parsedBill.installationCode || '',
-        holderName: parsedBill.holderName || '',
-        billingPeriod: parsedBill.billingPeriod || '',
-        dueDate: parsedBill.dueDate || '',
-        consumptionKwh: Number(parsedBill.consumptionKwh) || 0,
-        amountTotal: Number(parsedBill.amountTotal) || 0,
-        barcode: parsedBill.barcode || '',
-        pixCode: parsedBill.pixCode || '',
-        ocrConfidence: parsedBill.ocrConfidence || 95,
-        status: 'PENDENTE'
-      }
+      document: inboxItem,
+      account: createdAccount
     };
 
     return res.status(200).json(responsePayload);
