@@ -56,23 +56,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const GEMINI_API_KEY = getApiKey();
 
-    const promptText = `Você é a IA de Extração de Faturas de Energia do LOCASH (AutoBills).
-Analise este documento de fatura de energia elétrica (Neoenergia Coelba ou similar) e extraia os dados estritamente em formato JSON:
+    const promptText = `Você é o extrator de dados de faturas de energia do LOCASH AutoBills.
+Analise a fatura de energia elétrica (Neoenergia Coelba) e extraia os dados com precisão em JSON:
 
 {
-  "providerName": "Nome da concessionária (ex: Neoenergia Coelba)",
-  "consumerUnit": "Número da Conta Contrato ou Unidade Consumidora (apenas números)",
-  "installationCode": "Código de instalação se houver",
-  "holderName": "Nome completo do titular/cliente",
-  "billingPeriod": "Mês e ano de referência no formato MM/AAAA (ex: 08/2026)",
+  "providerName": "Neoenergia Coelba",
+  "consumerUnit": "Número da Conta Contrato / Código do Cliente (apenas dígitos)",
+  "installationCode": "Número da instalação",
+  "holderName": "Nome completo do titular",
+  "billingPeriod": "Mês/Ano de referência (ex: 07/2026)",
   "dueDate": "Data de vencimento no formato AAAA-MM-DD",
-  "consumptionKwh": 0,
-  "amountTotal": 0.00,
-  "barcode": "Linha digitável do código de barras de 48 dígitos (sem pontos ou espaços)",
-  "pixCode": "Código copia e cola do PIX se houver",
+  "consumptionKwh": número inteiro do consumo faturado em kWh (ex: 178),
+  "amountTotal": número decimal com o Valor Total a Pagar em R$ (ex: 145.80, não retorne 0 se houver valor na fatura),
+  "barcode": "Linha digitável do código de barras numérico de arrecadação/bancário",
+  "pixCode": "Código PIX Copia e Cola completo se presente",
   "ocrConfidence": 98
 }
-Responda APENAS o JSON puro, sem markdown e sem explicações.`;
+Responda ESTRITAMENTE o JSON puro sem formatação markdown.`;
 
     // Multi-model list to guarantee high availability (Using latest Gemini 3.6 Flash)
     const modelsToTry = [
