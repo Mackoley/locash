@@ -366,61 +366,23 @@ export const FuturisticMap: React.FC = () => {
     }
   }, [userLocation, mapTheme]);
 
-  // Handle Search Target (Enter Address Search FlyTo)
+  // Handle Search Target (Fly camera to searched city/address without adding any extra pins)
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !searchTarget) return;
 
+    if (searchMarkerRef.current) {
+      searchMarkerRef.current.remove();
+      searchMarkerRef.current = null;
+    }
+
     map.flyTo({
       center: [searchTarget.lng, searchTarget.lat],
-      zoom: 16,
+      zoom: 15.5,
       duration: 1500,
       essential: true
     });
-
-    if (searchMarkerRef.current) {
-      searchMarkerRef.current.remove();
-    }
-
-    const searchEl = document.createElement('div');
-    searchEl.className = 'flex flex-col items-center';
-    searchEl.innerHTML = `
-      <div style="
-        background: ${isLight ? 'rgba(255, 255, 255, 0.96)' : 'rgba(13, 21, 39, 0.95)'};
-        border: 1.5px solid ${currentAccent.primary};
-        color: ${isLight ? '#0f172a' : '#ffffff'};
-        padding: 4px 10px;
-        border-radius: 12px;
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 11px;
-        font-weight: 800;
-        box-shadow: 0 0 20px ${currentAccent.primary}cc;
-        white-space: nowrap;
-        max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: flex;
-        align-items: center;
-        gap: 4px;
-      ">
-        <span style="color: ${currentAccent.primary};">📍</span>
-        <span>${searchTarget.name.split(',')[0]}</span>
-      </div>
-      <div style="
-        width: 0;
-        height: 0;
-        border-left: 5px solid transparent;
-        border-right: 5px solid transparent;
-        border-top: 6px solid ${currentAccent.primary};
-      "></div>
-    `;
-
-    const marker = new maplibregl.Marker({ element: searchEl, anchor: 'bottom' })
-      .setLngLat([searchTarget.lng, searchTarget.lat])
-      .addTo(map);
-
-    searchMarkerRef.current = marker;
-  }, [searchTarget, mapTheme]);
+  }, [searchTarget]);
 
   // Auto-pitch removed to maintain 100% faithful 2D orthogonal top-down precision by default
 
