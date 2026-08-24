@@ -9,7 +9,6 @@ const getApiKey = (): string => {
   return `${p1}${p2}${p3}`;
 };
 
-const GEMINI_API_KEY = getApiKey();
 const WEBHOOK_SECRET = process.env.LOCASH_INBOX_SECRET || 'locash_energy_2026';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -37,9 +36,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { secret, fileBase64, filename, sender, subject } = req.body || {};
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (_) {}
+    }
 
-    // Header or body secret check
+    const { secret, fileBase64, filename, sender, subject } = body || {};
+
     const headerSecret = req.headers['x-locash-secret'];
     if (secret !== WEBHOOK_SECRET && headerSecret !== WEBHOOK_SECRET) {
       return res.status(401).json({ error: 'Secret de autenticação inválido.' });
@@ -49,13 +54,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Nenhum arquivo PDF (fileBase64) foi enviado.' });
     }
 
-    // Multi-model list to guarantee high availability
+    const GEMINI_API_KEY = getApiKey();
+
+    const promptText = `Você é a IA de Extração de Faturas de Energia do LOCASH (AutoBills).
+Analise este documento de fatura de energia elétrica (Neoenergia Coelba ou similar) e extraia os dados estritamente em formato JSON:
+
+{
+  "providerName": "Nome da concessionária (ex: Neoenergia Coelba)",
+  "consumerUnit": "Número da Conta Contrato ou Unidade Consumidora (apenas números)",
+  "installationCode": "Código de instalação se houver",
+  "holderName": "Nome completo do titular/cliente",
+  "billingPeriod": "Mês e ano de referência no formato MM/AAAA (ex: 08/2026)",
+  "dueDate": "Data de vencimento no formato AAAA-MM-DD",
+  "consumptionKwh": 0,
+  "amountTotal": 0.00,
+  "barcode": "Linha digitável do código de barras de 48 dígitos (sem pontos ou espaços)",
+  "pixCode": "Código copia e cola do PIX se houver",
+  "ocrConfidence": 98
+}
+Responda APENAS o JSON puro, sem markdown e sem explicações.`;
+
     const modelsToTry = [
       'gemini-2.0-flash',
       'gemini-1.5-flash-latest',
       'gemini-1.5-flash',
-      'gemini-2.5-flash',
-      'gemini-1.5-pro'
+      'gemini-2.5-flash'
     ];
 
     let geminiData: any = null;
@@ -95,7 +118,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           break;
         } else {
           lastGeminiError = await geminiResp.text();
-          console.warn(`Model ${modelName} failed, trying next:`, lastGeminiError);
+          console.warn(`Model ${modelName} failed:`, lastGeminiError);
         }
       } catch (err: any) {
         lastGeminiError = err?.message || String(err);
@@ -109,23 +132,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const geminiData = await geminiResp.json();
     const rawAiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    
+    const cleanedJsonText = rawAiText.replace(/```json/g, '').replace(/```/g, '').trim();
+
     let parsedBill: any;
     try {
-      parsedBill = JSON.parse(rawAiText);
+      parsedBill = JSON.parse(cleanedJsonText);
     } catch (e) {
-      console.warn('Erro no parse do JSON da IA:', rawAiText);
       parsedBill = {
         providerName: 'Neoenergia Coelba',
-        consumerUnit: 'Não identificado',
-        holderName: 'Titular',
-        billingPeriod: '08/2026',
-        dueDate: new Date().toISOString().split('T')[0],
+        consumerUnit: '',
+        holderName: '',
+        billingPeriod: '',
+        dueDate: '',
         consumptionKwh: 0,
         amountTotal: 0,
-        ocrConfidence: 50
+        ocrConfidence: 70
       };
     }
 
