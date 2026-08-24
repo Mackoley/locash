@@ -328,6 +328,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (isMounted && docs) setInboxDocuments(docs);
     });
 
+    // Live AutoBills Sync Loop (Real-Time Heartbeat every 3.5s + Window Focus)
+    const syncInboxRealtime = async () => {
+      try {
+        const liveDocs = await energyService.getInboxDocuments();
+        if (isMounted && liveDocs) {
+          setInboxDocuments(prev => {
+            const prevIds = new Set(prev.map(d => d.id));
+            const hasNew = liveDocs.some(d => !prevIds.has(d.id));
+            if (hasNew || liveDocs.length !== prev.length) {
+              return liveDocs;
+            }
+            return prev;
+          });
+        }
+      } catch (_) {}
+    };
+
+    const inboxInterval = setInterval(syncInboxRealtime, 3500);
+    const onFocus = () => syncInboxRealtime();
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+
     // Subscribe to live property updates across all connected clients
     const unsubProperties = propertyService.subscribeToChanges(async () => {
       const refreshed = await propertyService.getAll();
@@ -348,6 +370,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return () => {
       isMounted = false;
+      clearInterval(inboxInterval);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
       unsubProperties();
       unsubChat();
     };
