@@ -49,60 +49,63 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Nenhum arquivo PDF (fileBase64) foi enviado.' });
     }
 
-    // Call Gemini 1.5 Flash API for Multimodal OCR
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    // Multi-model list to guarantee high availability
+    const modelsToTry = [
+      'gemini-2.0-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-flash',
+      'gemini-2.5-flash',
+      'gemini-1.5-pro'
+    ];
 
-    const promptText = `
-Você é a IA de Extração de Faturas de Energia do LOCASH (AutoBills).
-Analise este documento de fatura de energia elétrica (Neoenergia Coelba ou similar) e extraia os dados estritamente em formato JSON:
+    let geminiData: any = null;
+    let lastGeminiError = '';
 
-{
-  "providerName": "Nome da concessionária (ex: Neoenergia Coelba)",
-  "consumerUnit": "Número da Conta Contrato ou Unidade Consumidora (apenas números)",
-  "installationCode": "Código de instalação se houver",
-  "holderName": "Nome completo do titular/cliente",
-  "billingPeriod": "Mês e ano de referência no formato MM/AAAA (ex: 08/2026)",
-  "dueDate": "Data de vencimento no formato AAAA-MM-DD",
-  "consumptionKwh": 0,
-  "amountTotal": 0.00,
-  "barcode": "Linha digitável do código de barras de 48 dígitos (sem pontos ou espaços)",
-  "pixCode": "Código copia e cola do PIX se houver",
-  "ocrConfidence": 98
-}
-Responda APENAS o JSON puro, sem markdown e sem explicações.`;
+    for (const modelName of modelsToTry) {
+      try {
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
 
-    const geminiPayload = {
-      contents: [
-        {
-          parts: [
-            { text: promptText },
+        const geminiPayload = {
+          contents: [
             {
-              inline_data: {
-                mime_type: 'application/pdf',
-                data: fileBase64
-              }
+              parts: [
+                { text: promptText },
+                {
+                  inlineData: {
+                    mimeType: 'application/pdf',
+                    data: fileBase64
+                  }
+                }
+              ]
             }
-          ]
+          ],
+          generationConfig: {
+            temperature: 0.1
+          }
+        };
+
+        const geminiResp = await fetch(geminiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(geminiPayload)
+        });
+
+        if (geminiResp.ok) {
+          geminiData = await geminiResp.json();
+          break;
+        } else {
+          lastGeminiError = await geminiResp.text();
+          console.warn(`Model ${modelName} failed, trying next:`, lastGeminiError);
         }
-      ],
-      generationConfig: {
-        temperature: 0.1,
-        response_mime_type: 'application/json'
+      } catch (err: any) {
+        lastGeminiError = err?.message || String(err);
       }
-    };
+    }
 
-    const geminiResp = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(geminiPayload)
-    });
-
-    if (!geminiResp.ok) {
-      const errText = await geminiResp.text();
-      console.error('Gemini API Error:', errText);
-      return res.status(500).json({ 
+    if (!geminiData) {
+      return res.status(500).json({
         error: 'Erro ao processar documento com IA Gemini.',
-        details: errText
+        details: lastGeminiError
       });
     }
 
