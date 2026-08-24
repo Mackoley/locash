@@ -74,11 +74,11 @@ Analise este documento de fatura de energia elétrica (Neoenergia Coelba ou simi
 }
 Responda APENAS o JSON puro, sem markdown e sem explicações.`;
 
+    // Multi-model list to guarantee high availability (Using latest Gemini 3.6 Flash)
     const modelsToTry = [
-      'gemini-2.0-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-flash',
-      'gemini-2.5-flash'
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-flash-latest'
     ];
 
     let geminiData: any = null;
