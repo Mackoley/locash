@@ -7,11 +7,22 @@ import {
   Home, 
   MessageSquare, 
   LayoutDashboard, 
-  Building
+  Building,
+  User
 } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
-  const { userRole, activeView, setActiveView, favorites, chatMessages, landlordStats } = useApp();
+  const { 
+    userRole, 
+    activeView, 
+    setActiveView, 
+    favorites, 
+    chatMessages, 
+    landlordStats,
+    currentUser,
+    setIsAuthModalOpen,
+    setIsProfileModalOpen
+  } = useApp();
 
   const tenantTabs = [
     { id: 'MAPA', label: 'Mapa', icon: Map },
@@ -31,8 +42,16 @@ export const MobileNav: React.FC = () => {
 
   const tabs = userRole === 'LANDLORD' ? landlordTabs : tenantTabs;
 
+  const handleProfileClick = () => {
+    if (currentUser) {
+      setIsProfileModalOpen(true);
+    } else {
+      setIsAuthModalOpen(true);
+    }
+  };
+
   return (
-    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0d1527]/98 backdrop-blur-2xl border-t border-cyan-500/25 px-1.5 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-[0_-6px_20px_rgba(5,10,25,0.9)]">
+    <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0d1527]/98 backdrop-blur-2xl border-t border-cyan-500/25 px-1 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-[0_-6px_20px_rgba(5,10,25,0.9)]">
       {tabs.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeView === tab.id;
@@ -41,7 +60,7 @@ export const MobileNav: React.FC = () => {
           <button
             key={tab.id}
             onClick={() => setActiveView(tab.id)}
-            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative ${
+            className={`flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all relative ${
               isActive 
                 ? 'bg-gradient-to-t from-cyan-500/25 to-blue-600/15 border border-cyan-500/40 text-white shadow-[0_0_12px_rgba(0,242,254,0.25)]' 
                 : 'text-slate-300 hover:text-white'
@@ -56,13 +75,13 @@ export const MobileNav: React.FC = () => {
                 }`} 
               />
               {tab.badge !== undefined && tab.badge > 0 && (
-                <span className="absolute -top-1.5 -right-2 w-3.5 h-3.5 bg-cyber-cyan text-slate-950 text-[8px] font-extrabold rounded-full flex items-center justify-center shadow-neon-cyan">
+                <span className="absolute -top-1.5 -right-2 w-3.5 h-3.5 bg-cyan-400 text-slate-950 text-[8px] font-extrabold rounded-full flex items-center justify-center shadow-neon-cyan">
                   {tab.badge}
                 </span>
               )}
             </div>
             <span 
-              className={`text-[9.5px] tracking-tight mt-0.5 leading-none transition-all ${
+              className={`text-[9px] tracking-tight mt-0.5 leading-none transition-all ${
                 isActive 
                   ? 'text-white font-extrabold drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]' 
                   : 'text-slate-300 font-medium'
@@ -71,11 +90,36 @@ export const MobileNav: React.FC = () => {
               {tab.label}
             </span>
             {isActive && (
-              <span className="w-1 h-1 rounded-full bg-cyber-cyan shadow-neon-cyan mt-0.5" />
+              <span className="w-1 h-1 rounded-full bg-cyan-400 shadow-[0_0_6px_rgba(0,242,254,0.8)] mt-0.5" />
             )}
           </button>
         );
       })}
+
+      {/* Mobile Profile Tab */}
+      <button
+        onClick={handleProfileClick}
+        className="flex flex-col items-center justify-center py-1 px-2 rounded-xl transition-all text-slate-300 hover:text-white relative cursor-pointer"
+        title="Perfil do Usuário"
+      >
+        <div className="relative">
+          {currentUser?.avatarUrl ? (
+            <img 
+              src={currentUser.avatarUrl} 
+              alt={currentUser.name} 
+              className="w-4 h-4 rounded-full object-cover border border-cyan-400"
+            />
+          ) : (
+            <User className="w-4 h-4 text-slate-300" />
+          )}
+          {currentUser && (
+            <span className="absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 border border-slate-950" />
+          )}
+        </div>
+        <span className="text-[9px] tracking-tight mt-0.5 leading-none font-medium text-slate-300">
+          {currentUser ? 'Perfil' : 'Entrar'}
+        </span>
+      </button>
     </nav>
   );
 };

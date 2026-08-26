@@ -80,20 +80,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const GEMINI_API_KEY = getApiKey();
 
-    const promptText = `Você é o extrator de dados de faturas de energia do LOCASH AutoBills.
-Analise a fatura de energia elétrica (Neoenergia Coelba) e extraia os dados com precisão em JSON:
+    const promptText = `Você é o extrator especializado de faturas de energia elétrica do LOCASH AutoBills.
+Analise detalhadamente o documento da fatura (Neoenergia Coelba) e extraia os campos com máxima precisão em JSON:
 
+REGRAS CRÍTICAS PARA NEOENERGIA COELBA:
+1. "consumerUnit": Extraia o número exato do campo impresso no cabeçalho como "CONTA CONTRATO" ou "CÓDIGO DO CLIENTE" (geralmente tem 10 dígitos, começando por 70... ex: 7068254234). NUNCA coloque o número de Instalação, Medidor ou Nota Fiscal aqui.
+2. "installationCode": Extraia o número do campo "INSTALAÇÃO" ou "Nº DA INSTALAÇÃO" (geralmente tem 8 dígitos, ex: 11180635).
+3. "amountTotal": Extraia o "TOTAL A PAGAR (R$)" ou "VALOR A PAGAR" da fatura como número decimal (ex: 145.80). Não retorne 0 se houver valor faturado.
+4. "holderName": Nome completo do titular impresso no cabeçalho.
+5. "billingPeriod": Mês e ano de referência no formato MM/AAAA (ex: 07/2026).
+6. "dueDate": Data de vencimento no formato AAAA-MM-DD.
+7. "consumptionKwh": Total de consumo de energia faturada em kWh (apenas o número inteiro).
+8. "barcode": Linha digitável do código de barras numérico se visível.
+9. "pixCode": Código copia e cola do PIX se presente.
+
+JSON Schema:
 {
   "providerName": "Neoenergia Coelba",
-  "consumerUnit": "Número da Conta Contrato / Código do Cliente (apenas dígitos)",
-  "installationCode": "Número da instalação",
-  "holderName": "Nome completo do titular",
-  "billingPeriod": "Mês/Ano de referência (ex: 07/2026)",
-  "dueDate": "Data de vencimento no formato AAAA-MM-DD",
-  "consumptionKwh": número inteiro do consumo faturado em kWh (ex: 178),
-  "amountTotal": número decimal com o Valor Total a Pagar em R$ (ex: 145.80, não retorne 0 se houver valor na fatura),
-  "barcode": "Linha digitável do código de barras numérico de arrecadação/bancário",
-  "pixCode": "Código PIX Copia e Cola completo se presente",
+  "consumerUnit": "7068254234",
+  "installationCode": "11180635",
+  "holderName": "NOME DO CLIENTE",
+  "billingPeriod": "07/2026",
+  "dueDate": "AAAA-MM-DD",
+  "consumptionKwh": 178,
+  "amountTotal": 145.80,
+  "barcode": "",
+  "pixCode": "",
   "ocrConfidence": 98
 }
 Responda ESTRITAMENTE o JSON puro sem formatação markdown.`;

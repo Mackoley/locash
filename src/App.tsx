@@ -1,8 +1,8 @@
 import React from 'react';
 import { useApp } from './context/AppContext';
-import { Header } from './components/layout/Header';
 import { SidebarNav } from './components/layout/SidebarNav';
 import { MobileNav } from './components/layout/MobileNav';
+import { FloatingSearchBar } from './components/layout/FloatingSearchBar';
 import { PwaInstallPrompt } from './components/layout/PwaInstallPrompt';
 import { FuturisticMap } from './components/map/FuturisticMap';
 import { PropertyDetailModal } from './components/property/PropertyDetailModal';
@@ -25,29 +25,26 @@ export const AppContent: React.FC = () => {
   const { activeView, isAuthModalOpen, setIsAuthModalOpen } = useApp();
 
   return (
-    <div className="h-[100dvh] w-screen max-w-full bg-cyber-darkest text-slate-100 flex flex-col overflow-hidden select-none">
-      {/* Top Cockpit Header */}
-      <Header />
+    <div className="h-[100dvh] w-screen max-w-full bg-cyber-darkest text-slate-100 flex overflow-hidden select-none relative">
+      {/* Desktop Sidebar (Full-height from top to bottom) */}
+      <SidebarNav />
 
-      {/* Main Container with Sidebar + Dynamic Center Stage */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Desktop Sidebar */}
-        <SidebarNav />
+      {/* Dynamic Center View (Takes 100% full height & width) */}
+      <main className="flex-1 flex flex-col overflow-hidden relative bg-[#080d1a]">
+        {/* Floating Glass Search Bar (Top-Center over the map) */}
+        <FloatingSearchBar />
 
-        {/* Dynamic Center View */}
-        <main className="flex-1 flex flex-col overflow-hidden relative bg-[#080d1a]">
-          {activeView === 'MAPA' && <FuturisticMap />}
-          {activeView === 'EXPLORAR' && <PropertyExplorerList />}
-          {activeView === 'FAVORITOS' && <PropertyExplorerList onlyFavorites />}
-          {activeView === 'CENTRAL_LOCACAO' && <LeaseHub />}
-          {activeView === 'DASHBOARD_LOCADOR' && <LandlordDashboard />}
-          {activeView === 'MEUS_IMOVEIS' && <LandlordProperties />}
-          {activeView === 'ENERGIA' && <EnergyDashboardView />}
-          {activeView === 'MENSAGENS' && <StandaloneChat />}
-        </main>
-      </div>
+        {activeView === 'MAPA' && <FuturisticMap />}
+        {activeView === 'EXPLORAR' && <PropertyExplorerList />}
+        {activeView === 'FAVORITOS' && <PropertyExplorerList onlyFavorites />}
+        {activeView === 'CENTRAL_LOCACAO' && <LeaseHub />}
+        {activeView === 'DASHBOARD_LOCADOR' && <LandlordDashboard />}
+        {activeView === 'MEUS_IMOVEIS' && <LandlordProperties />}
+        {activeView === 'ENERGIA' && <EnergyDashboardView />}
+        {activeView === 'MENSAGENS' && <StandaloneChat />}
+      </main>
 
-      {/* Mobile Bottom Navigation Bar */}
+      {/* Mobile Bottom Navigation Bar with Profile Tab */}
       <MobileNav />
 
       {/* Modals & Slide-overs */}
