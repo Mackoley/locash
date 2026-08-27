@@ -77,9 +77,9 @@ export const PwaInstallPrompt: React.FC = () => {
       <div className="mt-3 flex items-center gap-2">
         <button
           onClick={handleInstall}
-          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-cyber-cyan hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-sm transition-all"
+          className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs shadow-neon-cyan transition-all"
         >
-          <Download className="w-3.5 h-3.5" />
+          <Download className="w-3.5 h-3.5 text-white" />
           <span>Instalar Agora</span>
         </button>
         <button
