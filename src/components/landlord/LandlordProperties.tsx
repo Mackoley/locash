@@ -39,42 +39,27 @@ export const LandlordProperties: React.FC = () => {
 
   return (
     <div className="flex-1 p-4 sm:p-6 space-y-5 overflow-y-auto max-w-7xl mx-auto w-full no-scrollbar pb-20 md:pb-8">
-      {/* Cockpit Header Card with Clickable Status Filter Pills */}
+      {/* Cockpit Header Card with Centered Title & Status Filter Pills */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0c162d]/95 via-[#081022]/98 to-[#050a17]/99 border border-cyan-500/30 p-3.5 sm:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.6)] backdrop-blur-2xl group">
         {/* Cyber Neon Ambient Glow in Background */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-10 -mt-10 group-hover:bg-cyan-500/15 transition-all duration-700" />
         <div className="absolute bottom-0 left-1/3 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
-          {/* Left: Title & Interactive Filter Pills */}
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500/25 to-blue-600/30 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,242,254,0.25)] shrink-0">
-                <Building className="w-4 h-4 text-cyan-300" />
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-base sm:text-lg font-bold text-white tracking-tight font-sans">
-                  Meus Imóveis
-                </h1>
-
-                {/* Clickable 'Todos' Badge */}
-                <button
-                  type="button"
-                  onClick={() => toggleFilter('TODOS')}
-                  className={`px-2.5 py-0.5 rounded-full font-mono text-[10.5px] font-bold transition-all duration-200 cursor-pointer ${
-                    statusFilter === 'TODOS'
-                      ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-400 shadow-[0_0_12px_rgba(0,242,254,0.35)] ring-2 ring-cyan-500/20'
-                      : 'bg-slate-800/80 text-slate-400 hover:text-cyan-300 border border-slate-700/60'
-                  }`}
-                  title="Clique para ver todos os imóveis"
-                >
-                  {landlordStats.totalProperties} unidades • Todos
-                </button>
-              </div>
+        <div className="relative z-10 space-y-3">
+          {/* Centered Page Title */}
+          <div className="flex items-center justify-center gap-2.5 text-center">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-500/25 to-blue-600/30 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_15px_rgba(0,242,254,0.25)] shrink-0">
+              <Building className="w-4 h-4 text-cyan-300" />
             </div>
+            <h1 className="text-base sm:text-lg font-bold text-white tracking-tight font-sans">
+              Meus Imóveis
+            </h1>
+          </div>
 
-            {/* Futuristic Clickable Telemetry Filter Pills Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {/* Interactive Filter Pills Grid + Action Button */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            {/* 4 Clickable Telemetry Filter Pills Grid: [Disponíveis] [Alugados] [Negociação] [Todos] */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 flex-1">
               {/* 🟢 Disponíveis (Clickable Filter) */}
               <button
                 type="button"
@@ -153,33 +138,43 @@ export const LandlordProperties: React.FC = () => {
                 </div>
               </button>
 
-              {/* ⚡ Taxa de Ocupação */}
-              <div 
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-cyan-950/30 border border-cyan-500/30 text-left"
-                title="Taxa atual de ocupação da sua carteira"
+              {/* 🌐 Todos (Replaces Ocupação position) */}
+              <button
+                type="button"
+                onClick={() => setStatusFilter('TODOS')}
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all duration-200 text-left cursor-pointer group/pill ${
+                  statusFilter === 'TODOS'
+                    ? 'bg-cyan-950/70 border-cyan-400 ring-2 ring-cyan-500/30 shadow-[0_0_18px_rgba(0,242,254,0.35)] scale-[1.02]'
+                    : 'bg-cyan-950/30 hover:bg-cyan-950/50 border-cyan-500/30 hover:border-cyan-500/60 text-slate-300'
+                }`}
+                title="Ver todos os imóveis cadastrados"
               >
-                <TrendingUp className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <span className={`w-2 h-2 rounded-full bg-cyan-400 shrink-0 ${
+                  statusFilter === 'TODOS' ? 'shadow-[0_0_8px_rgba(0,242,254,0.9)] animate-pulse' : ''
+                }`} />
                 <div className="min-w-0 flex items-baseline gap-1.5">
                   <p className="text-xs sm:text-sm font-bold font-mono text-cyan-300 leading-none">
-                    {landlordStats.occupancyRate}%
+                    {landlordStats.totalProperties}
                   </p>
-                  <p className="text-[10px] font-mono text-cyan-400/80 truncate">
-                    Ocupação
+                  <p className={`text-[10px] font-mono leading-none truncate ${
+                    statusFilter === 'TODOS' ? 'text-cyan-300 font-bold' : 'text-cyan-400/80 group-hover/pill:text-cyan-300'
+                  }`}>
+                    Todos
                   </p>
                 </div>
-              </div>
+              </button>
             </div>
-          </div>
 
-          {/* Right: Quick Action Button */}
-          <div className="flex md:justify-end shrink-0">
-            <button
-              onClick={() => setIsWizardModalOpen(true)}
-              className="w-full md:w-auto flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-[0_0_18px_rgba(0,242,254,0.3)] hover:shadow-[0_0_25px_rgba(0,242,254,0.45)] transform active:scale-95 transition-all cursor-pointer group/btn"
-            >
-              <Plus className="w-3.5 h-3.5 stroke-[3] group-hover/btn:rotate-90 transition-transform duration-200" />
-              <span>Cadastrar Novo Imóvel</span>
-            </button>
+            {/* Right: Quick Action Button */}
+            <div className="flex sm:justify-end shrink-0">
+              <button
+                onClick={() => setIsWizardModalOpen(true)}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-[0_0_18px_rgba(0,242,254,0.3)] hover:shadow-[0_0_25px_rgba(0,242,254,0.45)] transform active:scale-95 transition-all cursor-pointer group/btn"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3] group-hover/btn:rotate-90 transition-transform duration-200" />
+                <span>Cadastrar Novo Imóvel</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
