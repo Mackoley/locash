@@ -28,6 +28,8 @@ export const PropertyEditModal: React.FC = () => {
   const [description, setDescription] = useState('');
   const [propertyType, setPropertyType] = useState<PropertyType>('APARTAMENTO');
   const [status, setStatus] = useState<PropertyStatus>('DISPONÍVEL');
+  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [rentPrice, setRentPrice] = useState<number>(3500);
   const [condoFee, setCondoFee] = useState<number>(600);
   const [propertyTax, setPropertyTax] = useState<number>(200);
@@ -324,34 +326,98 @@ export const PropertyEditModal: React.FC = () => {
               />
             </div>
 
-            <div className="space-y-1">
+            {/* Custom In-Place Dropdown for Tipo */}
+            <div className="space-y-1 relative">
               <label className="text-slate-400 font-bold">Tipo</label>
-              <select
-                value={propertyType}
-                onChange={(e) => setPropertyType(e.target.value as any)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-xs focus:border-cyber-cyan focus:outline-none cursor-pointer"
+              <button
+                type="button"
+                onClick={() => {
+                  setIsTypeDropdownOpen(!isTypeDropdownOpen);
+                  setIsStatusDropdownOpen(false);
+                }}
+                className="w-full bg-slate-900 border border-slate-700 hover:border-cyan-500/60 rounded-xl p-2.5 text-white text-xs flex items-center justify-between transition-all cursor-pointer font-bold"
               >
-                <option value="APARTAMENTO">APARTAMENTO</option>
-                <option value="CASA">CASA</option>
-                <option value="KITNET">KITNET</option>
-                <option value="SOBRADO">SOBRADO</option>
-                <option value="COMERCIAL">COMERCIAL</option>
-                <option value="OUTROS">OUTROS</option>
-              </select>
+                <span className="truncate">{propertyType}</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-cyan-400 transition-transform duration-200 shrink-0 ml-1 ${isTypeDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isTypeDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-40 p-1.5 rounded-xl bg-[#091022]/98 border border-cyan-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.85)] backdrop-blur-xl space-y-1 max-h-48 overflow-y-auto no-scrollbar animate-fade-in">
+                  {(['APARTAMENTO', 'CASA', 'KITNET', 'SOBRADO', 'COMERCIAL', 'OUTROS'] as PropertyType[]).map((t) => (
+                    <button
+                      type="button"
+                      key={t}
+                      onClick={() => {
+                        setPropertyType(t);
+                        setIsTypeDropdownOpen(false);
+                      }}
+                      className={`w-full text-left py-2 px-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
+                        propertyType === t 
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' 
+                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                      }`}
+                    >
+                      <span>{t}</span>
+                      {propertyType === t && <Check className="w-3 h-3 text-cyan-400 stroke-[3]" />}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="space-y-1">
+            {/* Custom In-Place Dropdown for Status */}
+            <div className="space-y-1 relative">
               <label className="text-slate-400 font-bold">Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as PropertyStatus)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-xs font-mono font-bold focus:border-cyber-cyan focus:outline-none cursor-pointer"
+              <button
+                type="button"
+                onClick={() => {
+                  setIsStatusDropdownOpen(!isStatusDropdownOpen);
+                  setIsTypeDropdownOpen(false);
+                }}
+                className="w-full bg-slate-900 border border-slate-700 hover:border-cyan-500/60 rounded-xl p-2.5 text-white text-xs flex items-center justify-between transition-all cursor-pointer font-bold font-mono"
               >
-                <option value="DISPONÍVEL">DISPONÍVEL</option>
-                <option value="ALUGADO">ALUGADO</option>
-                <option value="EM NEGOCIAÇÃO">EM NEGOCIAÇÃO</option>
-                <option value="RESERVADO">RESERVADO</option>
-              </select>
+                <div className="flex items-center gap-1.5 truncate">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${
+                    status === 'DISPONÍVEL' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' :
+                    status === 'ALUGADO' ? 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]' :
+                    status === 'EM NEGOCIAÇÃO' ? 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.8)]' :
+                    'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]'
+                  }`} />
+                  <span className="truncate">{status}</span>
+                </div>
+                <ChevronDown className={`w-3.5 h-3.5 text-cyan-400 transition-transform duration-200 shrink-0 ml-1 ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isStatusDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 z-40 p-1.5 rounded-xl bg-[#091022]/98 border border-cyan-500/50 shadow-[0_10px_30px_rgba(0,0,0,0.85)] backdrop-blur-xl space-y-1 animate-fade-in">
+                  {(['DISPONÍVEL', 'ALUGADO', 'EM NEGOCIAÇÃO', 'RESERVADO'] as PropertyStatus[]).map((st) => (
+                    <button
+                      type="button"
+                      key={st}
+                      onClick={() => {
+                        setStatus(st);
+                        setIsStatusDropdownOpen(false);
+                      }}
+                      className={`w-full text-left py-2 px-2.5 rounded-lg text-xs font-mono font-bold transition-all flex items-center justify-between cursor-pointer ${
+                        status === st 
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm' 
+                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          st === 'DISPONÍVEL' ? 'bg-emerald-400' :
+                          st === 'ALUGADO' ? 'bg-blue-400' :
+                          st === 'EM NEGOCIAÇÃO' ? 'bg-purple-400' :
+                          'bg-amber-400'
+                        }`} />
+                        <span>{st}</span>
+                      </div>
+                      {status === st && <Check className="w-3 h-3 text-cyan-400 stroke-[3]" />}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
