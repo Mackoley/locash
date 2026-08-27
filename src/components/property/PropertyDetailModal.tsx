@@ -9,7 +9,6 @@ import {
   Maximize2, 
   Heart, 
   Share2, 
-  Calendar, 
   MessageSquare, 
   Check, 
   MapPin, 
@@ -32,9 +31,6 @@ export const PropertyDetailModal: React.FC = () => {
   } = useApp();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [interestSent, setInterestSent] = useState(false);
-  const [visitScheduled, setVisitScheduled] = useState(false);
-  const [visitDate, setVisitDate] = useState('');
-  const [showVisitPicker, setShowVisitPicker] = useState(false);
 
   if (!selectedProperty) return null;
 
@@ -48,15 +44,6 @@ export const PropertyDetailModal: React.FC = () => {
     setTimeout(() => {
       alert(`🎉 Solicitação de interesse enviada com sucesso para ${selectedProperty.ownerName}!`);
     }, 400);
-  };
-
-  const handleScheduleVisit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!visitDate) return;
-    setVisitScheduled(true);
-    setShowVisitPicker(false);
-    sendChatMessage(`📅 Visita solicitada para a data: ${visitDate} no imóvel "${selectedProperty.title}".`, 'CONVERSA');
-    alert(`📅 Visita solicitada para ${visitDate}! O proprietário foi notificado.`);
   };
 
   return (
@@ -297,64 +284,23 @@ export const PropertyDetailModal: React.FC = () => {
             </div>
           )}
 
-          {/* Schedule Visit Date Picker Popup */}
-          {showVisitPicker && (
-            <form onSubmit={handleScheduleVisit} className="p-4 rounded-2xl bg-slate-900 border border-cyan-500/40 space-y-3">
-              <h4 className="text-xs font-bold text-cyber-cyan uppercase font-mono">
-                Selecione o melhor dia e horário para a visita:
-              </h4>
-              <input
-                type="datetime-local"
-                required
-                value={visitDate}
-                onChange={(e) => setVisitDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 text-sm focus:border-cyber-cyan focus:outline-none font-mono"
-              />
-              <div className="flex gap-2 justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowVisitPicker(false)}
-                  className="px-3 py-1.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-1.5 rounded-xl bg-cyber-cyan text-slate-950 text-xs font-bold shadow-neon-cyan"
-                >
-                  Confirmar Agendamento
-                </button>
-              </div>
-            </form>
-          )}
         </div>
 
         {/* Footer CTAs (Blocked if Rented per PRD #9) */}
-        <div className="sticky bottom-0 z-20 glass-panel border-t border-slate-800/80 p-4 bg-cyber-darkest/98 flex flex-col sm:flex-row items-center gap-2.5">
+        <div className="sticky bottom-0 z-20 glass-panel border-t border-slate-800/80 p-4 bg-cyber-darkest/98 flex items-center">
           {!isRented ? (
-            <>
-              <button
-                onClick={handleInterest}
-                disabled={interestSent}
-                className={`flex-1 w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-neon-cyan transition-all transform active:scale-95 ${
-                  interestSent 
-                    ? 'bg-emerald-600 text-white' 
-                    : 'bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950'
-                }`}
-              >
-                {interestSent ? <Check className="w-4 h-4" /> : <Send className="w-4 h-4" />}
-                <span>{interestSent ? 'Interesse Registrado!' : 'Tenho Interesse'}</span>
-              </button>
-
-              <button
-                onClick={() => setShowVisitPicker(true)}
-                disabled={visitScheduled}
-                className="w-full sm:w-auto py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 flex items-center justify-center gap-2 transition-all"
-              >
-                <Calendar className="w-4 h-4 text-cyber-cyan" />
-                <span>{visitScheduled ? 'Visita Solicitada' : 'Agendar Visita'}</span>
-              </button>
-            </>
+            <button
+              onClick={handleInterest}
+              disabled={interestSent}
+              className={`w-full py-3.5 px-6 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-neon-cyan transition-all transform active:scale-95 cursor-pointer ${
+                interestSent 
+                  ? 'bg-emerald-600 text-white' 
+                  : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-[0_0_25px_rgba(0,242,254,0.35)]'
+              }`}
+            >
+              {interestSent ? <Check className="w-4 h-4" /> : <Send className="w-4 h-4 stroke-[2.5]" />}
+              <span>{interestSent ? 'Interesse Registrado!' : 'Tenho Interesse'}</span>
+            </button>
           ) : (
             <div className="w-full text-center py-2 text-xs font-mono text-slate-500">
               Locação em andamento • Novas propostas indisponíveis
