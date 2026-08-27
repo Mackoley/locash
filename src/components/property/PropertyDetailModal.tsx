@@ -37,8 +37,12 @@ export const PropertyDetailModal: React.FC = () => {
   if (!selectedProperty) return null;
 
   const isOwner = Boolean(
-    (currentUser && selectedProperty.ownerId === currentUser.id) ||
-    (userRole === 'LANDLORD' && (!selectedProperty.ownerId || selectedProperty.ownerId === currentUser?.id || selectedProperty.ownerId === 'usr-landlord-1'))
+    activeView === 'PROPRIEDADES' ||
+    userRole === 'LANDLORD' ||
+    (currentUser && (
+      currentUser.id === selectedProperty.ownerId ||
+      currentUser.role === 'LANDLORD'
+    ))
   );
 
   const isFav = favorites.includes(selectedProperty.id);
