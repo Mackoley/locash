@@ -12,7 +12,9 @@ import {
   ExternalLink,
   Edit,
   CheckCircle,
-  MoreVertical
+  MoreVertical,
+  TrendingUp,
+  Sparkles
 } from 'lucide-react';
 
 export const LandlordProperties: React.FC = () => {
@@ -31,31 +33,103 @@ export const LandlordProperties: React.FC = () => {
 
   return (
     <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full no-scrollbar pb-20 md:pb-8">
-      {/* Header & Status Metrics Pill */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-5 rounded-3xl border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <Building className="w-5 h-5 text-cyber-cyan" />
-            <h1 className="text-xl sm:text-2xl font-extrabold text-white font-mono tracking-tight">
-              MEUS IMÓVEIS ({landlordStats.totalProperties})
-            </h1>
+      {/* Cockpit Banner Header & Futuristic Metrics HUD Card */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c162d]/95 via-[#081022]/98 to-[#050a17]/99 border border-cyan-500/30 p-5 sm:p-6 shadow-[0_12px_45px_rgba(0,0,0,0.7)] backdrop-blur-2xl group">
+        {/* Cyber Neon Ambient Glow in Background */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20 group-hover:bg-cyan-500/15 transition-all duration-700" />
+        <div className="absolute bottom-0 left-1/3 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          {/* Left: Title, Tag & Subtitle */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500/25 to-blue-600/30 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.3)] shrink-0">
+                <Building className="w-6 h-6 text-cyan-300" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight font-sans">
+                    MEUS IMÓVEIS
+                  </h1>
+                  <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/40 text-cyan-400 font-mono text-xs font-bold shadow-[0_0_12px_rgba(0,242,254,0.2)]">
+                    {landlordStats.totalProperties} UNIDADES
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 font-sans mt-0.5">
+                  Gestão patrimonial centralizada com monitoramento de ocupação e contratos em tempo real.
+                </p>
+              </div>
+            </div>
+
+            {/* Futuristic Telemetry Status Pills Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+              {/* Disponíveis */}
+              <div className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.08)]">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase font-mono font-bold text-emerald-400/80 tracking-wider truncate">
+                    Disponíveis
+                  </p>
+                  <p className="text-base font-extrabold font-mono text-emerald-300 leading-tight">
+                    {landlordStats.availableCount}
+                  </p>
+                </div>
+              </div>
+
+              {/* Alugados / Ocupados */}
+              <div className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-blue-950/40 border border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.08)]">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.9)] shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase font-mono font-bold text-blue-400/80 tracking-wider truncate">
+                    Alugados
+                  </p>
+                  <p className="text-base font-extrabold font-mono text-blue-300 leading-tight">
+                    {landlordStats.rentedCount}
+                  </p>
+                </div>
+              </div>
+
+              {/* Em Negociação */}
+              <div className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-purple-950/40 border border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.08)]">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)] shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase font-mono font-bold text-purple-400/80 tracking-wider truncate">
+                    Negociação
+                  </p>
+                  <p className="text-base font-extrabold font-mono text-purple-300 leading-tight">
+                    {landlordStats.negotiatingCount}
+                  </p>
+                </div>
+              </div>
+
+              {/* Taxa de Ocupação */}
+              <div className="flex items-center gap-2.5 px-3 py-2 rounded-2xl bg-cyan-950/40 border border-cyan-500/30 shadow-[0_0_15px_rgba(6,182,212,0.08)]">
+                <TrendingUp className="w-4 h-4 text-cyan-400 shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase font-mono font-bold text-cyan-400/80 tracking-wider truncate">
+                    Ocupação
+                  </p>
+                  <p className="text-base font-extrabold font-mono text-cyan-300 leading-tight">
+                    {landlordStats.occupancyRate}%
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs font-mono">
-            <span className="text-cyber-emerald">🟢 {landlordStats.availableCount} Disponíveis</span>
-            <span className="text-slate-600">•</span>
-            <span className="text-cyber-red">🔴 {landlordStats.rentedCount} Alugados</span>
-            <span className="text-slate-600">•</span>
-            <span className="text-cyber-purple">🟣 {landlordStats.negotiatingCount} Negociação</span>
+
+          {/* Right: Quick Action Button */}
+          <div className="flex sm:justify-end shrink-0">
+            <button
+              onClick={() => setIsWizardModalOpen(true)}
+              className="w-full sm:w-auto flex items-center justify-center gap-2.5 py-3 px-6 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs sm:text-sm shadow-[0_0_25px_rgba(0,242,254,0.35)] hover:shadow-[0_0_35px_rgba(0,242,254,0.5)] transform active:scale-95 transition-all cursor-pointer group/btn"
+            >
+              <div className="w-6 h-6 rounded-lg bg-slate-950/20 flex items-center justify-center group-hover/btn:rotate-90 transition-transform duration-300">
+                <Plus className="w-4 h-4 stroke-[3]" />
+              </div>
+              <span>Cadastrar Novo Imóvel</span>
+            </button>
           </div>
         </div>
-
-        <button
-          onClick={() => setIsWizardModalOpen(true)}
-          className="flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs shadow-neon-cyan transition-all"
-        >
-          <Plus className="w-4 h-4 stroke-[3]" />
-          <span>Cadastrar Novo Imóvel</span>
-        </button>
       </div>
 
       {/* Filter Tabs */}
