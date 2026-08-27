@@ -15,7 +15,8 @@ import {
   Dog, 
   Armchair, 
   ShieldAlert,
-  Send
+  Send,
+  Edit
 } from 'lucide-react';
 
 export const PropertyDetailModal: React.FC = () => {
@@ -27,12 +28,18 @@ export const PropertyDetailModal: React.FC = () => {
     setActiveView, 
     sendChatMessage, 
     userRole,
+    currentUser,
     setEditingProperty
   } = useApp();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [interestSent, setInterestSent] = useState(false);
 
   if (!selectedProperty) return null;
+
+  const isOwner = Boolean(
+    (currentUser && selectedProperty.ownerId === currentUser.id) ||
+    (userRole === 'LANDLORD' && (!selectedProperty.ownerId || selectedProperty.ownerId === currentUser?.id || selectedProperty.ownerId === 'usr-landlord-1'))
+  );
 
   const isFav = favorites.includes(selectedProperty.id);
   const isRented = selectedProperty.status === 'ALUGADO';
@@ -62,19 +69,6 @@ export const PropertyDetailModal: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            {userRole === 'LANDLORD' && (
-              <button
-                onClick={() => {
-                  setEditingProperty(selectedProperty);
-                  setSelectedProperty(null);
-                }}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyber-cyan border border-cyber-cyan/40 text-xs font-bold font-mono flex items-center gap-1.5 transition-colors"
-                title="Editar este imóvel"
-              >
-                <span>✏️ Editar</span>
-              </button>
-            )}
-
             <button
               onClick={() => toggleFavorite(selectedProperty.id)}
               className={`p-2.5 rounded-xl border transition-all ${
@@ -286,9 +280,23 @@ export const PropertyDetailModal: React.FC = () => {
 
         </div>
 
-        {/* Footer CTAs (Blocked if Rented per PRD #9) */}
+        {/* Footer CTAs */}
         <div className="sticky bottom-0 z-20 glass-panel border-t border-slate-800/80 p-4 bg-cyber-darkest/98 flex items-center">
-          {!isRented ? (
+          {isOwner ? (
+            /* Owner Action: Edit Property */
+            <button
+              onClick={() => {
+                setEditingProperty(selectedProperty);
+                setSelectedProperty(null);
+              }}
+              className="w-full py-3.5 px-6 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 shadow-[0_0_25px_rgba(0,242,254,0.35)] transition-all transform active:scale-95 cursor-pointer"
+              title="Editar dados e fotos do imóvel"
+            >
+              <Edit className="w-4 h-4 stroke-[2.5]" />
+              <span>Editar Anúncio</span>
+            </button>
+          ) : !isRented ? (
+            /* Visitor / Prospective Tenant Action: Register Interest */
             <button
               onClick={handleInterest}
               disabled={interestSent}
