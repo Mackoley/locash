@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Star, Loader2, ImagePlus, Move } from 'lucide-react';
+import { Upload, X, Star, Loader2, ImagePlus, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 import { uploadPropertyPhoto } from '../../services/imageUploadService';
 
 interface PropertyPhotoUploaderProps {
@@ -59,7 +59,23 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
     onChange(updated);
   };
 
-  // Drag & Drop Reordering Handlers
+  const handleSetPrimary = (indexToPrimary: number) => {
+    if (indexToPrimary === 0) return;
+    const item = images[indexToPrimary];
+    const filtered = images.filter((_, idx) => idx !== indexToPrimary);
+    onChange([item, ...filtered]);
+  };
+
+  const handleMove = (e: React.MouseEvent, fromIndex: number, toIndex: number) => {
+    e.stopPropagation();
+    if (toIndex < 0 || toIndex >= images.length) return;
+    const updated = [...images];
+    const [item] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, item);
+    onChange(updated);
+  };
+
+  // Drag & Drop Handlers for Desktop
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -105,7 +121,7 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
           </label>
           <p className="text-[11px] text-cyan-400 font-sans mt-0.5 flex items-center gap-1 font-medium">
             <span>💡</span>
-            <span>Arraste qualquer foto para a 1ª posição para ser a <b>Capa</b>.</span>
+            <span><b>Clique em qualquer foto</b> para defini-la como Capa Principal.</span>
           </p>
         </div>
 
@@ -140,7 +156,7 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
         </div>
       )}
 
-      {/* Drag & Drop Reorderable Thumbnails Grid */}
+      {/* Thumbnails Grid with Click to Cover & Move Controls */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {images.map((imgUrl, index) => {
           const isPrimary = index === 0;
@@ -150,40 +166,66 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
           return (
             <div
               key={`${imgUrl.substring(0, 30)}-${index}`}
+              onClick={() => handleSetPrimary(index)}
               draggable={!isUploading}
               onDragStart={(e) => handleDragStart(e, index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
-              className={`relative aspect-video rounded-xl overflow-hidden border bg-slate-900 transition-all duration-200 cursor-grab active:cursor-grabbing select-none group ${
-                isDragging ? 'opacity-30 scale-95 border-dashed border-cyan-400' : ''
+              className={`relative aspect-video rounded-xl overflow-hidden border bg-slate-900 transition-all duration-200 cursor-pointer select-none group ${
+                isDragging ? 'opacity-40 border-dashed border-cyan-400' : ''
               } ${
                 isOver && !isDragging ? 'ring-2 ring-cyan-400 scale-105 border-cyan-400 shadow-[0_0_20px_rgba(0,242,254,0.4)] z-20' : ''
               } ${
                 isPrimary && !isOver && !isDragging
-                  ? 'border-cyan-400 ring-2 ring-cyan-400/30 shadow-[0_0_15px_rgba(0,242,254,0.2)]' 
-                  : !isOver && !isDragging ? 'border-slate-800 hover:border-slate-700' : ''
+                  ? 'border-cyan-400 ring-2 ring-cyan-400/40 shadow-[0_0_18px_rgba(0,242,254,0.25)]' 
+                  : !isOver && !isDragging ? 'border-slate-800 hover:border-cyan-500/50 hover:shadow-[0_0_12px_rgba(0,242,254,0.15)]' : ''
               }`}
-              title="Arraste para mudar a ordem das fotos"
+              title={isPrimary ? 'Foto de Capa Principal' : 'Clique para tornar esta foto a Capa'}
             >
               <img
                 src={imgUrl}
                 alt={`Foto ${index + 1}`}
-                className="w-full h-full object-cover pointer-events-none"
+                className="w-full h-full object-cover pointer-events-none group-hover:scale-105 transition-transform duration-300"
               />
 
               {/* Primary Cover Badge */}
-              {isPrimary && (
+              {isPrimary ? (
                 <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-md bg-gradient-to-r from-cyan-400 to-blue-500 text-slate-950 font-black text-[9px] font-mono shadow-md flex items-center gap-1 z-10">
                   <Star className="w-2.5 h-2.5 fill-current" />
                   <span>CAPA</span>
                 </div>
+              ) : (
+                <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-slate-400 group-hover:text-cyan-300 group-hover:bg-cyan-950/80 text-[9px] font-mono transition-colors flex items-center gap-1 z-10">
+                  <span>#{index + 1}</span>
+                  <span className="hidden group-hover:inline font-bold">• Tornar Capa</span>
+                </div>
               )}
 
-              {/* Drag Handle Indicator */}
-              <div className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-cyan-300 text-[9px] font-mono opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 pointer-events-none">
-                <Move className="w-2.5 h-2.5" />
-                <span>#{index + 1}</span>
+              {/* Position Reorder Navigation Arrows */}
+              <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between pointer-events-none z-10">
+                <div className="flex items-center gap-1 pointer-events-auto">
+                  {index > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleMove(e, index, index - 1)}
+                      className="p-1 rounded-md bg-black/75 hover:bg-cyan-500 text-slate-300 hover:text-slate-950 text-[9px] transition-all cursor-pointer shadow"
+                      title="Mover para a esquerda"
+                    >
+                      <ChevronLeft className="w-3 h-3 stroke-[3]" />
+                    </button>
+                  )}
+                  {index < images.length - 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleMove(e, index, index + 1)}
+                      className="p-1 rounded-md bg-black/75 hover:bg-cyan-500 text-slate-300 hover:text-slate-950 text-[9px] transition-all cursor-pointer shadow"
+                      title="Mover para a direita"
+                    >
+                      <ChevronRight className="w-3 h-3 stroke-[3]" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Dedicated Top-Right Delete Button */}
