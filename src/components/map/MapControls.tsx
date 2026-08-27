@@ -78,33 +78,6 @@ export const MapControls: React.FC<MapControlsProps> = ({
 
   return (
     <>
-      {/* Top Left HUD Telemetry Badge */}
-      <div className="absolute top-4 left-4 z-20 hidden sm:flex flex-col gap-2">
-        <div className="glass-panel py-2 px-3.5 rounded-2xl flex items-center gap-3 border-cyan-500/30 bg-slate-950/90 shadow-lg">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-cyan opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyber-cyan"></span>
-            </span>
-            <span className="text-xs font-bold text-white font-mono uppercase tracking-wider">
-              LOCASH IMOBILIÁRIA
-            </span>
-          </div>
-          <span className="text-slate-600">|</span>
-          <span className="text-xs font-mono text-cyber-cyan">
-            {propertiesCount} IMÓVEIS
-          </span>
-          {hasUserLocation && (
-            <>
-              <span className="text-slate-600">|</span>
-              <span className="text-[10px] font-mono text-cyber-emerald flex items-center gap-1 font-bold">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyber-emerald animate-pulse"></span>
-                GPS ATIVO
-              </span>
-            </>
-          )}
-        </div>
-      </div>
 
       {/* Right Map Navigation Controls (Clean Minimal: Filtros, Localização Atual e Gaveta Extra) */}
       <div className="absolute right-4 top-4 z-20 flex flex-col items-end gap-2">
