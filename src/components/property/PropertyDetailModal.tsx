@@ -26,6 +26,7 @@ export const PropertyDetailModal: React.FC = () => {
     favorites, 
     toggleFavorite, 
     setActiveView, 
+    activeView,
     sendChatMessage, 
     userRole,
     currentUser,
