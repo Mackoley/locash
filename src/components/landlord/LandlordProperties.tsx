@@ -12,7 +12,8 @@ import {
   Edit, 
   TrendingUp,
   Layers,
-  Sparkles
+  Sparkles,
+  Check
 } from 'lucide-react';
 
 export const LandlordProperties: React.FC = () => {
@@ -78,11 +79,16 @@ export const LandlordProperties: React.FC = () => {
                   <p className="text-xs sm:text-sm font-bold font-mono text-emerald-300 leading-none">
                     {landlordStats.availableCount}
                   </p>
-                  <p className={`text-[10px] font-mono leading-none truncate ${
-                    statusFilter === 'DISPONÍVEL' ? 'text-emerald-300 font-bold' : 'text-emerald-400/80 group-hover/pill:text-emerald-300'
-                  }`}>
-                    Disponíveis
-                  </p>
+                  <div className="flex items-center gap-1 min-w-0">
+                    {statusFilter === 'DISPONÍVEL' && (
+                      <Check className="w-2.5 h-2.5 text-emerald-300 stroke-[3.5] shrink-0" />
+                    )}
+                    <p className={`text-[10px] font-mono leading-none truncate ${
+                      statusFilter === 'DISPONÍVEL' ? 'text-emerald-300 font-bold' : 'text-emerald-400/80 group-hover/pill:text-emerald-300'
+                    }`}>
+                      Disponíveis
+                    </p>
+                  </div>
                 </div>
               </button>
 
@@ -104,11 +110,16 @@ export const LandlordProperties: React.FC = () => {
                   <p className="text-xs sm:text-sm font-bold font-mono text-blue-300 leading-none">
                     {landlordStats.rentedCount}
                   </p>
-                  <p className={`text-[10px] font-mono leading-none truncate ${
-                    statusFilter === 'ALUGADO' ? 'text-blue-300 font-bold' : 'text-blue-400/80 group-hover/pill:text-blue-300'
-                  }`}>
-                    Alugados
-                  </p>
+                  <div className="flex items-center gap-1 min-w-0">
+                    {statusFilter === 'ALUGADO' && (
+                      <Check className="w-2.5 h-2.5 text-blue-300 stroke-[3.5] shrink-0" />
+                    )}
+                    <p className={`text-[10px] font-mono leading-none truncate ${
+                      statusFilter === 'ALUGADO' ? 'text-blue-300 font-bold' : 'text-blue-400/80 group-hover/pill:text-blue-300'
+                    }`}>
+                      Alugados
+                    </p>
+                  </div>
                 </div>
               </button>
 
@@ -130,11 +141,16 @@ export const LandlordProperties: React.FC = () => {
                   <p className="text-xs sm:text-sm font-bold font-mono text-purple-300 leading-none">
                     {landlordStats.negotiatingCount}
                   </p>
-                  <p className={`text-[10px] font-mono leading-none truncate ${
-                    statusFilter === 'EM NEGOCIAÇÃO' ? 'text-purple-300 font-bold' : 'text-purple-400/80 group-hover/pill:text-purple-300'
-                  }`}>
-                    Negociação
-                  </p>
+                  <div className="flex items-center gap-1 min-w-0">
+                    {statusFilter === 'EM NEGOCIAÇÃO' && (
+                      <Check className="w-2.5 h-2.5 text-purple-300 stroke-[3.5] shrink-0" />
+                    )}
+                    <p className={`text-[10px] font-mono leading-none truncate ${
+                      statusFilter === 'EM NEGOCIAÇÃO' ? 'text-purple-300 font-bold' : 'text-purple-400/80 group-hover/pill:text-purple-300'
+                    }`}>
+                      Negociação
+                    </p>
+                  </div>
                 </div>
               </button>
 
@@ -156,11 +172,16 @@ export const LandlordProperties: React.FC = () => {
                   <p className="text-xs sm:text-sm font-bold font-mono text-cyan-300 leading-none">
                     {landlordStats.totalProperties}
                   </p>
-                  <p className={`text-[10px] font-mono leading-none truncate ${
-                    statusFilter === 'TODOS' ? 'text-cyan-300 font-bold' : 'text-cyan-400/80 group-hover/pill:text-cyan-300'
-                  }`}>
-                    Todos
-                  </p>
+                  <div className="flex items-center gap-1 min-w-0">
+                    {statusFilter === 'TODOS' && (
+                      <Check className="w-2.5 h-2.5 text-cyan-300 stroke-[3.5] shrink-0" />
+                    )}
+                    <p className={`text-[10px] font-mono leading-none truncate ${
+                      statusFilter === 'TODOS' ? 'text-cyan-300 font-bold' : 'text-cyan-400/80 group-hover/pill:text-cyan-300'
+                    }`}>
+                      Todos
+                    </p>
+                  </div>
                 </div>
               </button>
             </div>
