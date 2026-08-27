@@ -20,8 +20,10 @@ import {
   Crosshair
 } from 'lucide-react';
 
+import { PropertyPhotoUploader } from './PropertyPhotoUploader';
+
 export const PropertyWizardModal: React.FC = () => {
-  const { isWizardModalOpen, setIsWizardModalOpen, addProperty, setActiveView, userLocation, setSearchTarget } = useApp();
+  const { isWizardModalOpen, setIsWizardModalOpen, addProperty, setActiveView, userLocation, setSearchTarget, currentUser } = useApp();
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form State
@@ -47,7 +49,10 @@ export const PropertyWizardModal: React.FC = () => {
   const [longitude, setLongitude] = useState<number>(-46.6850);
   const [isGeocoding, setIsGeocoding] = useState<boolean>(false);
   const [geocodedAddressName, setGeocodedAddressName] = useState<string>('Rua dos Pinheiros, Pinheiros, São Paulo - SP');
-  const [imageUrl, setImageUrl] = useState('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80');
+  const [images, setImages] = useState<string[]>([
+    'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
+    'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80'
+  ]);
 
   // Mini Map Picker Refs
   const miniMapContainerRef = useRef<HTMLDivElement>(null);
@@ -329,9 +334,9 @@ export const PropertyWizardModal: React.FC = () => {
     const finalLng = typeof longitude === 'number' && !isNaN(longitude) ? longitude : -46.6850;
 
     const createdProp = {
-      ownerId: 'landlord-1',
-      ownerName: 'Locador LOCASH',
-      ownerAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
+      ownerId: currentUser?.id || 'landlord-1',
+      ownerName: currentUser?.name || 'Locador LOCASH',
+      ownerAvatar: currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
       title: title.trim() || `${propertyType} em ${neighborhood}`,
       description: description.trim() || `Excelente ${propertyType.toLowerCase()} em ${neighborhood}. Localização privilegiada com fácil acesso.`,
       propertyType,
@@ -353,8 +358,8 @@ export const PropertyWizardModal: React.FC = () => {
       state: state.trim() || 'SP',
       featured: true,
       verified: true,
-      images: [
-        imageUrl.trim() || 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
+      images: images.length > 0 ? images : [
+        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=1000&q=80',
         'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1000&q=80'
       ],
       demandScore: 92,
@@ -685,15 +690,12 @@ export const PropertyWizardModal: React.FC = () => {
                 5. Fotos e Descrição
               </h4>
 
-              <div className="space-y-1.5">
-                <label className="text-slate-400 block">URL da Foto Principal</label>
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white text-xs focus:border-cyber-cyan focus:outline-none"
-                />
-              </div>
+              {/* Photo Gallery Uploader with Compression */}
+              <PropertyPhotoUploader 
+                images={images} 
+                onChange={setImages} 
+                propertyId="new-property" 
+              />
 
               <div className="space-y-1.5">
                 <label className="text-slate-400 block">Descrição Completa</label>

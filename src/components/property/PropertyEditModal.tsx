@@ -21,6 +21,8 @@ import {
   Check
 } from 'lucide-react';
 
+import { PropertyPhotoUploader } from './PropertyPhotoUploader';
+
 export const PropertyEditModal: React.FC = () => {
   const { editingProperty, setEditingProperty, editProperty, deleteProperty, setSelectedProperty } = useApp();
 
@@ -45,7 +47,7 @@ export const PropertyEditModal: React.FC = () => {
   const [state, setState] = useState('');
   const [latitude, setLatitude] = useState<number>(-23.5630);
   const [longitude, setLongitude] = useState<number>(-46.6850);
-  const [imageUrl, setImageUrl] = useState('');
+  const [images, setImages] = useState<string[]>([]);
   const [isGeocoding, setIsGeocoding] = useState<boolean>(false);
 
   const miniMapContainerRef = useRef<HTMLDivElement>(null);
@@ -75,7 +77,7 @@ export const PropertyEditModal: React.FC = () => {
     setState(editingProperty.state);
     setLatitude(editingProperty.latitude);
     setLongitude(editingProperty.longitude);
-    setImageUrl(editingProperty.images[0] || '');
+    setImages(Array.isArray(editingProperty.images) && editingProperty.images.length > 0 ? editingProperty.images : ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=1200&auto=format&fit=crop&q=80']);
   }, [editingProperty]);
 
   // Mini-map initialization for location adjustment
@@ -270,7 +272,7 @@ export const PropertyEditModal: React.FC = () => {
       state,
       latitude,
       longitude,
-      images: imageUrl ? [imageUrl, ...editingProperty.images.slice(1)] : editingProperty.images
+      images: images.length > 0 ? images : editingProperty.images
     });
 
     setEditingProperty(null);
@@ -583,16 +585,12 @@ export const PropertyEditModal: React.FC = () => {
             />
           </div>
 
-          {/* Photo URL */}
-          <div className="space-y-1">
-            <label className="text-slate-400 font-bold">URL da Imagem Principal</label>
-            <input
-              type="text"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-xs focus:border-cyber-cyan focus:outline-none"
-            />
-          </div>
+          {/* Photo Gallery Uploader with Compression & Cloud/Base64 Storage */}
+          <PropertyPhotoUploader 
+            images={images} 
+            onChange={setImages} 
+            propertyId={editingProperty.id} 
+          />
 
           {/* Submit and Delete Action Buttons */}
           <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
