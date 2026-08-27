@@ -655,18 +655,8 @@ export const PropertyEditModal: React.FC = () => {
                   Salvar Alterações?
                 </h3>
                 <p className="text-xs text-slate-300">
-                  Deseja atualizar e publicar as novas informações deste imóvel?
+                  Deseja salvar e publicar as atualizações deste imóvel na plataforma?
                 </p>
-              </div>
-
-              {/* Quick Summary Card */}
-              <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-left text-xs font-mono space-y-1.5 text-slate-300">
-                <p className="line-clamp-1"><b>Imóvel:</b> {title || editingProperty.title}</p>
-                <div className="flex items-center justify-between text-slate-400">
-                  <span>Status: <b className="text-cyan-300">{status}</b></span>
-                  <span>Aluguel: <b className="text-emerald-400">R$ {rentPrice.toLocaleString('pt-BR')}</b></span>
-                </div>
-                <p className="text-[11px] text-slate-400">Fotos: <b>{images.length} foto(s) cadastradas</b></p>
               </div>
 
               {/* Confirmation Actions */}
