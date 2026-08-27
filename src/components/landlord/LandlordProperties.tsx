@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Property, PropertyStatus } from '../../types';
 import { Badge } from '../ui/Badge';
@@ -9,13 +9,20 @@ import {
   Eye, 
   Users, 
   Sliders, 
-  ExternalLink,
-  Edit,
-  CheckCircle,
-  MoreVertical,
-  TrendingUp,
-  Sparkles,
-  Filter
+  ExternalLink, 
+  Edit, 
+  CheckCircle, 
+  MoreVertical, 
+  TrendingUp, 
+  Sparkles, 
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  CheckCircle2,
+  KeyRound,
+  Clock,
+  ShieldAlert,
+  Layers
 } from 'lucide-react';
 
 export const LandlordProperties: React.FC = () => {
@@ -29,6 +36,148 @@ export const LandlordProperties: React.FC = () => {
   } = useApp();
 
   const [statusFilter, setStatusFilter] = useState<PropertyStatus | 'TODOS'>('TODOS');
+  const [animDirection, setAnimDirection] = useState<'left' | 'right' | null>(null);
+
+  // Swipe / Drag Gesture State
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [mouseStartX, setMouseStartX] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const filterOptions = [
+    {
+      id: 'TODOS' as const,
+      label: 'Todos os Imóveis',
+      badgeLabel: 'VISÃO GERAL',
+      count: properties.length,
+      unitText: properties.length === 1 ? 'imóvel cadastrado' : 'imóveis cadastrados',
+      icon: Layers,
+      theme: {
+        glow: 'shadow-[0_0_35px_rgba(0,242,254,0.3)]',
+        border: 'border-cyan-500/50 hover:border-cyan-400',
+        bg: 'bg-gradient-to-r from-cyan-950/60 via-slate-900/95 to-blue-950/60',
+        dot: 'bg-cyan-400 shadow-[0_0_10px_rgba(0,242,254,0.9)]',
+        text: 'text-cyan-300',
+        badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+        activeDot: 'bg-cyan-400 shadow-[0_0_8px_rgba(0,242,254,0.9)]'
+      }
+    },
+    {
+      id: 'DISPONÍVEL' as const,
+      label: 'Imóveis Disponíveis',
+      badgeLabel: 'PRONTOS P/ ALUGAR',
+      count: properties.filter(p => p.status === 'DISPONÍVEL').length,
+      unitText: 'unidades vagas prontas para visita',
+      icon: CheckCircle2,
+      theme: {
+        glow: 'shadow-[0_0_35px_rgba(16,185,129,0.3)]',
+        border: 'border-emerald-500/50 hover:border-emerald-400',
+        bg: 'bg-gradient-to-r from-emerald-950/60 via-slate-900/95 to-slate-950/90',
+        dot: 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]',
+        text: 'text-emerald-300',
+        badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+        activeDot: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
+      }
+    },
+    {
+      id: 'ALUGADO' as const,
+      label: 'Imóveis Alugados',
+      badgeLabel: 'CONTRATOS ATIVOS',
+      count: properties.filter(p => p.status === 'ALUGADO').length,
+      unitText: 'unidades ocupadas gerando renda',
+      icon: KeyRound,
+      theme: {
+        glow: 'shadow-[0_0_35px_rgba(59,130,246,0.3)]',
+        border: 'border-blue-500/50 hover:border-blue-400',
+        bg: 'bg-gradient-to-r from-blue-950/60 via-slate-900/95 to-indigo-950/60',
+        dot: 'bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.9)]',
+        text: 'text-blue-300',
+        badge: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+        activeDot: 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.9)]'
+      }
+    },
+    {
+      id: 'EM NEGOCIAÇÃO' as const,
+      label: 'Em Negociação',
+      badgeLabel: 'PROPOSTAS EM ANÁLISE',
+      count: properties.filter(p => p.status === 'EM NEGOCIAÇÃO').length,
+      unitText: 'unidades com propostas em análise',
+      icon: Clock,
+      theme: {
+        glow: 'shadow-[0_0_35px_rgba(168,85,247,0.3)]',
+        border: 'border-purple-500/50 hover:border-purple-400',
+        bg: 'bg-gradient-to-r from-purple-950/60 via-slate-900/95 to-pink-950/60',
+        dot: 'bg-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.9)]',
+        text: 'text-purple-300',
+        badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+        activeDot: 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)]'
+      }
+    },
+    {
+      id: 'RESERVADO' as const,
+      label: 'Imóveis Reservados',
+      badgeLabel: 'RESERVAS CONFIRMADAS',
+      count: properties.filter(p => p.status === 'RESERVADO').length,
+      unitText: 'unidades aguardando assinatura de contrato',
+      icon: ShieldAlert,
+      theme: {
+        glow: 'shadow-[0_0_35px_rgba(245,158,11,0.3)]',
+        border: 'border-amber-500/50 hover:border-amber-400',
+        bg: 'bg-gradient-to-r from-amber-950/60 via-slate-900/95 to-orange-950/60',
+        dot: 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.9)]',
+        text: 'text-amber-300',
+        badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+        activeDot: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]'
+      }
+    }
+  ];
+
+  const currentIndex = filterOptions.findIndex(f => f.id === statusFilter);
+  const activeIndex = currentIndex === -1 ? 0 : currentIndex;
+  const currentOpt = filterOptions[activeIndex];
+  const Icon = currentOpt.icon;
+
+  const navigateFilter = (direction: 'next' | 'prev') => {
+    setAnimDirection(direction === 'next' ? 'right' : 'left');
+    const newIndex = direction === 'next' 
+      ? (activeIndex + 1) % filterOptions.length
+      : (activeIndex - 1 + filterOptions.length) % filterOptions.length;
+    
+    setStatusFilter(filterOptions[newIndex].id);
+  };
+
+  // Touch Swipe Handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX === null) return;
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (diff > 40) {
+      navigateFilter('prev');
+    } else if (diff < -40) {
+      navigateFilter('next');
+    }
+    setTouchStartX(null);
+  };
+
+  // Mouse Drag Handlers
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setMouseStartX(e.clientX);
+    setIsDragging(true);
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (!isDragging || mouseStartX === null) return;
+    const diff = e.clientX - mouseStartX;
+    if (diff > 40) {
+      navigateFilter('prev');
+    } else if (diff < -40) {
+      navigateFilter('next');
+    }
+    setIsDragging(false);
+    setMouseStartX(null);
+  };
 
   const filtered = properties.filter(p => statusFilter === 'TODOS' ? true : p.status === statusFilter);
 
@@ -126,185 +275,211 @@ export const LandlordProperties: React.FC = () => {
         </div>
       </div>
 
-      {/* Futuristic Cyber Segmented Filter Capsule Dock */}
-      <div className="p-1.5 rounded-2xl bg-[#081022]/90 border border-cyan-500/30 backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-          {[
-            {
-              id: 'TODOS',
-              label: 'Todos',
-              count: properties.length,
-              dotColor: 'bg-cyan-400 shadow-[0_0_8px_rgba(0,242,254,0.9)]',
-              activeClasses: 'bg-gradient-to-r from-cyan-500/30 to-blue-600/30 border border-cyan-400 text-white shadow-[0_0_15px_rgba(0,242,254,0.3)] font-bold'
-            },
-            {
-              id: 'DISPONÍVEL',
-              label: 'Disponíveis',
-              count: properties.filter(p => p.status === 'DISPONÍVEL').length,
-              dotColor: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]',
-              activeClasses: 'bg-emerald-950/60 border border-emerald-400 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.3)] font-bold'
-            },
-            {
-              id: 'ALUGADO',
-              label: 'Alugados',
-              count: properties.filter(p => p.status === 'ALUGADO').length,
-              dotColor: 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.9)]',
-              activeClasses: 'bg-blue-950/60 border border-blue-400 text-blue-200 shadow-[0_0_15px_rgba(59,130,246,0.3)] font-bold'
-            },
-            {
-              id: 'EM NEGOCIAÇÃO',
-              label: 'Negociação',
-              count: properties.filter(p => p.status === 'EM NEGOCIAÇÃO').length,
-              dotColor: 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)]',
-              activeClasses: 'bg-purple-950/60 border border-purple-400 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.3)] font-bold'
-            },
-            {
-              id: 'RESERVADO',
-              label: 'Reservados',
-              count: properties.filter(p => p.status === 'RESERVADO').length,
-              dotColor: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]',
-              activeClasses: 'bg-amber-950/60 border border-amber-400 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.3)] font-bold'
-            }
-          ].map((opt) => {
-            const isSelected = statusFilter === opt.id;
-            return (
+      {/* Futuristic Single-Option Swipeable Filter Dial Cockpit */}
+      <div 
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        className={`relative overflow-hidden rounded-2xl border ${currentOpt.theme.border} ${currentOpt.theme.bg} ${currentOpt.theme.glow} p-2.5 sm:p-3 transition-all duration-300 select-none cursor-grab active:cursor-grabbing backdrop-blur-xl group`}
+      >
+        {/* Discreet Left Navigation Arrow */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigateFilter('prev');
+          }}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/50 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 shadow-sm cursor-pointer group/arrow"
+          title="Filtro anterior (ou arraste para a direita)"
+        >
+          <ChevronLeft className="w-4 h-4 text-slate-400 group-hover/arrow:text-cyan-300 group-hover/arrow:-translate-x-0.5 transition-transform" />
+        </button>
+
+        {/* Center Active Filter Option Presentation */}
+        <div className="flex flex-col items-center justify-center text-center px-10 py-1 space-y-1.5">
+          {/* Top Tag & Pulsing LED Dot */}
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${currentOpt.theme.dot} animate-pulse`} />
+            <span className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold uppercase tracking-wider border ${currentOpt.theme.badge}`}>
+              {currentOpt.badgeLabel}
+            </span>
+          </div>
+
+          {/* Main Title & Dynamic Badge in Single View */}
+          <div className="flex items-center justify-center gap-2.5 flex-wrap">
+            <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${currentOpt.theme.badge} shrink-0`}>
+              <Icon className={`w-4 h-4 ${currentOpt.theme.text}`} />
+            </div>
+
+            <h2 className="text-sm sm:text-base font-extrabold text-white tracking-tight font-sans">
+              {currentOpt.label}
+            </h2>
+
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-black ${currentOpt.theme.badge} shadow-sm`}>
+              {currentOpt.count}
+            </span>
+          </div>
+
+          {/* Subtitle / Unit Counter description */}
+          <p className="text-[11px] text-slate-400 font-sans leading-tight">
+            {currentOpt.count} {currentOpt.unitText} • <span className="text-slate-500 font-mono text-[10px]">Arraste ⇄ para alternar filtro</span>
+          </p>
+
+          {/* Discreet 5-Dot Position Tracker Indicator */}
+          <div className="flex items-center justify-center gap-1.5 pt-1">
+            {filterOptions.map((opt, idx) => (
               <button
                 key={opt.id}
-                onClick={() => setStatusFilter(opt.id as any)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono transition-all duration-200 shrink-0 cursor-pointer ${
-                  isSelected
-                    ? opt.activeClasses
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 border border-transparent'
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setStatusFilter(opt.id);
+                }}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  idx === activeIndex
+                    ? `w-6 ${opt.theme.activeDot}`
+                    : 'w-1.5 bg-slate-700/60 hover:bg-slate-500'
                 }`}
-              >
-                <span className={`w-2 h-2 rounded-full ${opt.dotColor} ${isSelected ? 'animate-pulse' : ''}`} />
-                <span className={`font-semibold ${isSelected ? 'text-white' : ''}`}>
-                  {opt.label}
-                </span>
-                <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-bold font-mono ${
-                  isSelected
-                    ? 'bg-white/20 text-white'
-                    : 'bg-slate-800/80 text-slate-400'
-                }`}>
-                  {opt.count}
-                </span>
-              </button>
-            );
-          })}
+                title={`Ir para ${opt.label}`}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Live Filter Counter & Status Indicator */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1 text-[11px] font-mono text-slate-400 border-l border-slate-800 shrink-0">
-          <Filter className="w-3.5 h-3.5 text-cyan-400" />
-          <span>
-            Mostrando <strong className="text-cyan-300 font-bold">{filtered.length}</strong> de {properties.length}
-          </span>
-        </div>
+        {/* Discreet Right Navigation Arrow */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            navigateFilter('next');
+          }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/50 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 shadow-sm cursor-pointer group/arrow"
+          title="Próximo filtro (ou arraste para a esquerda)"
+        >
+          <ChevronRight className="w-4 h-4 text-slate-400 group-hover/arrow:text-cyan-300 group-hover/arrow:translate-x-0.5 transition-transform" />
+        </button>
       </div>
 
       {/* Properties Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filtered.map((prop) => (
-          <GlassCard key={prop.id} glow="none" className="flex flex-col justify-between group">
-            {/* Image & Status */}
-            <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
-              <img
-                src={prop.images[0]}
-                alt={prop.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
-              <div className="absolute top-3 left-3">
-                <Badge status={prop.status} size="sm" />
+      {filtered.length === 0 ? (
+        <div className="py-16 text-center rounded-2xl border border-slate-800 bg-[#081022]/60 p-8 space-y-3">
+          <Building className="w-10 h-10 text-slate-600 mx-auto" />
+          <h3 className="text-base font-bold text-white">Nenhum imóvel encontrado neste filtro</h3>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            Não há imóveis com o status <strong className="text-cyan-400">{currentOpt.label}</strong> no momento.
+          </p>
+          <button
+            onClick={() => setStatusFilter('TODOS')}
+            className="mt-2 py-1.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold font-mono transition-all"
+          >
+            Ver Todos os Imóveis ({properties.length})
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map((prop) => (
+            <GlassCard key={prop.id} glow="none" className="flex flex-col justify-between group">
+              {/* Image & Status */}
+              <div className="relative aspect-video w-full overflow-hidden bg-slate-900">
+                <img
+                  src={prop.images[0]}
+                  alt={prop.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-3 left-3">
+                  <Badge status={prop.status} size="sm" />
+                </div>
               </div>
-            </div>
 
-            {/* Info */}
-            <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] uppercase font-mono font-bold text-cyber-cyan">
-                  {prop.neighborhood} • {prop.city}
-                </span>
-                <h3 className="text-base font-bold text-white line-clamp-1 mt-0.5">
-                  {prop.title}
-                </h3>
-                <p className="text-xs text-slate-400 font-mono mt-1">
-                  {prop.area}m² • {prop.bedrooms} quartos • {prop.parkingSpaces} vagas
-                </p>
-              </div>
-
-              {/* Price & Telemetry */}
-              <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+              {/* Info */}
+              <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] text-slate-500">Aluguel</span>
-                  <p className="font-extrabold text-white">
-                    R$ {prop.rentPrice.toLocaleString('pt-BR')}
+                  <span className="text-[10px] uppercase font-mono font-bold text-cyber-cyan">
+                    {prop.neighborhood} • {prop.city}
+                  </span>
+                  <h3 className="text-base font-bold text-white line-clamp-1 mt-0.5">
+                    {prop.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 font-mono mt-1">
+                    {prop.area}m² • {prop.bedrooms} quartos • {prop.parkingSpaces} vagas
                   </p>
                 </div>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <span className="flex items-center gap-1" title="Visualizações">
-                    <Eye className="w-3.5 h-3.5 text-cyber-cyan" />
-                    {prop.viewsCount}
+
+                {/* Price & Telemetry */}
+                <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+                  <div>
+                    <span className="text-[10px] text-slate-500">Aluguel</span>
+                    <p className="font-extrabold text-white">
+                      R$ {prop.rentPrice.toLocaleString('pt-BR')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-400">
+                    <span className="flex items-center gap-1" title="Visualizações">
+                      <Eye className="w-3.5 h-3.5 text-cyber-cyan" />
+                      {prop.viewsCount}
+                    </span>
+                    <span className="flex items-center gap-1" title="Interessados">
+                      <Users className="w-3.5 h-3.5 text-cyber-emerald" />
+                      {prop.contactCount}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Status Quick Changer according to PRD #9 */}
+                <div className="space-y-1.5 pt-1">
+                  <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">
+                    Alterar Status do Imóvel:
                   </span>
-                  <span className="flex items-center gap-1" title="Interessados">
-                    <Users className="w-3.5 h-3.5 text-cyber-emerald" />
-                    {prop.contactCount}
-                  </span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      onClick={() => updatePropertyStatus(prop.id, 'DISPONÍVEL')}
+                      className={`py-1 px-2 rounded-lg text-[10px] font-mono font-bold border transition-all ${
+                        prop.status === 'DISPONÍVEL' 
+                          ? 'bg-emerald-500/20 text-cyber-emerald border-emerald-500/50' 
+                          : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300'
+                      }`}
+                    >
+                      DISPONÍVEL
+                    </button>
+                    <button
+                      onClick={() => updatePropertyStatus(prop.id, 'ALUGADO')}
+                      className={`py-1 px-2 rounded-lg text-[10px] font-mono font-bold border transition-all ${
+                        prop.status === 'ALUGADO' 
+                          ? 'bg-red-500/20 text-cyber-red border-red-500/50' 
+                          : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300'
+                      }`}
+                    >
+                      ALUGADO
+                    </button>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="pt-2.5 border-t border-slate-800/80 flex items-center justify-between gap-2.5">
+                  <button
+                    onClick={() => setEditingProperty(prop)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-slate-900/90 to-slate-800/90 hover:from-cyan-950/50 hover:to-blue-950/50 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-[0_0_15px_rgba(0,242,254,0.2)] active:scale-95 group/edit cursor-pointer"
+                    title="Editar dados e fotos do imóvel"
+                  >
+                    <Edit className="w-3.5 h-3.5 text-cyan-400 group-hover/edit:scale-110 transition-transform" />
+                    <span>Editar</span>
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedProperty(prop)}
+                    className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs transition-all duration-200 flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(0,242,254,0.25)] hover:shadow-[0_0_25px_rgba(0,242,254,0.45)] active:scale-95 group/view cursor-pointer"
+                    title="Abrir ficha completa do imóvel"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-950 group-hover/view:translate-x-0.5 group-hover/view:-translate-y-0.5 transition-transform stroke-[2.5]" />
+                    <span>Ver Detalhes</span>
+                  </button>
                 </div>
               </div>
-
-              {/* Status Quick Changer according to PRD #9 */}
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">
-                  Alterar Status do Imóvel:
-                </span>
-                <div className="grid grid-cols-2 gap-1.5">
-                  <button
-                    onClick={() => updatePropertyStatus(prop.id, 'DISPONÍVEL')}
-                    className={`py-1 px-2 rounded-lg text-[10px] font-mono font-bold border transition-all ${
-                      prop.status === 'DISPONÍVEL' 
-                        ? 'bg-emerald-500/20 text-cyber-emerald border-emerald-500/50' 
-                        : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300'
-                    }`}
-                  >
-                    DISPONÍVEL
-                  </button>
-                  <button
-                    onClick={() => updatePropertyStatus(prop.id, 'ALUGADO')}
-                    className={`py-1 px-2 rounded-lg text-[10px] font-mono font-bold border transition-all ${
-                      prop.status === 'ALUGADO' 
-                        ? 'bg-red-500/20 text-cyber-red border-red-500/50' 
-                        : 'bg-slate-900 text-slate-500 border-slate-800 hover:text-slate-300'
-                    }`}
-                  >
-                    ALUGADO
-                  </button>
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="pt-2.5 border-t border-slate-800/80 flex items-center justify-between gap-2.5">
-                <button
-                  onClick={() => setEditingProperty(prop)}
-                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-slate-900/90 to-slate-800/90 hover:from-cyan-950/50 hover:to-blue-950/50 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-[0_0_15px_rgba(0,242,254,0.2)] active:scale-95 group/edit cursor-pointer"
-                  title="Editar dados e fotos do imóvel"
-                >
-                  <Edit className="w-3.5 h-3.5 text-cyan-400 group-hover/edit:scale-110 transition-transform" />
-                  <span>Editar</span>
-                </button>
-
-                <button
-                  onClick={() => setSelectedProperty(prop)}
-                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs transition-all duration-200 flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(0,242,254,0.25)] hover:shadow-[0_0_25px_rgba(0,242,254,0.45)] active:scale-95 group/view cursor-pointer"
-                  title="Abrir ficha completa do imóvel"
-                >
-                  <ExternalLink className="w-3.5 h-3.5 text-slate-950 group-hover/view:translate-x-0.5 group-hover/view:-translate-y-0.5 transition-transform stroke-[2.5]" />
-                  <span>Ver Detalhes</span>
-                </button>
-              </div>
-            </div>
-          </GlassCard>
-        ))}
-      </div>
+            </GlassCard>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
