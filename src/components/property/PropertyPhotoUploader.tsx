@@ -125,20 +125,6 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={isUploading}
-          className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm hover:shadow-neon-cyan transition-all transform active:scale-95 cursor-pointer disabled:opacity-50"
-        >
-          {isUploading ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : (
-            <ImagePlus className="w-3.5 h-3.5 stroke-[2.5]" />
-          )}
-          <span>{isUploading ? 'Processando...' : 'Adicionar Fotos'}</span>
-        </button>
-
         <input
           ref={fileInputRef}
           type="file"
