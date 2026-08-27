@@ -119,7 +119,6 @@ export const LandlordProperties: React.FC = () => {
   const currentIndex = filterOptions.findIndex(f => f.id === statusFilter);
   const activeIndex = currentIndex === -1 ? 0 : currentIndex;
   const currentOpt = filterOptions[activeIndex];
-  const Icon = currentOpt.icon;
 
   const navigateFilter = (direction: 'next' | 'prev') => {
     setAnimDirection(direction === 'next' ? 'right' : 'left');
