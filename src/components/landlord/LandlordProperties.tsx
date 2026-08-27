@@ -47,15 +47,12 @@ export const LandlordProperties: React.FC = () => {
     {
       id: 'TODOS' as const,
       label: 'Todos os Imóveis',
-      badgeLabel: 'VISÃO GERAL',
       count: properties.length,
-      unitText: properties.length === 1 ? 'imóvel cadastrado' : 'imóveis cadastrados',
-      icon: Layers,
       theme: {
-        glow: 'shadow-[0_0_35px_rgba(0,242,254,0.3)]',
-        border: 'border-cyan-500/50 hover:border-cyan-400',
-        bg: 'bg-gradient-to-r from-cyan-950/60 via-slate-900/95 to-blue-950/60',
-        dot: 'bg-cyan-400 shadow-[0_0_10px_rgba(0,242,254,0.9)]',
+        glow: 'shadow-[0_0_25px_rgba(0,242,254,0.25)]',
+        border: 'border-cyan-500/40 hover:border-cyan-400',
+        bg: 'bg-gradient-to-r from-cyan-950/40 via-slate-900/90 to-blue-950/40',
+        dot: 'bg-cyan-400 shadow-[0_0_8px_rgba(0,242,254,0.9)]',
         text: 'text-cyan-300',
         badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
         activeDot: 'bg-cyan-400 shadow-[0_0_8px_rgba(0,242,254,0.9)]'
@@ -63,16 +60,13 @@ export const LandlordProperties: React.FC = () => {
     },
     {
       id: 'DISPONÍVEL' as const,
-      label: 'Imóveis Disponíveis',
-      badgeLabel: 'PRONTOS P/ ALUGAR',
+      label: 'Disponíveis',
       count: properties.filter(p => p.status === 'DISPONÍVEL').length,
-      unitText: 'unidades vagas prontas para visita',
-      icon: CheckCircle2,
       theme: {
-        glow: 'shadow-[0_0_35px_rgba(16,185,129,0.3)]',
-        border: 'border-emerald-500/50 hover:border-emerald-400',
-        bg: 'bg-gradient-to-r from-emerald-950/60 via-slate-900/95 to-slate-950/90',
-        dot: 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]',
+        glow: 'shadow-[0_0_25px_rgba(16,185,129,0.25)]',
+        border: 'border-emerald-500/40 hover:border-emerald-400',
+        bg: 'bg-gradient-to-r from-emerald-950/40 via-slate-900/90 to-slate-950/90',
+        dot: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]',
         text: 'text-emerald-300',
         badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
         activeDot: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]'
@@ -80,16 +74,13 @@ export const LandlordProperties: React.FC = () => {
     },
     {
       id: 'ALUGADO' as const,
-      label: 'Imóveis Alugados',
-      badgeLabel: 'CONTRATOS ATIVOS',
+      label: 'Alugados',
       count: properties.filter(p => p.status === 'ALUGADO').length,
-      unitText: 'unidades ocupadas gerando renda',
-      icon: KeyRound,
       theme: {
-        glow: 'shadow-[0_0_35px_rgba(59,130,246,0.3)]',
-        border: 'border-blue-500/50 hover:border-blue-400',
-        bg: 'bg-gradient-to-r from-blue-950/60 via-slate-900/95 to-indigo-950/60',
-        dot: 'bg-blue-400 shadow-[0_0_10px_rgba(96,165,250,0.9)]',
+        glow: 'shadow-[0_0_25px_rgba(59,130,246,0.25)]',
+        border: 'border-blue-500/40 hover:border-blue-400',
+        bg: 'bg-gradient-to-r from-blue-950/40 via-slate-900/90 to-indigo-950/40',
+        dot: 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.9)]',
         text: 'text-blue-300',
         badge: 'bg-blue-500/20 text-blue-300 border-blue-500/40',
         activeDot: 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.9)]'
@@ -98,15 +89,12 @@ export const LandlordProperties: React.FC = () => {
     {
       id: 'EM NEGOCIAÇÃO' as const,
       label: 'Em Negociação',
-      badgeLabel: 'PROPOSTAS EM ANÁLISE',
       count: properties.filter(p => p.status === 'EM NEGOCIAÇÃO').length,
-      unitText: 'unidades com propostas em análise',
-      icon: Clock,
       theme: {
-        glow: 'shadow-[0_0_35px_rgba(168,85,247,0.3)]',
-        border: 'border-purple-500/50 hover:border-purple-400',
-        bg: 'bg-gradient-to-r from-purple-950/60 via-slate-900/95 to-pink-950/60',
-        dot: 'bg-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.9)]',
+        glow: 'shadow-[0_0_25px_rgba(168,85,247,0.25)]',
+        border: 'border-purple-500/40 hover:border-purple-400',
+        bg: 'bg-gradient-to-r from-purple-950/40 via-slate-900/90 to-pink-950/40',
+        dot: 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)]',
         text: 'text-purple-300',
         badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
         activeDot: 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)]'
@@ -114,16 +102,13 @@ export const LandlordProperties: React.FC = () => {
     },
     {
       id: 'RESERVADO' as const,
-      label: 'Imóveis Reservados',
-      badgeLabel: 'RESERVAS CONFIRMADAS',
+      label: 'Reservados',
       count: properties.filter(p => p.status === 'RESERVADO').length,
-      unitText: 'unidades aguardando assinatura de contrato',
-      icon: ShieldAlert,
       theme: {
-        glow: 'shadow-[0_0_35px_rgba(245,158,11,0.3)]',
-        border: 'border-amber-500/50 hover:border-amber-400',
-        bg: 'bg-gradient-to-r from-amber-950/60 via-slate-900/95 to-orange-950/60',
-        dot: 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.9)]',
+        glow: 'shadow-[0_0_25px_rgba(245,158,11,0.25)]',
+        border: 'border-amber-500/40 hover:border-amber-400',
+        bg: 'bg-gradient-to-r from-amber-950/40 via-slate-900/90 to-orange-950/40',
+        dot: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]',
         text: 'text-amber-300',
         badge: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
         activeDot: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]'
@@ -275,13 +260,13 @@ export const LandlordProperties: React.FC = () => {
         </div>
       </div>
 
-      {/* Futuristic Single-Option Swipeable Filter Dial Cockpit */}
+      {/* Minimalist Single-Option Swipeable Filter Dial */}
       <div 
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
-        className={`relative overflow-hidden rounded-2xl border ${currentOpt.theme.border} ${currentOpt.theme.bg} ${currentOpt.theme.glow} p-2.5 sm:p-3 transition-all duration-300 select-none cursor-grab active:cursor-grabbing backdrop-blur-xl group`}
+        className={`relative overflow-hidden rounded-2xl border ${currentOpt.theme.border} ${currentOpt.theme.bg} ${currentOpt.theme.glow} py-2 px-3 transition-all duration-300 select-none cursor-grab active:cursor-grabbing backdrop-blur-xl group`}
       >
         {/* Discreet Left Navigation Arrow */}
         <button
@@ -290,44 +275,26 @@ export const LandlordProperties: React.FC = () => {
             e.stopPropagation();
             navigateFilter('prev');
           }}
-          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/50 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 shadow-sm cursor-pointer group/arrow"
-          title="Filtro anterior (ou arraste para a direita)"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-xl bg-slate-950/40 hover:bg-slate-900/80 border border-slate-800/60 hover:border-cyan-500/40 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 cursor-pointer group/arrow"
+          title="Filtro anterior"
         >
           <ChevronLeft className="w-4 h-4 text-slate-400 group-hover/arrow:text-cyan-300 group-hover/arrow:-translate-x-0.5 transition-transform" />
         </button>
 
-        {/* Center Active Filter Option Presentation */}
-        <div className="flex flex-col items-center justify-center text-center px-10 py-1 space-y-1.5">
-          {/* Top Tag & Pulsing LED Dot */}
-          <div className="flex items-center gap-2">
+        {/* Center: Filter Name + Small Count & Active Indicator */}
+        <div className="flex flex-col items-center justify-center text-center px-10 space-y-1">
+          <div className="flex items-center justify-center gap-2">
             <span className={`w-2 h-2 rounded-full ${currentOpt.theme.dot} animate-pulse`} />
-            <span className={`px-2 py-0.5 rounded-md text-[9.5px] font-mono font-bold uppercase tracking-wider border ${currentOpt.theme.badge}`}>
-              {currentOpt.badgeLabel}
-            </span>
-          </div>
-
-          {/* Main Title & Dynamic Badge in Single View */}
-          <div className="flex items-center justify-center gap-2.5 flex-wrap">
-            <div className={`w-7 h-7 rounded-xl flex items-center justify-center ${currentOpt.theme.badge} shrink-0`}>
-              <Icon className={`w-4 h-4 ${currentOpt.theme.text}`} />
-            </div>
-
-            <h2 className="text-sm sm:text-base font-extrabold text-white tracking-tight font-sans">
+            <h2 className="text-sm sm:text-base font-bold text-white tracking-tight font-sans">
               {currentOpt.label}
             </h2>
-
-            <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-black ${currentOpt.theme.badge} shadow-sm`}>
+            <span className={`px-2 py-0.2 rounded-md text-xs font-mono font-bold ${currentOpt.theme.badge}`}>
               {currentOpt.count}
             </span>
           </div>
 
-          {/* Subtitle / Unit Counter description */}
-          <p className="text-[11px] text-slate-400 font-sans leading-tight">
-            {currentOpt.count} {currentOpt.unitText} • <span className="text-slate-500 font-mono text-[10px]">Arraste ⇄ para alternar filtro</span>
-          </p>
-
-          {/* Discreet 5-Dot Position Tracker Indicator */}
-          <div className="flex items-center justify-center gap-1.5 pt-1">
+          {/* Small Bottom Indicative Bar / Dots */}
+          <div className="flex items-center justify-center gap-1.5 pt-0.5">
             {filterOptions.map((opt, idx) => (
               <button
                 key={opt.id}
@@ -336,12 +303,12 @@ export const LandlordProperties: React.FC = () => {
                   e.stopPropagation();
                   setStatusFilter(opt.id);
                 }}
-                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                className={`h-1 rounded-full transition-all duration-300 cursor-pointer ${
                   idx === activeIndex
-                    ? `w-6 ${opt.theme.activeDot}`
-                    : 'w-1.5 bg-slate-700/60 hover:bg-slate-500'
+                    ? `w-5 ${opt.theme.activeDot}`
+                    : 'w-1.5 bg-slate-700/50 hover:bg-slate-500'
                 }`}
-                title={`Ir para ${opt.label}`}
+                title={opt.label}
               />
             ))}
           </div>
@@ -354,8 +321,8 @@ export const LandlordProperties: React.FC = () => {
             e.stopPropagation();
             navigateFilter('next');
           }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-slate-950/60 hover:bg-slate-900 border border-slate-800/80 hover:border-cyan-500/50 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 shadow-sm cursor-pointer group/arrow"
-          title="Próximo filtro (ou arraste para a esquerda)"
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-xl bg-slate-950/40 hover:bg-slate-900/80 border border-slate-800/60 hover:border-cyan-500/40 text-slate-400 hover:text-white flex items-center justify-center transition-all duration-200 cursor-pointer group/arrow"
+          title="Próximo filtro"
         >
           <ChevronRight className="w-4 h-4 text-slate-400 group-hover/arrow:text-cyan-300 group-hover/arrow:translate-x-0.5 transition-transform" />
         </button>
