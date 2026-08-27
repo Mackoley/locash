@@ -14,7 +14,8 @@ import {
   CheckCircle,
   MoreVertical,
   TrendingUp,
-  Sparkles
+  Sparkles,
+  Filter
 } from 'lucide-react';
 
 export const LandlordProperties: React.FC = () => {
@@ -125,21 +126,80 @@ export const LandlordProperties: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs font-mono">
-        {(['TODOS', 'DISPONÍVEL', 'ALUGADO', 'EM NEGOCIAÇÃO', 'RESERVADO'] as (PropertyStatus | 'TODOS')[]).map(st => (
-          <button
-            key={st}
-            onClick={() => setStatusFilter(st)}
-            className={`px-3.5 py-1.5 rounded-xl border transition-all ${
-              statusFilter === st
-                ? 'bg-cyber-cyan/20 border-cyber-cyan text-cyber-cyan font-bold shadow-sm'
-                : 'bg-slate-900/80 border-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            {st}
-          </button>
-        ))}
+      {/* Futuristic Cyber Segmented Filter Capsule Dock */}
+      <div className="p-1.5 rounded-2xl bg-[#081022]/90 border border-cyan-500/30 backdrop-blur-2xl shadow-[0_8px_30px_rgba(0,0,0,0.5)] flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {[
+            {
+              id: 'TODOS',
+              label: 'Todos',
+              count: properties.length,
+              dotColor: 'bg-cyan-400 shadow-[0_0_8px_rgba(0,242,254,0.9)]',
+              activeClasses: 'bg-gradient-to-r from-cyan-500/30 to-blue-600/30 border border-cyan-400 text-white shadow-[0_0_15px_rgba(0,242,254,0.3)] font-bold'
+            },
+            {
+              id: 'DISPONÍVEL',
+              label: 'Disponíveis',
+              count: properties.filter(p => p.status === 'DISPONÍVEL').length,
+              dotColor: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]',
+              activeClasses: 'bg-emerald-950/60 border border-emerald-400 text-emerald-200 shadow-[0_0_15px_rgba(16,185,129,0.3)] font-bold'
+            },
+            {
+              id: 'ALUGADO',
+              label: 'Alugados',
+              count: properties.filter(p => p.status === 'ALUGADO').length,
+              dotColor: 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.9)]',
+              activeClasses: 'bg-blue-950/60 border border-blue-400 text-blue-200 shadow-[0_0_15px_rgba(59,130,246,0.3)] font-bold'
+            },
+            {
+              id: 'EM NEGOCIAÇÃO',
+              label: 'Negociação',
+              count: properties.filter(p => p.status === 'EM NEGOCIAÇÃO').length,
+              dotColor: 'bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.9)]',
+              activeClasses: 'bg-purple-950/60 border border-purple-400 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.3)] font-bold'
+            },
+            {
+              id: 'RESERVADO',
+              label: 'Reservados',
+              count: properties.filter(p => p.status === 'RESERVADO').length,
+              dotColor: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]',
+              activeClasses: 'bg-amber-950/60 border border-amber-400 text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.3)] font-bold'
+            }
+          ].map((opt) => {
+            const isSelected = statusFilter === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => setStatusFilter(opt.id as any)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono transition-all duration-200 shrink-0 cursor-pointer ${
+                  isSelected
+                    ? opt.activeClasses
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/80 border border-transparent'
+                }`}
+              >
+                <span className={`w-2 h-2 rounded-full ${opt.dotColor} ${isSelected ? 'animate-pulse' : ''}`} />
+                <span className={`font-semibold ${isSelected ? 'text-white' : ''}`}>
+                  {opt.label}
+                </span>
+                <span className={`px-1.5 py-0.2 rounded-md text-[10px] font-bold font-mono ${
+                  isSelected
+                    ? 'bg-white/20 text-white'
+                    : 'bg-slate-800/80 text-slate-400'
+                }`}>
+                  {opt.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Live Filter Counter & Status Indicator */}
+        <div className="hidden md:flex items-center gap-2 px-3 py-1 text-[11px] font-mono text-slate-400 border-l border-slate-800 shrink-0">
+          <Filter className="w-3.5 h-3.5 text-cyan-400" />
+          <span>
+            Mostrando <strong className="text-cyan-300 font-bold">{filtered.length}</strong> de {properties.length}
+          </span>
+        </div>
       </div>
 
       {/* Properties Grid */}
