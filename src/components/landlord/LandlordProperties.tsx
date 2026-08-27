@@ -309,10 +309,10 @@ export const LandlordProperties: React.FC = () => {
                   <button
                     onClick={() => setSelectedProperty(prop)}
                     className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs transition-all duration-200 flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(0,242,254,0.25)] hover:shadow-[0_0_25px_rgba(0,242,254,0.45)] active:scale-95 group/view cursor-pointer"
-                    title="Abrir ficha completa do imóvel"
+                    title="Abrir ficha completa do anúncio"
                   >
                     <ExternalLink className="w-3.5 h-3.5 text-slate-950 group-hover/view:translate-x-0.5 group-hover/view:-translate-y-0.5 transition-transform stroke-[2.5]" />
-                    <span>Ver Detalhes</span>
+                    <span>Ver Anúncio</span>
                   </button>
                 </div>
               </div>
