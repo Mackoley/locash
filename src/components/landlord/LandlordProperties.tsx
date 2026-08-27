@@ -80,14 +80,14 @@ export const LandlordProperties: React.FC = () => {
                     {landlordStats.availableCount}
                   </p>
                   <div className="flex items-center gap-1 min-w-0">
-                    {statusFilter === 'DISPONÍVEL' && (
-                      <Check className="w-2.5 h-2.5 text-emerald-300 stroke-[3.5] shrink-0" />
-                    )}
                     <p className={`text-[10px] font-mono leading-none truncate ${
                       statusFilter === 'DISPONÍVEL' ? 'text-emerald-300 font-bold' : 'text-emerald-400/80 group-hover/pill:text-emerald-300'
                     }`}>
                       Disponíveis
                     </p>
+                    {statusFilter === 'DISPONÍVEL' && (
+                      <Check className="w-2.5 h-2.5 text-emerald-300 stroke-[3.5] shrink-0" />
+                    )}
                   </div>
                 </div>
               </button>
@@ -111,14 +111,14 @@ export const LandlordProperties: React.FC = () => {
                     {landlordStats.rentedCount}
                   </p>
                   <div className="flex items-center gap-1 min-w-0">
-                    {statusFilter === 'ALUGADO' && (
-                      <Check className="w-2.5 h-2.5 text-blue-300 stroke-[3.5] shrink-0" />
-                    )}
                     <p className={`text-[10px] font-mono leading-none truncate ${
                       statusFilter === 'ALUGADO' ? 'text-blue-300 font-bold' : 'text-blue-400/80 group-hover/pill:text-blue-300'
                     }`}>
                       Alugados
                     </p>
+                    {statusFilter === 'ALUGADO' && (
+                      <Check className="w-2.5 h-2.5 text-blue-300 stroke-[3.5] shrink-0" />
+                    )}
                   </div>
                 </div>
               </button>
@@ -142,14 +142,14 @@ export const LandlordProperties: React.FC = () => {
                     {landlordStats.negotiatingCount}
                   </p>
                   <div className="flex items-center gap-1 min-w-0">
-                    {statusFilter === 'EM NEGOCIAÇÃO' && (
-                      <Check className="w-2.5 h-2.5 text-purple-300 stroke-[3.5] shrink-0" />
-                    )}
                     <p className={`text-[10px] font-mono leading-none truncate ${
                       statusFilter === 'EM NEGOCIAÇÃO' ? 'text-purple-300 font-bold' : 'text-purple-400/80 group-hover/pill:text-purple-300'
                     }`}>
                       Negociação
                     </p>
+                    {statusFilter === 'EM NEGOCIAÇÃO' && (
+                      <Check className="w-2.5 h-2.5 text-purple-300 stroke-[3.5] shrink-0" />
+                    )}
                   </div>
                 </div>
               </button>
@@ -173,14 +173,14 @@ export const LandlordProperties: React.FC = () => {
                     {landlordStats.totalProperties}
                   </p>
                   <div className="flex items-center gap-1 min-w-0">
-                    {statusFilter === 'TODOS' && (
-                      <Check className="w-2.5 h-2.5 text-cyan-300 stroke-[3.5] shrink-0" />
-                    )}
                     <p className={`text-[10px] font-mono leading-none truncate ${
                       statusFilter === 'TODOS' ? 'text-cyan-300 font-bold' : 'text-cyan-400/80 group-hover/pill:text-cyan-300'
                     }`}>
                       Todos
                     </p>
+                    {statusFilter === 'TODOS' && (
+                      <Check className="w-2.5 h-2.5 text-cyan-300 stroke-[3.5] shrink-0" />
+                    )}
                   </div>
                 </div>
               </button>
