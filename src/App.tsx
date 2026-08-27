@@ -31,8 +31,8 @@ export const AppContent: React.FC = () => {
 
       {/* Dynamic Center View (Takes 100% full height & width) */}
       <main className="flex-1 flex flex-col overflow-hidden relative bg-[#080d1a]">
-        {/* Floating Glass Search Bar (Top-Center over the map) */}
-        <FloatingSearchBar />
+        {/* Floating Glass Search Bar (Only on Map view) */}
+        {activeView === 'MAPA' && <FloatingSearchBar />}
 
         {activeView === 'MAPA' && <FuturisticMap />}
         {activeView === 'EXPLORAR' && <PropertyExplorerList />}
