@@ -249,8 +249,9 @@ export const LandlordProperties: React.FC = () => {
                 <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
                   <div>
                     <span className="text-[10px] text-slate-500">Aluguel</span>
-                    <p className="font-extrabold text-white">
+                    <p className="text-base sm:text-lg font-black text-white leading-tight flex items-baseline">
                       R$ {prop.rentPrice.toLocaleString('pt-BR')}
+                      <span className="text-[10px] text-slate-500 font-normal ml-1">/mês</span>
                     </p>
                   </div>
                   <div className="flex items-center gap-3 text-slate-400">
