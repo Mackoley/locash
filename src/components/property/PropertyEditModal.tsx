@@ -116,11 +116,9 @@ export const PropertyEditModal: React.FC = () => {
 
       const pinEl = document.createElement('div');
       pinEl.innerHTML = `
-        <div style="display: flex; flex-direction: column; align-items: center; cursor: grab;">
-          <div style="background: rgba(13, 21, 39, 0.95); border: 2px solid #00f2fe; color: #00f2fe; padding: 4px 8px; border-radius: 8px; font-weight: 800; font-size: 10px; font-family: monospace; box-shadow: 0 0 15px #00f2fe;">
-            📍 ARRASTE PARA REPOSICIONAR
-          </div>
-          <div style="width: 14px; height: 14px; border-radius: 50%; background: #00f2fe; box-shadow: 0 0 12px #00f2fe; border: 2px solid #ffffff; margin-top: 2px;"></div>
+        <div style="display: flex; flex-direction: column; align-items: center; cursor: grab; filter: drop-shadow(0 0 10px rgba(0,242,254,0.8));">
+          <div style="width: 18px; height: 18px; border-radius: 50%; background: #00f2fe; box-shadow: 0 0 14px #00f2fe, 0 0 6px #ffffff; border: 3px solid #ffffff; transition: transform 0.2s;"></div>
+          <div style="width: 3px; height: 12px; background: #00f2fe; border-radius: 2px;"></div>
         </div>
       `;
 
@@ -551,17 +549,27 @@ export const PropertyEditModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleGeocodeSearch}
-                className="px-3.5 py-2 rounded-xl bg-cyber-cyan/20 hover:bg-cyber-cyan/30 text-cyber-cyan border border-cyber-cyan/40 flex items-center gap-1 font-bold"
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-sm hover:shadow-neon-cyan transition-all transform active:scale-95 shrink-0 cursor-pointer"
               >
-                {isGeocoding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                {isGeocoding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5 stroke-[2.5]" />}
                 <span>Buscar</span>
               </button>
             </div>
 
-            <div 
-              ref={miniMapContainerRef} 
-              className="w-full h-40 rounded-2xl overflow-hidden border border-cyan-500/40 shadow-inner relative bg-slate-950 mt-2"
-            />
+            <div className="space-y-1.5 mt-2">
+              <div 
+                ref={miniMapContainerRef} 
+                className="w-full h-44 rounded-2xl overflow-hidden border border-cyan-500/40 shadow-inner relative bg-slate-950"
+              />
+              <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 px-1">
+                <span className="flex items-center gap-1 text-cyan-400 font-semibold">
+                  <span>📍</span> Arraste o pino ou clique no mapa para reposicionar
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono">
+                  {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Description */}

@@ -116,11 +116,9 @@ export const PropertyWizardModal: React.FC = () => {
         // Create Custom Draggable Pin Element
         const pinEl = document.createElement('div');
         pinEl.innerHTML = `
-          <div style="display: flex; flex-direction: column; align-items: center; cursor: grab;">
-            <div style="background: rgba(13, 21, 39, 0.95); border: 2px solid #00f2fe; color: #00f2fe; padding: 4px 8px; border-radius: 8px; font-weight: 800; font-size: 10px; font-family: monospace; box-shadow: 0 0 15px #00f2fe;">
-              📍 ARRASTE OU CLIQUE
-            </div>
-            <div style="width: 14px; height: 14px; border-radius: 50%; background: #00f2fe; box-shadow: 0 0 12px #00f2fe; border: 2px solid #ffffff; margin-top: 2px;"></div>
+          <div style="display: flex; flex-direction: column; align-items: center; cursor: grab; filter: drop-shadow(0 0 10px rgba(0,242,254,0.8));">
+            <div style="width: 18px; height: 18px; border-radius: 50%; background: #00f2fe; box-shadow: 0 0 14px #00f2fe, 0 0 6px #ffffff; border: 3px solid #ffffff; transition: transform 0.2s;"></div>
+            <div style="width: 3px; height: 12px; background: #00f2fe; border-radius: 2px;"></div>
           </div>
         `;
 
