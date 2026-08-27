@@ -18,7 +18,8 @@ import {
   Armchair, 
   Dog,
   ChevronDown,
-  Check
+  Check,
+  CheckCircle2
 } from 'lucide-react';
 
 import { PropertyPhotoUploader } from './PropertyPhotoUploader';
@@ -32,6 +33,8 @@ export const PropertyEditModal: React.FC = () => {
   const [status, setStatus] = useState<PropertyStatus>('DISPONÍVEL');
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const [showSaveConfirm, setShowSaveConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [rentPrice, setRentPrice] = useState<number>(3500);
   const [condoFee, setCondoFee] = useState<number>(600);
   const [propertyTax, setPropertyTax] = useState<number>(200);
@@ -251,32 +254,42 @@ export const PropertyEditModal: React.FC = () => {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingProperty) return;
+    setShowSaveConfirm(true);
+  };
 
-    editProperty(editingProperty.id, {
-      title,
-      description,
-      propertyType,
-      status,
-      rentPrice,
-      condoFee,
-      propertyTax,
-      bedrooms,
-      bathrooms,
-      parkingSpaces,
-      area,
-      furnished,
-      petsAllowed,
-      neighborhood,
-      publicAddress,
-      city,
-      state,
-      latitude,
-      longitude,
-      images: images.length > 0 ? images : editingProperty.images
-    });
+  const executeSave = () => {
+    if (!editingProperty) return;
+    setIsSaving(true);
 
-    setEditingProperty(null);
-    alert('✅ Informações do imóvel atualizadas com sucesso!');
+    try {
+      editProperty(editingProperty.id, {
+        title,
+        description,
+        propertyType,
+        status,
+        rentPrice,
+        condoFee,
+        propertyTax,
+        bedrooms,
+        bathrooms,
+        parkingSpaces,
+        area,
+        furnished,
+        petsAllowed,
+        neighborhood,
+        publicAddress,
+        city,
+        state,
+        latitude,
+        longitude,
+        images: images.length > 0 ? images : editingProperty.images
+      });
+
+      setShowSaveConfirm(false);
+      setEditingProperty(null);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDelete = () => {
@@ -290,7 +303,7 @@ export const PropertyEditModal: React.FC = () => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
       <div 
-        className="w-full max-w-2xl max-h-[90vh] bg-cyber-darkest border border-cyan-500/40 rounded-3xl shadow-neon-cyan flex flex-col justify-between overflow-hidden"
+        className="w-full max-w-2xl max-h-[90vh] bg-cyber-darkest border border-cyan-500/40 rounded-3xl shadow-neon-cyan flex flex-col justify-between overflow-hidden relative"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -622,6 +635,67 @@ export const PropertyEditModal: React.FC = () => {
             </div>
           </div>
         </form>
+
+        {/* Save Confirmation Modal Popup */}
+        {showSaveConfirm && (
+          <div 
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div 
+              className="w-full max-w-md bg-[#091022]/98 border border-cyan-500/50 rounded-3xl p-5 sm:p-6 shadow-[0_0_50px_rgba(0,242,254,0.35)] space-y-4 animate-scale-up text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 mx-auto flex items-center justify-center shadow-[0_0_20px_rgba(0,242,254,0.3)]">
+                <CheckCircle2 className="w-6 h-6 stroke-[2.5]" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">
+                  Salvar Alterações?
+                </h3>
+                <p className="text-xs text-slate-300">
+                  Deseja atualizar e publicar as novas informações deste imóvel?
+                </p>
+              </div>
+
+              {/* Quick Summary Card */}
+              <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-left text-xs font-mono space-y-1.5 text-slate-300">
+                <p className="line-clamp-1"><b>Imóvel:</b> {title || editingProperty.title}</p>
+                <div className="flex items-center justify-between text-slate-400">
+                  <span>Status: <b className="text-cyan-300">{status}</b></span>
+                  <span>Aluguel: <b className="text-emerald-400">R$ {rentPrice.toLocaleString('pt-BR')}</b></span>
+                </div>
+                <p className="text-[11px] text-slate-400">Fotos: <b>{images.length} foto(s) cadastradas</b></p>
+              </div>
+
+              {/* Confirmation Actions */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowSaveConfirm(false)}
+                  disabled={isSaving}
+                  className="py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold text-xs border border-slate-800 transition-all cursor-pointer"
+                >
+                  Voltar
+                </button>
+                <button
+                  type="button"
+                  onClick={executeSave}
+                  disabled={isSaving}
+                  className="py-2.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs shadow-neon-cyan transition-all transform active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5 stroke-[3]" />
+                  )}
+                  <span>{isSaving ? 'Salvando...' : 'Confirmar e Salvar'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
