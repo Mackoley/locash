@@ -593,29 +593,30 @@ export const PropertyEditModal: React.FC = () => {
           />
 
           {/* Submit and Delete Action Buttons */}
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
+          <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={handleDelete}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-cyber-red border border-red-500/40 font-bold transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-red-950/30 hover:bg-red-900/50 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/60 font-bold text-xs transition-all duration-200 shadow-sm hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] active:scale-95 cursor-pointer group/del"
+              title="Excluir este imóvel permanentemente"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5 text-red-400 group-hover/del:scale-110 transition-transform" />
               <span>Excluir Imóvel</span>
             </button>
 
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setEditingProperty(null)}
-                className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 font-bold border border-slate-800 transition-all"
+                className="px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white font-bold text-xs border border-slate-800 hover:border-slate-700 transition-all duration-200 active:scale-95 cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-extrabold shadow-neon-cyan transition-all"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs transition-all duration-200 shadow-[0_0_20px_rgba(0,242,254,0.3)] hover:shadow-[0_0_30px_rgba(0,242,254,0.5)] active:scale-95 cursor-pointer group/save"
               >
-                <Save className="w-4 h-4" />
+                <Save className="w-3.5 h-3.5 text-slate-950 stroke-[2.5] group-hover/save:scale-110 transition-transform" />
                 <span>Salvar Alterações</span>
               </button>
             </div>
