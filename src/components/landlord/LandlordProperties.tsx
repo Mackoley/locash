@@ -222,20 +222,22 @@ export const LandlordProperties: React.FC = () => {
               </div>
 
               {/* Actions */}
-              <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
+              <div className="pt-2.5 border-t border-slate-800/80 flex items-center justify-between gap-2.5">
                 <button
                   onClick={() => setEditingProperty(prop)}
-                  className="flex-1 py-2 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyber-cyan text-xs font-bold font-mono border border-cyber-cyan/30 transition-colors flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-slate-900/90 to-slate-800/90 hover:from-cyan-950/50 hover:to-blue-950/50 border border-cyan-500/30 hover:border-cyan-400 text-cyan-300 hover:text-white text-xs font-bold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-[0_0_15px_rgba(0,242,254,0.2)] active:scale-95 group/edit cursor-pointer"
+                  title="Editar dados e fotos do imóvel"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit className="w-3.5 h-3.5 text-cyan-400 group-hover/edit:scale-110 transition-transform" />
                   <span>Editar</span>
                 </button>
 
                 <button
                   onClick={() => setSelectedProperty(prop)}
-                  className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold font-mono transition-colors flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2 px-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs transition-all duration-200 flex items-center justify-center gap-1.5 shadow-[0_0_15px_rgba(0,242,254,0.25)] hover:shadow-[0_0_25px_rgba(0,242,254,0.45)] active:scale-95 group/view cursor-pointer"
+                  title="Abrir ficha completa do imóvel"
                 >
-                  <ExternalLink className="w-3.5 h-3.5" />
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-950 group-hover/view:translate-x-0.5 group-hover/view:-translate-y-0.5 transition-transform stroke-[2.5]" />
                   <span>Ver Detalhes</span>
                 </button>
               </div>
