@@ -497,21 +497,25 @@ export const PropertyEditModal: React.FC = () => {
             <button
               type="button"
               onClick={() => setFurnished(!furnished)}
-              className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 transition-all ${
-                furnished ? 'bg-cyber-cyan/20 border-cyber-cyan text-cyber-cyan font-bold' : 'bg-slate-900 border-slate-800 text-slate-500'
+              className={`p-3 rounded-2xl border flex items-center justify-center gap-2 transition-all cursor-pointer font-bold text-xs ${
+                furnished 
+                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-neon-cyan' 
+                  : 'bg-slate-900/80 border-slate-800 text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
               }`}
             >
-              <Armchair className="w-4 h-4" />
+              <Armchair className={`w-4 h-4 ${furnished ? 'text-cyan-400' : 'text-slate-500'}`} />
               <span>{furnished ? 'Mobiliado' : 'Sem Mobília'}</span>
             </button>
             <button
               type="button"
               onClick={() => setPetsAllowed(!petsAllowed)}
-              className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 transition-all ${
-                petsAllowed ? 'bg-cyber-emerald/20 border-cyber-emerald text-cyber-emerald font-bold' : 'bg-slate-900 border-slate-800 text-slate-500'
+              className={`p-3 rounded-2xl border flex items-center justify-center gap-2 transition-all cursor-pointer font-bold text-xs ${
+                petsAllowed 
+                  ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300 shadow-neon-cyan' 
+                  : 'bg-slate-900/80 border-slate-800 text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
               }`}
             >
-              <Dog className="w-4 h-4" />
+              <Dog className={`w-4 h-4 ${petsAllowed ? 'text-cyan-400' : 'text-slate-500'}`} />
               <span>{petsAllowed ? 'Aceita Pets' : 'Não Aceita Pets'}</span>
             </button>
           </div>
