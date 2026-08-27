@@ -95,13 +95,19 @@ export const PropertyEditModal: React.FC = () => {
         style: {
           version: 8,
           sources: {
-            'carto-dark-tiles': {
+            'google-roadmap-tiles': {
               type: 'raster',
-              tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
-              tileSize: 256
+              tiles: [
+                'https://mt0.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}',
+                'https://mt1.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}',
+                'https://mt2.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}',
+                'https://mt3.google.com/vt/lyrs=m&hl=pt-BR&x={x}&y={y}&z={z}'
+              ],
+              tileSize: 256,
+              maxzoom: 21
             }
           },
-          layers: [{ id: 'carto-dark', type: 'raster', source: 'carto-dark-tiles' }]
+          layers: [{ id: 'google-roadmap-layer', type: 'raster', source: 'google-roadmap-tiles' }]
         },
         center: [editingProperty.longitude, editingProperty.latitude],
         zoom: 15,
