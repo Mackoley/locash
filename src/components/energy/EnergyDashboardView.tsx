@@ -153,28 +153,25 @@ export const EnergyDashboardView: React.FC = () => {
 
   return (
     <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full no-scrollbar pb-24 md:pb-8 font-mono">
-      {/* Top Banner & Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-5 rounded-3xl border-slate-800 bg-[#070d1d]/90">
+      {/* Header Banner */}
+      <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-800/80 bg-[#091022]/80 backdrop-blur-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300 shadow-md">
-              <Zap className="w-4 h-4" />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-cyan-500/20 text-amber-300 border border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.2)] shrink-0">
+              <Zap className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-amber-300 uppercase tracking-widest">
-                  LOCASH AUTOBILLS v1.0
-                </span>
-                <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold border border-emerald-500/40">
-                  IA ATIVA
+                <span className="text-[11px] font-bold font-mono px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
+                  Neoenergia Coelba
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight font-mono mt-0.5">
                 GESTÃO & TELEMETRIA DE ENERGIA
               </h1>
             </div>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-slate-400 font-mono mt-1">
             Recebimento automático de faturas Neoenergia Coelba via E-mail e WhatsApp com conciliação contábil.
           </p>
         </div>
@@ -184,7 +181,7 @@ export const EnergyDashboardView: React.FC = () => {
             <button
               onClick={handleClearAll}
               disabled={isClearing}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900/80 hover:bg-red-500/20 text-slate-400 hover:text-red-400 border border-slate-800 hover:border-red-500/40 text-xs font-bold transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-red-950/30 hover:bg-red-900/50 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/60 text-xs font-bold transition-all shadow-sm hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] cursor-pointer"
               title="Limpar todos os dados de energia"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -194,9 +191,9 @@ export const EnergyDashboardView: React.FC = () => {
 
           <button
             onClick={() => setIsEnergyInboxModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyber-cyan border border-cyber-cyan/30 text-xs font-bold transition-all relative"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 hover:border-cyan-500/50 text-xs font-bold font-mono transition-all relative cursor-pointer"
           >
-            <Inbox className="w-4 h-4" />
+            <Inbox className="w-4 h-4 text-cyan-400" />
             <span>Caixa de Entrada</span>
             {inboxDocuments.length > 0 && (
               <span className="w-4 h-4 rounded-full bg-amber-500 text-slate-950 text-[9px] font-extrabold flex items-center justify-center shadow">
@@ -207,7 +204,7 @@ export const EnergyDashboardView: React.FC = () => {
 
           <button
             onClick={() => setIsEnergyConnectionModalOpen(true)}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-cyan-500 hover:from-amber-400 hover:to-cyan-400 text-slate-950 text-xs font-extrabold shadow-lg shadow-cyan-500/20 transition-all"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 text-xs font-black font-mono shadow-[0_0_20px_rgba(0,242,254,0.35)] transition-all transform active:scale-95 cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
             <span>Cadastrar UC</span>

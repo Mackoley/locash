@@ -37,45 +37,45 @@ export const LeaseHub: React.FC = () => {
   return (
     <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full no-scrollbar pb-20 md:pb-8">
       {/* Central da Locação Header Banner (PRD #52) */}
-      <div className="glass-panel p-5 rounded-3xl border-slate-800 space-y-4">
+      <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-800/80 bg-[#091022]/80 backdrop-blur-xl space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyber-cyan to-blue-600 flex items-center justify-center text-slate-950 font-bold shadow-neon-cyan shrink-0">
-              <Home className="w-6 h-6" />
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-slate-950 font-bold shadow-[0_0_20px_rgba(0,242,254,0.3)] shrink-0">
+              <Home className="w-6 h-6 stroke-[2.5]" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <Badge status="ACTIVE" size="sm" />
-                <span className="text-xs font-mono font-bold text-cyber-cyan">
+                <span className="text-xs font-mono font-bold text-cyan-300">
                   CONTRATO #{activeLease.id.toUpperCase()}
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight mt-0.5">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight mt-0.5 font-mono">
                 {activeLease.propertyTitle}
               </h1>
               <p className="text-xs text-slate-400 font-mono flex items-center gap-1.5 mt-0.5">
-                <MapPin className="w-3.5 h-3.5 text-cyber-cyan" />
+                <MapPin className="w-3.5 h-3.5 text-cyan-400" />
                 <span>{activeLease.propertyAddress}</span>
               </p>
             </div>
           </div>
 
-          <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center gap-4 text-xs font-mono">
+          <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex items-center gap-4 text-xs font-mono">
             <div>
-              <span className="text-slate-500 text-[10px] uppercase block">Valor Mensal</span>
-              <p className="font-extrabold text-cyber-emerald text-base">
+              <span className="text-slate-500 text-[10px] uppercase block font-bold">Valor Mensal</span>
+              <p className="font-extrabold text-emerald-400 text-lg">
                 R$ {activeLease.rentAmount.toLocaleString('pt-BR')}
               </p>
             </div>
             <div className="border-l border-slate-800 pl-4">
-              <span className="text-slate-500 text-[10px] uppercase block">Vencimento</span>
-              <p className="font-bold text-white">Todo dia {activeLease.dueDay}</p>
+              <span className="text-slate-500 text-[10px] uppercase block font-bold">Vencimento</span>
+              <p className="font-bold text-white text-sm">Todo dia {activeLease.dueDay}</p>
             </div>
           </div>
         </div>
 
         {/* Tab Navigation (PRD #52) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-2 border-t border-slate-800/80 text-xs font-mono">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-slate-800/80 text-xs font-mono no-scrollbar">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -84,13 +84,13 @@ export const LeaseHub: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all shrink-0 cursor-pointer ${
                   isActive
-                    ? 'bg-cyber-cyan/20 border border-cyber-cyan text-cyber-cyan shadow-neon-cyan'
-                    : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? 'bg-cyan-500/20 border border-cyan-400 text-cyan-300 shadow-neon-cyan'
+                    : 'bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
                 <span>{tab.label}</span>
               </button>
             );

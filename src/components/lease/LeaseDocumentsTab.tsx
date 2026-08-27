@@ -28,22 +28,24 @@ export const LeaseDocumentsTab: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-5 rounded-3xl border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-cyber-cyan" />
+      <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-800/80 bg-[#091022]/80 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-2xl bg-cyan-500/20 text-cyber-cyan border border-cyan-500/40 shadow-[0_0_15px_rgba(0,242,254,0.15)] shrink-0">
+            <ShieldCheck className="w-5 h-5" />
+          </div>
+          <div>
             <h3 className="text-base font-bold text-white font-mono uppercase tracking-wider">
               Repositório de Documentos e Vistorias
             </h3>
+            <p className="text-xs text-slate-400 font-mono mt-0.5">
+              Armazenamento seguro, contratos assinados e laudos de vistoria de entrada e saída
+            </p>
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
-            Armazenamento seguro, contratos assinados e laudos de vistoria de entrada e saída
-          </p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs font-mono shadow-neon-cyan transition-all"
+          className="flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs font-mono shadow-[0_0_20px_rgba(0,242,254,0.35)] transition-all transform active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4 stroke-[3]" />
           <span>Anexar Novo Documento</span>
@@ -79,16 +81,16 @@ export const LeaseDocumentsTab: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => alert(`Visualizando documento ${doc.fileName}...`)}
-                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-colors"
+                  className="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition-colors cursor-pointer"
                   title="Visualizar"
                 >
                   <Eye className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={() => alert(`Download de ${doc.fileName} concluído!`)}
-                  className="px-3 py-1.5 rounded-xl bg-cyber-cyan hover:bg-cyan-400 text-slate-950 font-bold text-xs font-mono flex items-center gap-1.5 transition-colors shadow-sm"
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs font-mono flex items-center gap-1.5 transition-all shadow-sm cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 stroke-[2.5]" />
                   <span>Baixar</span>
                 </button>
               </div>

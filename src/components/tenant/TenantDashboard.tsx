@@ -24,24 +24,28 @@ export const TenantDashboard: React.FC = () => {
   return (
     <div className="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto max-w-7xl mx-auto w-full no-scrollbar pb-20 md:pb-8">
       {/* Header */}
-      <div className="glass-panel p-5 rounded-3xl border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <Home className="w-5 h-5 text-cyber-cyan" />
-            <h1 className="text-xl sm:text-2xl font-extrabold text-white font-mono tracking-tight">
-              MINHAS LOCAÇÕES
-            </h1>
+      <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-800/80 bg-[#091022]/80 backdrop-blur-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="p-2.5 rounded-2xl bg-cyan-500/20 text-cyber-cyan border border-cyan-500/40 shadow-[0_0_15px_rgba(0,242,254,0.15)] shrink-0">
+            <Home className="w-5 h-5" />
           </div>
-          <p className="text-xs text-slate-400 font-mono mt-1">
-            Painel do Locatário • Gestão ativa de pagamentos, contratos e suporte
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white font-mono tracking-tight">
+                MINHAS LOCAÇÕES
+              </h1>
+            </div>
+            <p className="text-xs text-slate-400 font-mono mt-0.5">
+              Painel do Locatário • Gestão ativa de pagamentos, contratos e suporte
+            </p>
+          </div>
         </div>
 
         <button
           onClick={() => setActiveView('MAPA')}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyber-cyan border border-cyber-cyan/30 text-xs font-bold font-mono transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-slate-200 hover:text-white border border-slate-700 hover:border-cyan-500/50 text-xs font-bold font-mono transition-all cursor-pointer"
         >
-          <Compass className="w-4 h-4" />
+          <Compass className="w-4 h-4 text-cyan-400" />
           <span>Explorar Mais Imóveis no Mapa</span>
         </button>
       </div>
@@ -66,10 +70,10 @@ export const TenantDashboard: React.FC = () => {
 
           <button
             onClick={() => setActiveView('CENTRAL_LOCACAO')}
-            className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs font-mono shadow-neon-cyan transition-all"
+            className="flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs font-mono shadow-[0_0_20px_rgba(0,242,254,0.35)] transition-all transform active:scale-95 cursor-pointer"
           >
             <span>Acessar Central da Locação</span>
-            <ArrowRight className="w-4 h-4" />
+            <ArrowRight className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
 

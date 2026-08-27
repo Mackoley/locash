@@ -111,15 +111,15 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         {/* Price & CTA */}
         <div className="flex items-center justify-between pt-1">
           <div>
-            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-mono">Aluguel</span>
-            <p className="text-lg font-extrabold text-white font-mono">
-              R$ {property.rentPrice.toLocaleString('pt-BR')}
-              <span className="text-xs text-slate-400 font-normal">/mês</span>
+            <span className="text-[10px] uppercase tracking-wider text-slate-500 font-mono block">Aluguel</span>
+            <p className="text-xl font-black text-white font-mono flex items-baseline">
+              <span>R$ {property.rentPrice.toLocaleString('pt-BR')}</span>
+              <span className="text-[10px] text-slate-500 font-mono ml-1 font-normal">/mês</span>
             </p>
           </div>
 
-          <button className="px-3.5 py-1.5 rounded-xl bg-slate-800/80 group-hover:bg-cyber-cyan text-slate-200 group-hover:text-slate-950 font-bold text-xs border border-slate-700 group-hover:border-transparent transition-all">
-            Ver Imóvel
+          <button className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs shadow-sm hover:shadow-[0_0_20px_rgba(0,242,254,0.35)] transition-all transform active:scale-95 cursor-pointer">
+            Ver Anúncio
           </button>
         </div>
       </div>

@@ -47,7 +47,7 @@ export const LeaseFinanceTab: React.FC = () => {
             {userRole === 'TENANT' && (
               <button
                 onClick={() => setSelectedPaymentForModal(pendingPayment)}
-                className="py-3 px-6 rounded-xl bg-gradient-to-r from-cyber-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs font-mono shadow-neon-cyan transition-all transform active:scale-95 flex items-center justify-center gap-2"
+                className="py-3 px-6 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-xs font-mono shadow-[0_0_20px_rgba(0,242,254,0.35)] transition-all transform active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <DollarSign className="w-4 h-4 stroke-[3]" />
                 <span>Pagar Aluguel (PIX / Boleto)</span>
@@ -101,15 +101,15 @@ export const LeaseFinanceTab: React.FC = () => {
                     {pay.status === 'PAGO' ? (
                       <button
                         onClick={() => alert(`📄 Comprovante do mês ${pay.referenceMonth} baixado com sucesso!`)}
-                        className="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyber-cyan border border-slate-700 font-bold text-[11px] inline-flex items-center gap-1"
+                        className="px-3.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 text-cyan-300 border border-slate-700 hover:border-cyan-500/50 font-bold text-[11px] inline-flex items-center gap-1.5 cursor-pointer transition-all"
                       >
-                        <FileText className="w-3 h-3" />
+                        <FileText className="w-3.5 h-3.5" />
                         <span>Recibo</span>
                       </button>
                     ) : (
                       <button
                         onClick={() => setSelectedPaymentForModal(pay)}
-                        className="px-3 py-1 rounded-lg bg-cyber-cyan/20 hover:bg-cyber-cyan/30 text-cyber-cyan border border-cyber-cyan/40 font-bold text-[11px]"
+                        className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-black text-[11px] shadow-sm hover:shadow-neon-cyan transition-all transform active:scale-95 cursor-pointer"
                       >
                         Pagar Agora
                       </button>
