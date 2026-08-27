@@ -9,14 +9,16 @@ import {
   DollarSign, 
   Layers, 
   Image as ImageIcon, 
-  ShieldCheck,
-  Search,
-  Loader2,
-  Trash2,
-  Save,
-  Crosshair,
-  Armchair,
-  Dog
+  ShieldCheck, 
+  Search, 
+  Loader2, 
+  Trash2, 
+  Save, 
+  Crosshair, 
+  Armchair, 
+  Dog,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 
 export const PropertyEditModal: React.FC = () => {
@@ -309,29 +311,8 @@ export const PropertyEditModal: React.FC = () => {
 
         {/* Scrollable Form Body */}
         <form onSubmit={handleSave} className="p-6 overflow-y-auto space-y-5 text-xs font-mono no-scrollbar flex-1">
-          {/* Status Selector */}
-          <div className="space-y-1.5">
-            <label className="text-slate-400 font-bold uppercase block">Status da Locação</label>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {(['DISPONÍVEL', 'RESERVADO', 'EM NEGOCIAÇÃO', 'ALUGADO'] as PropertyStatus[]).map(st => (
-                <button
-                  type="button"
-                  key={st}
-                  onClick={() => setStatus(st)}
-                  className={`p-2.5 rounded-xl border text-center font-bold transition-all ${
-                    status === st 
-                      ? 'bg-cyber-cyan/20 border-cyber-cyan text-cyber-cyan shadow-neon-cyan' 
-                      : 'bg-slate-900 border-slate-800 text-slate-500'
-                  }`}
-                >
-                  {st}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Title & Type */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          {/* Title, Type & Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
             <div className="sm:col-span-2 space-y-1">
               <label className="text-slate-400 font-bold">Título do Imóvel</label>
               <input
@@ -348,7 +329,7 @@ export const PropertyEditModal: React.FC = () => {
               <select
                 value={propertyType}
                 onChange={(e) => setPropertyType(e.target.value as any)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-xs focus:border-cyber-cyan focus:outline-none"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-xs focus:border-cyber-cyan focus:outline-none cursor-pointer"
               >
                 <option value="APARTAMENTO">APARTAMENTO</option>
                 <option value="CASA">CASA</option>
@@ -356,6 +337,20 @@ export const PropertyEditModal: React.FC = () => {
                 <option value="SOBRADO">SOBRADO</option>
                 <option value="COMERCIAL">COMERCIAL</option>
                 <option value="OUTROS">OUTROS</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-slate-400 font-bold">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as PropertyStatus)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white text-xs font-mono font-bold focus:border-cyber-cyan focus:outline-none cursor-pointer"
+              >
+                <option value="DISPONÍVEL">DISPONÍVEL</option>
+                <option value="ALUGADO">ALUGADO</option>
+                <option value="EM NEGOCIAÇÃO">EM NEGOCIAÇÃO</option>
+                <option value="RESERVADO">RESERVADO</option>
               </select>
             </div>
           </div>
