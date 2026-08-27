@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, X, Star, Loader2, ImagePlus, ChevronLeft, ChevronRight, Check } from 'lucide-react';
+import { Upload, X, Star, Loader2, ImagePlus, ChevronLeft, ChevronRight, Camera, Images } from 'lucide-react';
 import { uploadPropertyPhoto } from '../../services/imageUploadService';
 
 interface PropertyPhotoUploaderProps {
@@ -15,14 +15,18 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+  const [showSourceModal, setShowSourceModal] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
+    setShowSourceModal(false);
     setIsUploading(true);
     setUploadProgress(`Otimizando e enviando ${files.length} foto(s)...`);
 
@@ -43,9 +47,8 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
     } finally {
       setIsUploading(false);
       setUploadProgress(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
+      if (galleryInputRef.current) galleryInputRef.current.value = '';
+      if (cameraInputRef.current) cameraInputRef.current.value = '';
     }
   };
 
@@ -114,6 +117,7 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
 
   return (
     <div className="space-y-3">
+      {/* Header Info */}
       <div className="flex items-center justify-between">
         <div>
           <label className="text-slate-300 font-bold text-xs flex items-center gap-1.5 font-mono uppercase tracking-wider">
@@ -121,19 +125,28 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
           </label>
           <p className="text-[11px] text-cyan-400 font-sans mt-0.5 flex items-center gap-1 font-medium">
             <span>💡</span>
-            <span><b>Clique em qualquer foto</b> para defini-la como Capa Principal.</span>
+            <span><b>Clique em qualquer foto</b> para torná-la a Capa Principal.</span>
           </p>
         </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp,image/jpg"
-          multiple
-          onChange={handleFileSelect}
-          className="hidden"
-        />
       </div>
+
+      {/* Hidden File Inputs: Gallery and Camera */}
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/jpg"
+        multiple
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
 
       {uploadProgress && (
         <div className="p-2.5 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-300 text-xs flex items-center gap-2 animate-fade-in font-mono">
@@ -230,14 +243,79 @@ export const PropertyPhotoUploader: React.FC<PropertyPhotoUploaderProps> = ({
         {/* Add photo card button */}
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => setShowSourceModal(true)}
           disabled={isUploading}
-          className="aspect-video rounded-xl border border-dashed border-cyan-500/30 hover:border-cyan-400 bg-slate-900/40 hover:bg-cyan-950/20 flex flex-col items-center justify-center gap-1.5 text-cyan-400/80 hover:text-cyan-300 transition-all cursor-pointer group"
+          className="aspect-video rounded-xl border border-dashed border-cyan-500/40 hover:border-cyan-400 bg-slate-900/60 hover:bg-cyan-950/20 flex flex-col items-center justify-center gap-1.5 text-cyan-400 hover:text-cyan-300 transition-all cursor-pointer group shadow-sm"
         >
           <Upload className="w-4 h-4 group-hover:scale-110 transition-transform" />
           <span className="text-[11px] font-mono font-bold">+ Foto</span>
         </button>
       </div>
+
+      {/* Choice Modal: Camera vs Gallery */}
+      {showSourceModal && (
+        <div 
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in"
+          onClick={() => setShowSourceModal(false)}
+        >
+          <div 
+            className="w-full max-w-sm bg-[#091022]/98 border border-cyan-500/50 rounded-3xl p-5 sm:p-6 shadow-[0_0_50px_rgba(0,242,254,0.35)] space-y-4 animate-scale-up text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
+                <ImagePlus className="w-4 h-4 text-cyan-400" />
+                <span>Adicionar Foto</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowSourceModal(false)}
+                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-300 text-left">
+              Escolha de onde você deseja carregar as fotos do imóvel:
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              {/* Option 1: Camera */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSourceModal(false);
+                  cameraInputRef.current?.click();
+                }}
+                className="p-4 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/30 hover:border-cyan-400 text-slate-200 hover:text-white flex flex-col items-center justify-center gap-2.5 transition-all group active:scale-95 cursor-pointer shadow-sm hover:shadow-[0_0_20px_rgba(0,242,254,0.2)]"
+              >
+                <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors">
+                  <Camera className="w-6 h-6 stroke-[2]" />
+                </div>
+                <span className="font-bold text-xs">Câmera</span>
+                <span className="text-[10px] text-slate-400">Tirar foto agora</span>
+              </button>
+
+              {/* Option 2: Gallery */}
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSourceModal(false);
+                  galleryInputRef.current?.click();
+                }}
+                className="p-4 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-cyan-500/30 hover:border-cyan-400 text-slate-200 hover:text-white flex flex-col items-center justify-center gap-2.5 transition-all group active:scale-95 cursor-pointer shadow-sm hover:shadow-[0_0_20px_rgba(0,242,254,0.2)]"
+              >
+                <div className="p-3 rounded-2xl bg-cyan-500/10 text-cyan-400 group-hover:bg-cyan-500 group-hover:text-slate-950 transition-colors">
+                  <Images className="w-6 h-6 stroke-[2]" />
+                </div>
+                <span className="font-bold text-xs">Galeria</span>
+                <span className="text-[10px] text-slate-400">Escolher arquivos</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
