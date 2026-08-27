@@ -179,21 +179,6 @@ export const LandlordProperties: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter Active Notice when not TODOS */}
-      {statusFilter !== 'TODOS' && (
-        <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs font-mono">
-          <span className="text-slate-400 flex items-center gap-1.5">
-            Filtrando por: <strong className="text-cyan-300">{statusFilter}</strong> ({filtered.length} imóveis)
-          </span>
-          <button
-            onClick={() => setStatusFilter('TODOS')}
-            className="text-cyan-400 hover:text-cyan-300 text-[11px] underline cursor-pointer"
-          >
-            Limpar filtro (Ver todos)
-          </button>
-        </div>
-      )}
-
       {/* Properties Grid */}
       {filtered.length === 0 ? (
         <div className="py-16 text-center rounded-2xl border border-slate-800 bg-[#081022]/60 p-8 space-y-3">
